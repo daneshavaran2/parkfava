@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Logo3D, type PerfStats } from "@/components/hero/Logo3D";
 import { LogoPerfPanel } from "@/components/hero/LogoPerfPanel";
 import { useLogoPivot, DEFAULT_PIVOT } from "@/hooks/use-logo-pivot";
-import logoSpin from "@/assets/logo-spin.png.asset.json";
+import logoSpin from "@/assets/logo-spin.png";
 
 export const Route = createFileRoute("/dev/logo")({
   component: DevLogoPage,
@@ -157,7 +157,7 @@ function Stage({
       </div>
       <div style={{ width: "100%", aspectRatio: "1 / 1", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", border: "1px dashed #e2e8f0", borderRadius: 6 }}>
         {reference && (
-          <img src={logoSpin.url} alt="" style={{ position: "absolute", width: "88%", height: "88%", opacity: 0.3, pointerEvents: "none" }} />
+          <img src={logoSpin} alt="" style={{ position: "absolute", width: "88%", height: "88%", opacity: 0.3, pointerEvents: "none" }} />
         )}
         <Logo3D
           size={480}
