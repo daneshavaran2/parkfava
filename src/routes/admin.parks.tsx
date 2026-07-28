@@ -30,7 +30,7 @@ function AdminParksPage() {
 
   useEffect(() => {
     if (loading) return;
-    if (!user) navigate({ to: "/auth" });
+    if (!user) navigate({ to: "/auth", search: { next: "/admin/parks" } });
   }, [user, loading, navigate]);
 
   useEffect(() => {
@@ -54,7 +54,7 @@ function AdminParksPage() {
       <div className="view"><div className="shell" style={{ padding: 40 }}>
         <h2 className="h2">دسترسی ندارید</h2>
         <p className="lead">حساب شما نقش ادمین ندارد.</p>
-        <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }}>خروج</button>
+        <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>خروج</button>
       </div></div>
     );
   }
@@ -72,7 +72,7 @@ function AdminParksPage() {
             <Link to="/admin/kahkeshan" className="btn btn-ghost">کهکشان (پارک‌ها)</Link>
             <Link to="/admin/attachments" className="btn btn-ghost">داشبورد ضمیمه‌ها</Link>
             <Link to="/admin/exhibition" className="btn btn-ghost">نمایشگاه</Link>
-            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }}>خروج</button>
+            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>خروج</button>
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 16 }}>

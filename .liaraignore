@@ -1,0 +1,12 @@
+.git
+node_modules
+.output
+.wrangler
+.vinxi
+.nitro
+dist
+dist-ssr
+tests/visual/baseline
+tests/visual/current
+tests/smoke/screenshots
+*.log

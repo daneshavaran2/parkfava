@@ -22,7 +22,7 @@ function AdminAboutPage() {
   const qc = useQueryClient();
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth" });
+    if (!loading && !user) navigate({ to: "/auth", search: { next: "/admin/about" } });
   }, [user, loading, navigate]);
 
   const { data: sections = [] } = useQuery({
@@ -62,7 +62,7 @@ function AdminAboutPage() {
             <Link to="/admin/parks" className="btn btn-ghost">پارک‌ها</Link>
             <Link to="/admin/exhibition" className="btn btn-ghost">نمایشگاه</Link>
             <button className="btn btn-primary" onClick={addSection}>+ افزودن بخش</button>
-            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }}>خروج</button>
+            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>خروج</button>
           </div>
         </div>
 
