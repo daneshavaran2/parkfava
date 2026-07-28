@@ -1,0 +1,143 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  unit:
+    name: Unit tests (i18n guard)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+      - run: bun install --frozen-lockfile
+      - run: bun run test:unit
+
+  typecheck:
+    name: Typecheck + i18n lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+      - run: bun install --frozen-lockfile
+      - run: bun run lint:i18n
+      - run: bunx tsgo --noEmit
+        continue-on-error: true
+
+  e2e-request-id:
+    name: E2E x-request-id propagation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: bun install --frozen-lockfile
+      - run: |
+          LOG_SINK=memory NODE_ENV=development bun run dev > /tmp/dev.log 2>&1 &
+          echo $! > /tmp/dev.pid
+          for i in {1..60}; do
+            curl -sf http://localhost:8080 > /dev/null && break
+            sleep 1
+          done
+      - run: bun run test:request-id
+      - if: always()
+        run: kill $(cat /tmp/dev.pid) 2>/dev/null || true
+
+  e2e-directions:
+    name: E2E directions buttons (FA/EN)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: bun install --frozen-lockfile
+      - run: pip install playwright && playwright install chromium
+      - run: |
+          bun run dev > /tmp/dev.log 2>&1 &
+          echo $! > /tmp/dev.pid
+          for i in {1..60}; do
+            curl -sf http://localhost:8080 > /dev/null && break
+            sleep 1
+          done
+      - run: bun run test:directions
+      - if: always()
+        run: kill $(cat /tmp/dev.pid) 2>/dev/null || true
+
+
+
+  e2e-company-smoke:
+    name: E2E company profile smoke (light theme)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: bun install --frozen-lockfile
+      - run: pip install playwright && playwright install chromium
+      - run: |
+          bun run dev > /tmp/dev.log 2>&1 &
+          echo $! > /tmp/dev.pid
+          for i in {1..60}; do
+            curl -sf http://localhost:8080 > /dev/null && break
+            sleep 1
+          done
+      - run: bun run test:company-smoke
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: company-smoke-screenshots
+          path: tests/smoke/screenshots/
+          if-no-files-found: ignore
+      - if: always()
+        run: kill $(cat /tmp/dev.pid) 2>/dev/null || true
+
+  visual:
+    name: Visual regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: bun install --frozen-lockfile
+      - run: pip install playwright pillow && playwright install chromium
+      - run: |
+          bun run dev > /tmp/dev.log 2>&1 &
+          echo $! > /tmp/dev.pid
+          for i in {1..60}; do
+            curl -sf http://localhost:8080 > /dev/null && break
+            sleep 1
+          done
+      - run: bun run test:visual
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: tests/visual/diff/
+          if-no-files-found: ignore
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-current
+          path: tests/visual/current/
+          if-no-files-found: ignore
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-baseline
+          path: tests/visual/baseline/
+          if-no-files-found: ignore
+      - if: always()
+        run: kill $(cat /tmp/dev.pid) 2>/dev/null || true

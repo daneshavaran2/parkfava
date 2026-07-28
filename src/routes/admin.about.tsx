@@ -1,0 +1,218 @@
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth, useAssetUrl } from "@/lib/use-auth";
+import {
+  fetchAboutSections,
+  upsertAboutSection,
+  deleteAboutSection,
+  uploadAboutAsset,
+  type AboutSection,
+} from "@/lib/exhibition-api";
+import { supabase } from "@/integrations/supabase/client";
+
+export const Route = createFileRoute("/admin/about")({
+  head: () => ({ meta: [{ title: "مدیریت درباره اطلس" }] }),
+  component: AdminAboutPage,
+});
+
+function AdminAboutPage() {
+  const { user, isAdmin, loading } = useAuth();
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    if (!loading && !user) navigate({ to: "/auth" });
+  }, [user, loading, navigate]);
+
+  const { data: sections = [] } = useQuery({
+    queryKey: ["admin-about"],
+    queryFn: fetchAboutSections,
+    enabled: !!user && isAdmin,
+  });
+
+  if (loading) return <div className="view"><div className="shell" style={{ padding: 40 }}>درحال بارگذاری…</div></div>;
+  if (!user) return null;
+  if (!isAdmin) {
+    return (
+      <div className="view"><div className="shell" style={{ padding: 40 }}>
+        <h2 className="h2">دسترسی ندارید</h2>
+      </div></div>
+    );
+  }
+
+  async function addSection() {
+    const key = prompt("کلید بخش (مثلاً intro، overview، avatar):");
+    if (!key) return;
+    await upsertAboutSection({ section_key: key, title: "", body: "", sort_order: sections.length });
+    qc.invalidateQueries({ queryKey: ["admin-about"] });
+    qc.invalidateQueries({ queryKey: ["about-public"] });
+  }
+
+  return (
+    <div className="view">
+      <div className="shell" style={{ padding: "20px 16px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div>
+            <span className="eyebrow">Admin</span>
+            <h2 className="h2" style={{ fontSize: 24 }}>مدیریت محتوای «درباره اطلس»</h2>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Link to="/about" className="btn btn-ghost">مشاهده صفحه</Link>
+            <Link to="/admin/parks" className="btn btn-ghost">پارک‌ها</Link>
+            <Link to="/admin/exhibition" className="btn btn-ghost">نمایشگاه</Link>
+            <button className="btn btn-primary" onClick={addSection}>+ افزودن بخش</button>
+            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }}>خروج</button>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {sections.map((s) => <SectionEditor key={s.id} section={s} />)}
+          {!sections.length && (
+            <div className="panel" style={{ padding: 24, color: "var(--ink-soft)" }}>
+              هنوز بخشی ایجاد نشده. روی «افزودن بخش» کلیک کنید.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionEditor({ section }: { section: AboutSection }) {
+  const qc = useQueryClient();
+  const [form, setForm] = useState<AboutSection>(section);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  useEffect(() => { setForm(section); }, [section]);
+  const imgUrl = useAssetUrl(form.image_url);
+  const videoSrc = useAssetUrl(form.video_url);
+  const videoSrc2 = useAssetUrl(form.video_url_2);
+
+  async function save() {
+    setBusy(true); setMsg(null);
+    const { error } = await upsertAboutSection(form);
+    if (error) setMsg("خطا: " + error.message);
+    else {
+      setMsg("ذخیره شد ✓");
+      qc.invalidateQueries({ queryKey: ["admin-about"] });
+      qc.invalidateQueries({ queryKey: ["about-public"] });
+    }
+    setBusy(false);
+  }
+
+  async function upload(kind: "image" | "video" | "video2", e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]; if (!file) return;
+    setBusy(true);
+    try {
+      const path = await uploadAboutAsset(file);
+      const key = kind === "image" ? "image_url" : kind === "video" ? "video_url" : "video_url_2";
+      const next = { ...form, [key]: path };
+      setForm(next);
+      await upsertAboutSection(next);
+      qc.invalidateQueries({ queryKey: ["admin-about"] });
+      qc.invalidateQueries({ queryKey: ["about-public"] });
+      setMsg("بارگذاری شد ✓");
+    } catch (e: any) { setMsg("خطا: " + (e.message ?? e)); }
+    setBusy(false); e.target.value = "";
+  }
+
+  async function remove() {
+    if (!confirm("حذف این بخش؟")) return;
+    await deleteAboutSection(section.id);
+    qc.invalidateQueries({ queryKey: ["admin-about"] });
+    qc.invalidateQueries({ queryKey: ["about-public"] });
+  }
+
+  return (
+    <div className="panel" style={{ padding: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div>
+          <span className="eyebrow">{form.section_key}</span>
+          <h3 style={{ marginTop: 4 }}>{form.title || "بدون عنوان"}</h3>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            type="number"
+            value={form.sort_order}
+            onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) || 0 })}
+            style={{ ...field, width: 80 }}
+            title="ترتیب"
+          />
+          <label style={{ fontSize: 13, color: "var(--ink-soft)", display: "flex", gap: 6, alignItems: "center" }}>
+            <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
+            فعال
+          </label>
+          <button className="btn btn-ghost" onClick={remove} style={{ fontSize: 12 }}>حذف بخش</button>
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <input
+            value={form.section_key}
+            onChange={(e) => setForm({ ...form, section_key: e.target.value })}
+            placeholder="کلید بخش (انگلیسی)"
+            style={field}
+          />
+          <input value={form.title ?? ""} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="عنوان بخش" style={field} />
+          <textarea value={form.body ?? ""} onChange={(e) => setForm({ ...form, body: e.target.value })}
+            placeholder="متن کامل…" rows={8}
+            style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <button className="btn btn-primary" onClick={save} disabled={busy}>ذخیره</button>
+            {msg && <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>{msg}</span>}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 6 }}>تصویر بخش</div>
+            <div style={{ aspectRatio: "16/9", borderRadius: 10, background: "var(--panel-2)", border: "1px solid var(--stroke)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {imgUrl ? <img src={imgUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>بدون تصویر</span>}
+            </div>
+            <label className="btn btn-ghost" style={{ marginTop: 6, fontSize: 12, cursor: "pointer", display: "block", textAlign: "center" }}>
+              آپلود تصویر
+              <input type="file" accept="image/*" onChange={(e) => upload("image", e)} style={{ display: "none" }} />
+            </label>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 6 }}>ویدئو ۱</div>
+            <div style={{ aspectRatio: "16/9", borderRadius: 10, background: "var(--panel-2)", border: "1px solid var(--stroke)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {videoSrc ? <video src={videoSrc} controls style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>بدون ویدئو</span>}
+            </div>
+            <label className="btn btn-ghost" style={{ marginTop: 6, fontSize: 12, cursor: "pointer", display: "block", textAlign: "center" }}>
+              {form.video_url ? "جایگزینی ویدئو ۱" : "آپلود ویدئو ۱"}
+              <input type="file" accept="video/*" onChange={(e) => upload("video", e)} style={{ display: "none" }} />
+            </label>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 6 }}>ویدئو ۲</div>
+            <div style={{ aspectRatio: "16/9", borderRadius: 10, background: "var(--panel-2)", border: "1px solid var(--stroke)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {videoSrc2 ? <video src={videoSrc2} controls style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>بدون ویدئو</span>}
+            </div>
+            <label className="btn btn-ghost" style={{ marginTop: 6, fontSize: 12, cursor: "pointer", display: "block", textAlign: "center" }}>
+              {form.video_url_2 ? "جایگزینی ویدئو ۲" : "آپلود ویدئو ۲"}
+              <input type="file" accept="video/*" onChange={(e) => upload("video2", e)} style={{ display: "none" }} />
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const field: React.CSSProperties = {
+  background: "var(--panel-2)",
+  border: "1px solid var(--stroke)",
+  borderRadius: 8,
+  padding: "10px 12px",
+  color: "inherit",
+  fontFamily: "inherit",
+  fontSize: 14,
+  width: "100%",
+};

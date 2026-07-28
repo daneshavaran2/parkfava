@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "sdk_version": "0.22.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://vbyoyqybfqlvggxbawul.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "fava-network-mcp",
+      "version": "0.1.0",
+      "title": "Fava Network MCP"
+    },
+    "tools": [
+      {
+        "name": "list_companies",
+        "title": "List exhibition companies",
+        "description": "List active exhibition companies visible to the signed-in user, optionally filtered by park, city, or category. Returns basic profile fields.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "park_id": {
+              "type": "string",
+              "description": "Filter by park id."
+            },
+            "city": {
+              "type": "string",
+              "description": "Filter by city name."
+            },
+            "category": {
+              "type": "string",
+              "description": "Filter by category."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "description": "Max rows to return (default 50)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_company",
+        "title": "Get exhibition company",
+        "description": "Return the full profile of a single exhibition company by its company_id.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "company_id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The company_id (slug) of the company."
+            }
+          },
+          "required": [
+            "company_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_parks",
+        "title": "List parks",
+        "description": "List technology and science parks stored in this app.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

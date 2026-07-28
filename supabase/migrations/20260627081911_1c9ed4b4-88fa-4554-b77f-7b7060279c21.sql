@@ -1,0 +1,1 @@
+ALTER TABLE public.exhibition_products ADD COLUMN IF NOT EXISTS catalog_url text;
