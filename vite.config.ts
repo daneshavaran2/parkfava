@@ -7,9 +7,14 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 
-// Liara (and other non-Cloudflare hosts) run the build as a plain Node process,
-// so the nitro preset must switch away from the `cloudflare-module` default.
-const nitroPreset = process.env.NITRO_PRESET;
+// The current deploy target (Liara) runs the app as a plain Node process, and
+// its buildpack does not forward app environment variables into the build
+// step (only into the runtime start step) — so gating the preset behind an
+// env var silently falls back to the `cloudflare-module` default and ships a
+// Workers-format build that never opens a port under plain Node. Default to
+// `node-server` unconditionally; pass NITRO_PRESET=cloudflare-module
+// explicitly (see `build:cloudflare`) when actually deploying to Cloudflare.
+const nitroPreset = process.env.NITRO_PRESET || "node-server";
 
 export default defineConfig({
   tanstackStart: {
@@ -17,7 +22,7 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
-  ...(nitroPreset ? { nitro: { preset: nitroPreset } } : {}),
+  nitro: { preset: nitroPreset },
   vite: {
     plugins: [mcpPlugin()],
   },
