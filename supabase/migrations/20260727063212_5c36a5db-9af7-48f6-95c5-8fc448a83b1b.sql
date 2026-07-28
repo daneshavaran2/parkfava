@@ -1,0 +1,1 @@
+update public.exhibition_companies set latitude = 36.30450, longitude = 59.53880 where company_id = 'esm' and latitude is null;
