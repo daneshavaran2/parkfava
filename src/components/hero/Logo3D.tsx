@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import logoSpin from "@/assets/logo-spin.png.asset.json";
+import logoSpin from "@/assets/logo-spin.png";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLogoPivot, DEFAULT_PIVOT, type LogoPivot } from "@/hooks/use-logo-pivot";
 import { useDeferredMount } from "@/hooks/use-deferred-mount";
@@ -274,7 +274,7 @@ export function Logo3D({
     return () => cancelAnimationFrame(raf);
   }, [needsMeter]);
 
-  const maskUrl = `url(${logoSpin.url})`;
+  const maskUrl = `url(${logoSpin})`;
   const startDeg = ((startAt ?? pivot.startAt ?? 0) % 360 + 360) % 360;
   const sliceFadeKf = `logo3d-slice-${uid}`;
   const sliceCss = `@keyframes ${sliceFadeKf}{from{opacity:0}to{opacity:1}}`;
@@ -333,7 +333,7 @@ export function Logo3D({
     return (
       <img
         key={t.toFixed(4)}
-        src={logoSpin.url}
+        src={logoSpin}
         alt=""
         draggable={false}
         style={{
@@ -436,7 +436,7 @@ export function Logo3D({
             }}
           >
             <img
-              src={logoSpin.url}
+              src={logoSpin}
               alt=""
               draggable={false}
               style={{
@@ -462,7 +462,7 @@ export function Logo3D({
               }}
             >
               <img
-                src={logoSpin.url}
+                src={logoSpin}
                 alt=""
                 draggable={false}
                 style={{
