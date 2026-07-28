@@ -16,7 +16,6 @@ import { fetchParkContent } from "@/lib/park-content-api";
 import { fetchExhibitionCompanies } from "@/lib/exhibition-api";
 import { useAuth, useAssetUrl } from "@/lib/use-auth";
 import { buildCompanyLocationUrl, buildGoogleMapsDirectionsUrl, buildNeshanUrl, coordinatesMatch, parseLatLng } from "@/lib/geo";
-import logoMark from "@/assets/logo-mark.jpg.asset.json";
 
 const F = () => (typeof window !== "undefined" ? window.FAVA : null);
 
@@ -107,7 +106,7 @@ export function Nav({ view, query, setQuery, theme, toggleTheme }) {
     <nav className="nav">
       <div className="nav-inner">
         <Link to="/" className="brand" style={{ textDecoration: "none", color: "inherit" }}>
-          <img src={logoMark.url} alt={t("nav.brand")} width={40} height={40} style={{ display: "block", objectFit: "contain" }} />
+          <Logo size={40} glossy />
           <div className="word"><b>{t("nav.brand")}</b></div>
         </Link>
         <div className={"nav-links" + (open ? " open" : "")}>
