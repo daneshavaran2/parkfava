@@ -141,7 +141,8 @@ function RootComponent() {
     path.startsWith("/exhibition") ? "exhibition" :
     path.startsWith("/parks") ? "parks" :
     path.startsWith("/categories") ? "categories" :
-    path.startsWith("/company") ? "company" : "home";
+    path.startsWith("/company") ? "company" :
+    path.startsWith("/about") ? "about" : "home";
 
   return (
     <QueryClientProvider client={queryClient}>

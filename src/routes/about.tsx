@@ -1,6 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Nav } from "@/components/fava/views";
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAboutSections, type AboutSection } from "@/lib/exhibition-api";
 import { useAssetUrl } from "@/lib/use-auth";
@@ -18,9 +16,6 @@ export const Route = createFileRoute("/about")({
 });
 
 function AboutPage() {
-  const [query, setQuery] = useState("");
-  const theme = typeof document !== "undefined" ? (document.documentElement.dataset.theme || "dark") : "dark";
-
   const { data: sections = [] } = useQuery({
     queryKey: ["about-public"],
     queryFn: fetchAboutSections,
@@ -31,7 +26,6 @@ function AboutPage() {
 
   return (
     <>
-      <Nav view="about" query={query} setQuery={setQuery} theme={theme} toggleTheme={() => {}} />
       <div className="view">
         <div className="shell" style={{ paddingTop: 32, paddingBottom: 64 }}>
           <section style={{ marginBottom: 32 }}>
