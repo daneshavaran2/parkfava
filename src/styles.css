@@ -612,7 +612,12 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 1000px) {
   .hero-grid { grid-template-columns: 1fr; gap: 30px; }
-  .hero-orb { max-width: 360px; margin: 0 auto; }
+  /* `.hero-orb` establishes a 3D perspective context (as do its `preserve-3d`
+     descendants), and that combined with an `aspect-ratio` box in an
+     implicit `auto`-sized grid row collapses to 0×0 in some engines — the
+     row-track sizing pass never gets a definite size to derive from. An
+     explicit `width` sidesteps it entirely. */
+  .hero-orb { width: 100%; max-width: 360px; margin: 0 auto; }
   .map-layout { grid-template-columns: 1fr; }
   .profile-grid { grid-template-columns: 1fr; }
 }

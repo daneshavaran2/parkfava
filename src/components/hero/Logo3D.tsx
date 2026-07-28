@@ -380,7 +380,15 @@ export function Logo3D({
         zIndex: 0,
         perspective: `${1500 * scale}px`,
         touchAction: "none",
-        contentVisibility: shouldDefer ? "auto" : "visible",
+        // `content-visibility: auto` here (previously gated on `shouldDefer`,
+        // i.e. on by default on mobile) is unreliable inside a `perspective`
+        // + `transform-style: preserve-3d` containing block: mobile browsers
+        // (notably Safari) can fail to ever mark the element "relevant to
+        // the user" and skip rendering it entirely — the logo just never
+        // appears. The `showHeavy`/useDeferredMount gating below already
+        // covers the real perf cost (extrusion slices, shadow, sheen), so
+        // always painting the front face is worth the small extra cost.
+        contentVisibility: "visible",
         containIntrinsicSize: `${size}px ${size}px`,
       }}
     >
