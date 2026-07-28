@@ -5,9 +5,10 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import logoSpin from "@/assets/logo-spin.png";
 
 import {
-  Icon, Logo, HeroOrb, AICommandBar, QRCode,
+  Icon, HeroOrb, AICommandBar, QRCode,
   useCountUp, useTilt,
   toFa, faNum, faMoney, colorVar, glowVar, CAT_ICON,
 } from "./primitives";
@@ -106,7 +107,11 @@ export function Nav({ view, query, setQuery, theme, toggleTheme }) {
     <nav className="nav">
       <div className="nav-inner">
         <Link to="/" className="brand" style={{ textDecoration: "none", color: "inherit" }}>
-          <Logo size={40} glossy />
+          <img
+            src={logoSpin}
+            alt={t("nav.brand")}
+            style={{ display: "block", width: "clamp(32px, 8vw, 40px)", height: "clamp(32px, 8vw, 40px)", aspectRatio: "1 / 1", objectFit: "contain" }}
+          />
           <div className="word"><b>{t("nav.brand")}</b></div>
         </Link>
         <div className={"nav-links" + (open ? " open" : "")}>
@@ -1303,7 +1308,10 @@ function CatCard({ c, real }) {
 export function Footer() {
   return (
     <div className="shell"><div className="footer">
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Logo size={26} /> شبکه فناوری فاوا</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <img src={logoSpin} alt="" style={{ display: "block", width: 26, height: 26, aspectRatio: "1 / 1", objectFit: "contain" }} />
+        شبکه فناوری فاوا
+      </div>
     </div></div>
   );
 }
