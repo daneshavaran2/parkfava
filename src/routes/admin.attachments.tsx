@@ -33,7 +33,7 @@ function AdminAttachmentsPage() {
   const [companyFilter, setCompanyFilter] = useState("");
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth" });
+    if (!loading && !user) navigate({ to: "/auth", search: { next: "/admin/attachments" } });
   }, [user, loading, navigate]);
 
   const { data: companies = [] } = useQuery({
@@ -99,7 +99,7 @@ function AdminAttachmentsPage() {
             <Link to="/admin/exhibition" className="btn btn-ghost">نمایشگاه</Link>
             <Link to="/admin/parks" className="btn btn-ghost">پارک‌ها</Link>
             <Link to="/admin/about" className="btn btn-ghost">درباره</Link>
-            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }}>خروج</button>
+            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>خروج</button>
           </div>
         </div>
 

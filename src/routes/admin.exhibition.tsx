@@ -80,7 +80,7 @@ function AdminExhibitionPage() {
   const [newId, setNewId] = useState("");
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth" });
+    if (!loading && !user) navigate({ to: "/auth", search: { next: "/admin/exhibition" } });
   }, [user, loading, navigate]);
 
   const { data: companies = [], isLoading: companiesLoading, isError: companiesError, error: companiesErr } = useQuery<ExhibitionCompany[]>({
@@ -114,7 +114,7 @@ function AdminExhibitionPage() {
             INSERT INTO public.user_roles (user_id, role) VALUES ('{user.id}', 'admin');
           </code>
         </p>
-        <button className="btn btn-ghost" style={{ marginTop: 16 }} onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }}>خروج و ورود مجدد</button>
+        <button className="btn btn-ghost" style={{ marginTop: 16 }} onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>خروج و ورود مجدد</button>
       </div></div>
     );
   }
@@ -158,7 +158,7 @@ function AdminExhibitionPage() {
             <Link to="/admin/attachments" className="btn btn-ghost">داشبورد ضمیمه‌ها</Link>
             <Link to="/admin/parks" className="btn btn-ghost">پارک‌ها</Link>
             <Link to="/admin/about" className="btn btn-ghost">درباره</Link>
-            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }}>خروج</button>
+            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>خروج</button>
           </div>
         </div>
 

@@ -22,7 +22,7 @@ function AdminKahkeshanPage() {
 
   useEffect(() => {
     if (loading) return;
-    if (!user) navigate({ to: "/auth" });
+    if (!user) navigate({ to: "/auth", search: { next: "/admin/kahkeshan" } });
   }, [user, loading, navigate]);
 
   if (loading) return <div className="view"><div className="shell" style={{ padding: 40 }}>درحال بارگذاری…</div></div>;
@@ -91,7 +91,7 @@ function AdminKahkeshanPage() {
             <Link to="/admin/parks" className="btn btn-ghost">محتوای پارک‌ها</Link>
             <Link to="/admin/exhibition" className="btn btn-ghost">نمایشگاه</Link>
             <button className="btn btn-primary" onClick={addNew}>+ افزودن پارک</button>
-            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }}>خروج</button>
+            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>خروج</button>
           </div>
         </div>
 

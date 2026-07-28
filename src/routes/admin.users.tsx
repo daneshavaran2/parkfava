@@ -73,7 +73,7 @@ function AdminUsersPage() {
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <Link to="/admin/exhibition" className="btn btn-ghost">شرکت‌ها</Link>
           <Link to="/admin/parks" className="btn btn-ghost">پارک‌ها</Link>
-          <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }}>خروج</button>
+          <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>خروج</button>
         </div>
       </div>
 
