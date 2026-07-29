@@ -1,3 +1,9 @@
+// Loads .env into process.env at Node startup. Vite's build only inlines
+// VITE_-prefixed vars into the client bundle via import.meta.env; plain vars
+// like SUPABASE_URL/SUPABASE_PUBLISHABLE_KEY (read by server-only code such
+// as the auth middleware) are otherwise never populated on a plain Node host.
+import "dotenv/config";
+
 import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
