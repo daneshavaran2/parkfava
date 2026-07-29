@@ -148,6 +148,17 @@ export async function fetchExhibitionCompanies() {
   return (data ?? []) as ExhibitionCompany[];
 }
 
+/** Products belonging to publicly-visible (approved + active) companies only. */
+export async function fetchPublicExhibitionProducts(companyIds: string[]) {
+  if (!companyIds.length) return [] as ExhibitionProduct[];
+  const { data } = await supabase
+    .from("exhibition_products" as any)
+    .select("*")
+    .in("company_id", companyIds)
+    .order("sort_order", { ascending: true });
+  return ((data ?? []) as any) as ExhibitionProduct[];
+}
+
 export async function fetchAllCompaniesAdmin() {
   const { data, error } = await supabase
     .from("exhibition_companies")
