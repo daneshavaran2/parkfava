@@ -293,6 +293,24 @@ export function CircuitCanvas() {
 /* ---------- HeroOrb ---------- */
 export function HeroOrb() {
   const wrapRef = useRef(null);
+  // Logo3D's `size` is a fixed pixel box, not CSS — it doesn't shrink with
+  // its container on its own. `.hl-wrap` is the actual sized box (CSS
+  // controls its width per breakpoint), so measure it and keep Logo3D in
+  // sync via ResizeObserver. This also re-measures on orientation change
+  // (a resize as far as the browser is concerned), so rotating the phone
+  // moves/resizes the logo along with everything else instead of leaving
+  // it at a stale fixed size that can overflow into surrounding content.
+  const [orbSize, setOrbSize] = useState(360);
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width) setOrbSize(Math.round(width));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   function onMove(e) {
     const el = wrapRef.current; if (!el) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -316,7 +334,7 @@ export function HeroOrb() {
         <div className="hl-grid" />
         <div className="hl-halo" />
         <div className="hl-stack" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Logo3D size={360} />
+          <Logo3D size={orbSize} />
         </div>
 
         <div className="hl-podium" />
