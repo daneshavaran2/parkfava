@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Logo3D, type PerfStats } from "@/components/hero/Logo3D";
 import { LogoPerfPanel } from "@/components/hero/LogoPerfPanel";
 import { useLogoPivot, DEFAULT_PIVOT } from "@/hooks/use-logo-pivot";
-import logoSpin from "@/assets/logo-spin.png";
+import logoSpin from "@/assets/logo-spin.webp";
 
 export const Route = createFileRoute("/dev/logo")({
   component: DevLogoPage,
