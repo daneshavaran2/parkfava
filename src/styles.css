@@ -151,7 +151,7 @@ h1, h2, h3, h4, h5, .h1, .h2 { font-family: var(--font-display); letter-spacing:
 }
 .brand { display: flex; align-items: center; gap: 12px; cursor: pointer; }
 .brand .word { display: flex; flex-direction: column; line-height: 1.05; }
-.brand .word b { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
+.brand .word b { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; }
 .nav-logo-img {
   width: 48px; height: 48px;
   border-radius: 12px;
@@ -622,6 +622,7 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
   .profile-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 720px) {
+  .brand .word b { font-size: 13px; }
   .nav-links, .nav-search { display: none; }
   .nav-links.open {
     display: flex; flex-direction: column; align-items: stretch;
@@ -630,12 +631,26 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
     box-shadow: 0 20px 50px -20px #000;
   }
   .nav-toggle { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: rgba(124,152,200,0.08); border: 1px solid var(--stroke); cursor: pointer; color: var(--ink); }
+
+  /* Tighten the home hero so it comes much closer to fitting a phone
+     screen without scrolling — full elimination isn't realistic on the
+     smallest devices (the hero text + orb + footer genuinely exceed a
+     ~650px viewport), but this closes most of the gap. */
+  .home-view .hero { padding: 18px 0 20px; }
+  .hero-grid { gap: 14px; }
+  .hero h1 { margin: 8px 0 8px; }
+  .hero .lead { margin-top: 4px; }
+  .hero-cta { margin-top: 12px; gap: 8px; }
+  .hero-orb { max-width: 200px; }
+  .footer { padding: 16px 0; }
+  .nav-inner { padding: 8px 24px; }
 }
 @media (max-width: 560px) {
   .portals { grid-template-columns: 1fr; }
   .grid-cards, .cat-grid { grid-template-columns: 1fr; }
   .profile-grid { grid-template-columns: 1fr; }
   .kpi-row { grid-template-columns: 1fr; }
+  .hero-orb { max-width: 168px; }
 }
 
 /* mono direction: collapse all per-element colors to the single accent */
