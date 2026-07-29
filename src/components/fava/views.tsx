@@ -1306,11 +1306,12 @@ function CatCard({ c, real }) {
 
 /* ===================== FOOTER ===================== */
 export function Footer() {
+  const { t } = useTranslation();
   return (
     <div className="shell"><div className="footer">
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <img src={logoSpin} alt="" style={{ display: "block", width: 26, height: 26, aspectRatio: "1 / 1", objectFit: "contain" }} />
-        شبکه فناوری فاوا
+        {t("nav.brand")}
       </div>
     </div></div>
   );

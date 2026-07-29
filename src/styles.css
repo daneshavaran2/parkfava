@@ -149,9 +149,9 @@ h1, h2, h3, h4, h5, .h1, .h2 { font-family: var(--font-display); letter-spacing:
   max-width: var(--maxw); margin: 0 auto; padding: 12px 24px;
   display: flex; align-items: center; gap: 18px;
 }
-.brand { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-.brand .word { display: flex; flex-direction: column; line-height: 1.05; }
-.brand .word b { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; }
+.brand { display: flex; align-items: center; gap: 12px; cursor: pointer; min-width: 0; flex-shrink: 1; }
+.brand .word { display: flex; flex-direction: column; line-height: 1.05; min-width: 0; }
+.brand .word b { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .nav-logo-img {
   width: 48px; height: 48px;
   border-radius: 12px;
@@ -243,7 +243,7 @@ h1, h2, h3, h4, h5, .h1, .h2 { font-family: var(--font-display); letter-spacing:
 .hero-cta { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
 
 /* hero visual = 3D EXTRUDED ANIMATED LOGO */
-.hero-orb { position: relative; aspect-ratio: 1; display: grid; place-items: center; perspective: 1300px; }
+.hero-orb { position: relative; aspect-ratio: 1; display: grid; place-items: center; perspective: 1300px; overflow: hidden; }
 .hl-wrap {
   position: relative; width: min(100%, 440px); aspect-ratio: 1;
   transform-style: preserve-3d;
@@ -624,6 +624,7 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
 @media (max-width: 720px) {
   .brand .word b { font-size: 13px; }
   .nav-links, .nav-search { display: none; }
+  .nav-inner { gap: 10px; }
   .nav-links.open {
     display: flex; flex-direction: column; align-items: stretch;
     position: absolute; top: 100%; inset-inline: 12px; margin-top: 8px;
@@ -646,6 +647,8 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
   .nav-inner { padding: 8px 24px; }
 }
 @media (max-width: 560px) {
+  .brand .word b { font-size: 11px; }
+  .nav-inner { padding: 8px 12px; gap: 6px; }
   .portals { grid-template-columns: 1fr; }
   .grid-cards, .cat-grid { grid-template-columns: 1fr; }
   .profile-grid { grid-template-columns: 1fr; }
