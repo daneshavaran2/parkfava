@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireMfaVerified } from "@/integrations/supabase/mfa-middleware";
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
   const { data, error } = await ctx.supabase
@@ -22,7 +22,7 @@ export type AdminUserRow = {
 };
 
 export const listUsers = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireMfaVerified])
   .handler(async ({ context }): Promise<AdminUserRow[]> => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -43,7 +43,7 @@ export const listUsers = createServerFn({ method: "GET" })
   });
 
 export const grantAdmin = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireMfaVerified])
   .inputValidator((i) => z.object({ user_id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -56,7 +56,7 @@ export const grantAdmin = createServerFn({ method: "POST" })
   });
 
 export const revokeAdmin = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireMfaVerified])
   .inputValidator((i) => z.object({ user_id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -72,7 +72,7 @@ export const revokeAdmin = createServerFn({ method: "POST" })
   });
 
 export const assignCompanyOwner = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireMfaVerified])
   .inputValidator((i) => z.object({
     company_id: z.string().min(1).max(120),
     user_id: z.string().uuid().nullable(),
@@ -94,7 +94,7 @@ export const assignCompanyOwner = createServerFn({ method: "POST" })
   });
 
 export const getMyRoles = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireMfaVerified])
   .handler(async ({ context }): Promise<{ roles: string[]; owned_company_id: string | null }> => {
     const [{ data: roles }, { data: owned }] = await Promise.all([
       context.supabase.from("user_roles").select("role").eq("user_id", context.userId),

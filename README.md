@@ -98,6 +98,10 @@ re‑run it or clear it with `bun run reset:dev`.
 | `LOVABLE_API_KEY`               | server  | AI gateway; leave unset if you don't need generation features       |
 | `VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY` | client | Managed Maps JS key; valid only on `*.lovable.app` / `*.lovableproject.com` |
 | `VITE_GOOGLE_MAPS_DEV_KEY`      | client  | Optional developer key so Google Maps also renders on `localhost`   |
+| `MFA_ENFORCED`                  | server  | Set to `true` to require SMS-OTP on every login (all users). Unset/anything else = off. See `src/integrations/supabase/mfa-middleware.ts` |
+| `SMS_PROVIDER`                  | server  | `kavenegar` \| `melipayamak` \| `ghasedak` — required for `MFA_ENFORCED=true` to actually deliver codes; see `src/lib/sms/send-sms.server.ts` |
+| `SMS_API_KEY`                   | server  | API key for the chosen `SMS_PROVIDER`                                |
+| `SMS_SENDER_LINE`               | server  | Optional sender line number some panels require                     |
 
 Rules:
 

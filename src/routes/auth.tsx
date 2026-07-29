@@ -5,6 +5,8 @@ import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { getMyRoles } from "@/lib/admin-users.functions";
+import { getMfaStatus, setPhone as setPhoneFn, requestOtp, verifyOtp } from "@/lib/mfa.functions";
+import { normalizePhone, maskPhone } from "@/lib/mfa/phone";
 
 async function resolveDestination(fallback: string): Promise<string> {
   if (fallback && fallback !== "/") return fallback;
@@ -34,15 +36,46 @@ function AuthPage() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Step-up SMS verification. Only ever engaged when the server reports
+  // MFA_ENFORCED=true (see src/integrations/supabase/mfa-middleware.ts) —
+  // stays out of the way entirely otherwise.
+  const [mfaStep, setMfaStep] = useState<"phone" | "otp" | null>(null);
+  const [mfaPhoneInput, setMfaPhoneInput] = useState("");
+  const [mfaPhone, setMfaPhone] = useState<string | null>(null);
+  const [otpCode, setOtpCode] = useState("");
+  const [resendAt, setResendAt] = useState(0);
+
   const fallback = next || "";
+
+  async function proceedAfterAuth() {
+    try {
+      const status = await getMfaStatus();
+      if (status.enforced && !status.satisfied) {
+        setMfaPhone(status.phone);
+        if (status.phone) {
+          setMfaStep("otp");
+          await triggerRequestOtp();
+        } else {
+          setMfaStep("phone");
+        }
+        return;
+      }
+    } catch (e) {
+      // A bug in the (brand new, not yet exercised end-to-end) MFA check
+      // itself must never be able to lock everyone out of the site —
+      // fail open to the pre-existing behavior instead.
+      console.error("[auth] mfa status check failed", e);
+    }
+    const dest = await resolveDestination(fallback);
+    window.location.assign(dest);
+  }
 
   useEffect(() => {
     let done = false;
     const go = async () => {
       if (done) return;
       done = true;
-      const dest = await resolveDestination(fallback);
-      window.location.assign(dest);
+      await proceedAfterAuth();
     };
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) void go();
@@ -51,6 +84,7 @@ function AuthPage() {
       if (session) void go();
     });
     return () => sub.subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fallback]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -69,11 +103,11 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      const dest = await resolveDestination(fallback);
-      window.location.assign(dest);
+      await proceedAfterAuth();
     } catch (e: any) {
       console.error("[auth] sign-in failed", e);
       setErr(e?.message ?? t("auth.login_failed"));
+    } finally {
       setBusy(false);
     }
   }
@@ -82,6 +116,142 @@ function AuthPage() {
     setErr(null);
     const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + (fallback || "/") });
     if (res.error) setErr((res.error as any).message ?? t("auth.google_failed"));
+  }
+
+  async function triggerRequestOtp() {
+    setErr(null);
+    try {
+      await requestOtp();
+      setResendAt(Date.now() + 60_000);
+    } catch (e: any) {
+      setErr(e?.message ?? "خطا در ارسال کد");
+    }
+  }
+
+  async function submitPhone(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null);
+    const normalized = normalizePhone(mfaPhoneInput);
+    if (!normalized) {
+      setErr("شماره موبایل نامعتبر است (فرمت صحیح: 09xxxxxxxxx)");
+      return;
+    }
+    setBusy(true);
+    try {
+      await setPhoneFn({ data: { phone: normalized } });
+      setMfaPhone(normalized);
+      setMfaStep("otp");
+      await triggerRequestOtp();
+    } catch (e: any) {
+      setErr(e?.message ?? t("common.error"));
+    }
+    setBusy(false);
+  }
+
+  async function submitOtp(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null);
+    setBusy(true);
+    try {
+      await verifyOtp({ data: { code: otpCode.trim() } });
+      await supabase.auth.refreshSession();
+      const dest = await resolveDestination(fallback);
+      window.location.assign(dest);
+    } catch (e: any) {
+      setErr(e?.message ?? "کد نامعتبر است");
+      setBusy(false);
+    }
+  }
+
+  async function backToCredentials() {
+    await supabase.auth.signOut();
+    setMfaStep(null);
+    setMfaPhone(null);
+    setMfaPhoneInput("");
+    setOtpCode("");
+    setErr(null);
+  }
+
+  if (mfaStep === "phone") {
+    return (
+      <div className="view">
+        <div className="shell" style={{ maxWidth: 460, margin: "60px auto" }}>
+          <div className="panel" style={{ padding: 28 }}>
+            <h2 className="h2" style={{ fontSize: 24 }}>ثبت شماره موبایل</h2>
+            <p className="lead" style={{ marginTop: 6, fontSize: 14 }}>
+              برای ورود دو‌مرحله‌ای، ابتدا شماره موبایل خود را ثبت کنید. کد تایید به همین شماره پیامک می‌شود.
+            </p>
+            <form onSubmit={submitPhone} style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 18 }}>
+              <input
+                type="tel"
+                required
+                dir="ltr"
+                value={mfaPhoneInput}
+                onChange={(e) => setMfaPhoneInput(e.target.value)}
+                placeholder="09xxxxxxxxx"
+                aria-label="شماره موبایل"
+                className="input"
+                style={inputStyle}
+              />
+              {err && <div role="alert" style={{ color: "#ff7676", fontSize: 13 }}>{err}</div>}
+              <button type="submit" className="btn btn-primary" disabled={busy}>
+                {busy ? "…" : "ارسال کد تایید"}
+              </button>
+            </form>
+            <div style={{ marginTop: 18, textAlign: "center" }}>
+              <button type="button" onClick={backToCredentials}
+                style={{ background: "transparent", color: "var(--ink-soft)", border: 0, cursor: "pointer", fontSize: 12 }}>
+                بازگشت به صفحه ورود
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (mfaStep === "otp") {
+    return (
+      <div className="view">
+        <div className="shell" style={{ maxWidth: 460, margin: "60px auto" }}>
+          <div className="panel" style={{ padding: 28 }}>
+            <h2 className="h2" style={{ fontSize: 24 }}>کد تایید پیامکی</h2>
+            <p className="lead" style={{ marginTop: 6, fontSize: 14 }}>
+              کد ۶ رقمی ارسال‌شده به {mfaPhone ? maskPhone(mfaPhone) : "شماره شما"} را وارد کنید.
+            </p>
+            <form onSubmit={submitOtp} style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 18 }}>
+              <input
+                type="text"
+                inputMode="numeric"
+                required
+                dir="ltr"
+                maxLength={6}
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                placeholder="------"
+                aria-label="کد تایید"
+                className="input"
+                style={{ ...inputStyle, letterSpacing: 6, textAlign: "center", fontSize: 20 }}
+              />
+              {err && <div role="alert" style={{ color: "#ff7676", fontSize: 13 }}>{err}</div>}
+              <button type="submit" className="btn btn-primary" disabled={busy || otpCode.length < 4}>
+                {busy ? "…" : "تایید"}
+              </button>
+            </form>
+            <div style={{ marginTop: 14, display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+              <button type="button" onClick={triggerRequestOtp} disabled={Date.now() < resendAt}
+                style={{ background: "transparent", color: "var(--accent-glow)", border: 0, cursor: "pointer" }}>
+                ارسال دوباره کد
+              </button>
+              <button type="button" onClick={backToCredentials}
+                style={{ background: "transparent", color: "var(--ink-soft)", border: 0, cursor: "pointer" }}>
+                بازگشت به صفحه ورود
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

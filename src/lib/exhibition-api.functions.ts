@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireMfaVerified } from "@/integrations/supabase/mfa-middleware";
 import { parseLatLngValue } from "@/lib/geo";
 
 const nullableText = z.string().trim().max(4000).nullable().optional();
@@ -44,7 +44,7 @@ const companyPatchSchema = z.object({
 }).passthrough();
 
 export const saveAdminCompany = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireMfaVerified])
   .inputValidator((input) => companyPatchSchema.parse(input))
   .handler(async ({ data, context }) => {
     const { data: isAdmin, error: roleError } = await context.supabase
@@ -70,7 +70,7 @@ export const saveAdminCompany = createServerFn({ method: "POST" })
   });
 
 export const listAdminCompanies = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireMfaVerified])
   .handler(async ({ context }) => {
     const { data: isAdmin, error: roleError } = await context.supabase
       .from("user_roles")
@@ -91,7 +91,7 @@ export const listAdminCompanies = createServerFn({ method: "GET" })
   });
 
 export const saveOwnedCompany = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireMfaVerified])
   .inputValidator((input) => z.object({
     company_id: z.string().trim().min(1).max(120),
     patch: companyPatchSchema.partial(),
