@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import logoSpin from "@/assets/logo-spin.png";
+import logoSpin from "@/assets/logo-spin.webp";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLogoPivot, DEFAULT_PIVOT, type LogoPivot } from "@/hooks/use-logo-pivot";
 import { useDeferredMount } from "@/hooks/use-deferred-mount";
@@ -447,6 +447,8 @@ export function Logo3D({
               src={logoSpin}
               alt=""
               draggable={false}
+              fetchPriority="high"
+              decoding="async"
               style={{
                 width: "100%",
                 height: "100%",

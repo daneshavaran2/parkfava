@@ -5,7 +5,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import logoSpin from "@/assets/logo-spin.png";
+import logoSpin from "@/assets/logo-spin.webp";
 
 import {
   Icon, HeroOrb, AICommandBar, QRCode,
