@@ -96,10 +96,10 @@ export function Nav({ view, query, setQuery, theme, toggleTheme }) {
     ...(isAdmin ? [
       { id: "admin", to: "/admin/parks", label: t("nav.admin_parks"), icon: "chip" },
       { id: "admin-exh", to: "/admin/exhibition", label: t("nav.admin_exhibition"), icon: "store" },
-      { id: "admin-users", to: "/admin/users", label: "کاربران", icon: "spark" },
+      { id: "admin-users", to: "/admin/users", label: t("nav.admin_users"), icon: "spark" },
       { id: "admin-about", to: "/admin/about", label: t("nav.admin_about"), icon: "spark" },
     ] : (session ? [
-      { id: "my-company", to: "/my-company", label: "شرکت من", icon: "store" },
+      { id: "my-company", to: "/my-company", label: t("nav.my_company"), icon: "store" },
     ] : [])),
   ];
   const active = view === "company" ? "exhibition" : view;
@@ -149,10 +149,10 @@ export function Nav({ view, query, setQuery, theme, toggleTheme }) {
           <button className="btn btn-ghost" style={{ padding: "6px 10px" }}
             onClick={async () => { const { supabase } = await import("@/integrations/supabase/client"); await supabase.auth.signOut(); navigate({ to: "/" }); }}
             title={user?.email ?? ""}>
-            خروج
+            {t("common.logout")}
           </button>
         ) : (
-          <Link to="/auth" className="btn btn-primary" style={{ padding: "6px 10px" }}>ورود</Link>
+          <Link to="/auth" className="btn btn-primary" style={{ padding: "6px 10px" }}>{t("common.login")}</Link>
         )}
         <button className="nav-toggle" onClick={() => setOpen((o) => !o)} aria-label={t("common.menu")}><Icon name={open ? "close" : "menu"} /></button>
       </div>

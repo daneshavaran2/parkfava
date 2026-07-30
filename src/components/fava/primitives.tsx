@@ -1,6 +1,7 @@
 // @ts-nocheck
 /* FAVA primitives ported from the original components.jsx (Babel-in-browser). */
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Logo3D } from "@/components/hero/Logo3D";
 
 /* ---------- utilities ---------- */
@@ -156,12 +157,13 @@ export function RobotFace({ size = 40, talking = false, eye = "#46e6ff" }) {
 
 /* ---------- AI command bar ---------- */
 export function AICommandBar({ onAsk }) {
+  const { t } = useTranslation();
   const [v, setV] = useState("");
   const sugg = [
-    { q: "هوش مصنوعی", l: "شرکت‌های هوش مصنوعی" },
-    { q: "مشهد", l: "فناوران مشهد" },
-    { q: "IoT", l: "محصولات اینترنت اشیا" },
-    { q: "فین‌تک", l: "فین‌تک" },
+    { q: "هوش مصنوعی", l: t("home.ai_sugg_ai") },
+    { q: "مشهد", l: t("home.ai_sugg_mashhad") },
+    { q: "IoT", l: t("home.ai_sugg_iot") },
+    { q: "فین‌تک", l: t("home.ai_sugg_fintech") },
   ];
   const fire = (q) => { if (q && q.trim()) onAsk(q.trim()); };
   return (
@@ -169,8 +171,8 @@ export function AICommandBar({ onAsk }) {
       <div className="ai-bar">
         <form className="ai-bar-inner" onSubmit={(e) => { e.preventDefault(); fire(v); }}>
           <span className="ai-spark"><RobotFace size={34} /></span>
-          <input value={v} onChange={(e) => setV(e.target.value)} placeholder="از دستیار هوشمند فاوا بپرسید… مثلاً «شرکت‌های هوش مصنوعی مشهد»" />
-          <button type="submit" className="ai-go"><Icon name="send" size={16} /> بپرس</button>
+          <input value={v} onChange={(e) => setV(e.target.value)} placeholder={t("home.ai_placeholder")} />
+          <button type="submit" className="ai-go"><Icon name="send" size={16} /> {t("home.ai_ask")}</button>
         </form>
       </div>
       <div className="ai-sugg">
