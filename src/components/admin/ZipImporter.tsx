@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import JSZip from "jszip";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -6,11 +7,10 @@ import {
   type AttachmentKind,
 } from "@/lib/attachments-api";
 import {
-  upsertExhibitionCompany,
-  upsertExhibitionProduct,
   uploadExhibitionAsset,
   type ExhibitionCompany,
 } from "@/lib/exhibition-api";
+import { saveAdminCompany, upsertExhibitionProduct } from "@/lib/exhibition-api.functions";
 import { supabase } from "@/integrations/supabase/client";
 
 const IMG_RE = /\.(png|jpe?g|webp|gif|svg)$/i;
@@ -34,6 +34,8 @@ export function ZipImporter({
   existingCompany?: ExhibitionCompany | null;
 }) {
   const qc = useQueryClient();
+  const saveAdminCompanyFn = useServerFn(saveAdminCompany);
+  const upsertExhibitionProductFn = useServerFn(upsertExhibitionProduct);
   const [busy, setBusy] = useState(false);
   const [log, setLog] = useState<LogLine[]>([]);
 
@@ -155,11 +157,15 @@ export function ZipImporter({
           for (const [field, aliases] of map) {
             const v = pick(obj, ...aliases);
             if (v !== undefined) {
-              patch[field] = v;
+              // headcount is a number column server-side — company.json may
+              // supply it as a string (e.g. "50"), which the protected
+              // server function now validates strictly instead of passing
+              // straight through to a raw upsert.
+              patch[field] = field === "headcount" && typeof v !== "number" ? Number(v) : v;
               counts.fields++;
             }
           }
-          await upsertExhibitionCompany(patch);
+          await saveAdminCompanyFn({ data: patch as any });
           push("ok", `اطلاعات شرکت به‌روزرسانی شد (${counts.fields} فیلد)`);
         } catch (e: any) {
           counts.errors++;
@@ -188,11 +194,13 @@ export function ZipImporter({
               /^logo\/.+\.(png|jpe?g|webp|svg|gif)$/i.test(path))
           ) {
             const stored = await uploadExhibitionAsset(ownerId, new File([blob], filename));
-            await upsertExhibitionCompany({
-              company_id: ownerId,
-              name: existingCompany?.name || companyJsonObj?.name || ownerId,
-              logo_url: stored,
-            } as any);
+            await saveAdminCompanyFn({
+              data: {
+                company_id: ownerId,
+                name: existingCompany?.name || companyJsonObj?.name || ownerId,
+                logo_url: stored,
+              } as any,
+            });
             await uploadAttachmentFromBlob({ ownerType, ownerId, kind: "logo", blob, filename, title: "لوگو" });
             counts.attachments++;
             push("ok", "لوگو بارگذاری شد");
@@ -309,14 +317,16 @@ export function ZipImporter({
               video_url = await uploadExhibitionAsset(ownerId, new File([blob], fn));
             }
 
-            await upsertExhibitionProduct({
-              company_id: ownerId,
-              name,
-              description,
-              link_url,
-              image_url,
-              video_url,
-            } as any);
+            await upsertExhibitionProductFn({
+              data: {
+                company_id: ownerId,
+                name,
+                description,
+                link_url,
+                image_url,
+                video_url,
+              } as any,
+            });
             counts.products++;
             push("ok", `محصول: ${name}${image_url ? " 🖼" : ""}${video_url ? " 🎬" : ""}`);
 
@@ -350,14 +360,16 @@ export function ZipImporter({
           const n = (p?.name || "").trim();
           if (!n || processed.has(n)) continue;
           try {
-            await upsertExhibitionProduct({
-              company_id: ownerId,
-              name: n,
-              description: p.description ?? p.desc ?? null,
-              link_url: p.url ?? p.link_url ?? p.website ?? null,
-              image_url: p.image_url ?? p.image ?? null,
-              video_url: p.video_url ?? p.video ?? null,
-            } as any);
+            await upsertExhibitionProductFn({
+              data: {
+                company_id: ownerId,
+                name: n,
+                description: p.description ?? p.desc ?? null,
+                link_url: p.url ?? p.link_url ?? p.website ?? null,
+                image_url: p.image_url ?? p.image ?? null,
+                video_url: p.video_url ?? p.video ?? null,
+              } as any,
+            });
             counts.products++;
             push("ok", `محصول (از company.json): ${n}`);
           } catch (e: any) {

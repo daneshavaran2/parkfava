@@ -140,24 +140,7 @@ export async function fetchExhibitionCompany(id: string) {
   };
 }
 
-// Still used by ZipImporter.tsx (admin-only bulk import tool). Every other
-// mutation path has been moved to MFA-gated server functions in
-// exhibition-api.functions.ts — see the security review notes there.
-export async function upsertExhibitionCompany(c: Partial<ExhibitionCompany> & { company_id: string; name: string }) {
-  return supabase.from("exhibition_companies").upsert(c as any, { onConflict: "company_id" });
-}
-
 /* ============ PRODUCTS ============ */
-
-// Still used by ZipImporter.tsx (admin-only bulk import tool) — see note above.
-export async function upsertExhibitionProduct(p: Partial<ExhibitionProduct> & { company_id: string; name: string }) {
-  const table = supabase.from("exhibition_products" as any);
-  if (p.id) {
-    const { id, ...rest } = p;
-    return table.update(rest as any).eq("id", id);
-  }
-  return table.insert(p as any);
-}
 
 export async function uploadExhibitionAsset(company_id: string, file: File) {
   const ext = file.name.split(".").pop() || "bin";
