@@ -19,6 +19,7 @@
 - [Architecture](#architecture)
 - [Data Model](#data-model)
 - [Security Model & RLS](#security-model--rls)
+- [Authentication & Company Onboarding](#authentication--company-onboarding)
 - [API Reference](#api-reference)
 - [Testing Strategy](#testing-strategy)
 - [Deployment](#deployment)
@@ -36,8 +37,11 @@ Frontend runs on **TanStack Start** (React 19, Vite 7, file‑based routing).
 Styling is **Tailwind CSS v4** via `@tailwindcss/vite`, with all tokens declared
 in `src/styles.css`. Data lives in **PostgreSQL** managed by Supabase; auth,
 storage, and the auto‑generated Data API (PostgREST) come from the same
-platform. Deployment target is **Cloudflare Workers** with `nodejs_compat`;
-edge functions are avoided for internal logic in favour of `createServerFn`.
+platform. Deployment target is **Liara, as a plain Node.js container**
+(Nitro's `node-server` preset — see [Deployment](#deployment) for why this
+differs from the Cloudflare-flavoured defaults in
+`@lovable.dev/vite-tanstack-config`); edge functions are avoided for
+internal logic in favour of `createServerFn`.
 
 We deliberately avoid several patterns:
 
@@ -74,7 +78,9 @@ re‑run it or clear it with `bun run reset:dev`.
 | Command                    | What it does                                                     |
 | -------------------------- | ---------------------------------------------------------------- |
 | `bun dev`                  | Vite dev server on port 8080                                     |
-| `bun run build`            | Production build for Cloudflare Workers                          |
+| `bun run build`            | Production build for Liara/Node (Nitro `node-server` preset)     |
+| `bun run build:cloudflare` | Production build for Cloudflare Workers instead                  |
+| `npm start`                | Run the built Node server (`node .output/server/index.mjs`)      |
 | `bun run build:dev`        | Build with development mode flags (used by CI smoke tests)       |
 | `bun run lint`             | ESLint over the whole tree                                       |
 | `bun run seed`             | Insert local demo data (parks, companies, products)              |
@@ -215,9 +221,8 @@ graph TB
     C4[bun run test:visual]
   end
 
-  subgraph Prod["Cloudflare edge"]
-    W[Worker bundle<br/>SSR + serverFn]
-    KV[(Assets on CDN)]
+  subgraph Prod["Liara (plain Node.js container)"]
+    W[Nitro node-server bundle<br/>SSR + serverFn]
   end
 
   subgraph Managed["Supabase project"]
@@ -227,12 +232,17 @@ graph TB
   end
 
   D1 -->|push| C1 --> C2 --> C3 --> C4
-  C4 -->|on green| W
+  C4 -->|manual: git pull + liara deploy| W
   W --> M1
   W --> M2
   W --> M3
   D2 --> M1
 ```
+
+Despite the Cloudflare-flavoured naming in `@lovable.dev/vite-tanstack-config`
+(the project's origin), production actually runs as a **plain Node.js
+process** on Liara — see [Deployment](#deployment) for why, and why that
+default lives in `vite.config.ts` rather than an env var.
 
 ### Route layout
 
@@ -247,9 +257,13 @@ src/routes/
 ├── company.$id.product.$pid.tsx — product detail (canonical share URL)
 ├── kahkeshan.tsx           — 3D park map (client-only vendor bundle)
 ├── parks.tsx               — public list of parks
-├── my-company.tsx          — owner dashboard (requires auth)
-├── register-company.tsx    — owner onboarding
+├── my-company.tsx          — owner dashboard (requires auth); fill in
+│                             company info and submit for admin review
+├── register-company.tsx    — static page: company sign-up is admin-only,
+│                             this just tells visitors to email the admin
 ├── admin.exhibition.tsx    — admin review console (approve / reject)
+├── admin.users.tsx         — grant admin role; assign a company to a user
+│                             (see Authentication & Company Onboarding)
 ├── admin.parks.tsx         — park CRUD + reorder
 ├── admin.kahkeshan.tsx     — park layout editor
 ├── admin.attachments.tsx   — attachment moderation
@@ -325,19 +339,24 @@ erDiagram
   exhibition_companies {
     text company_id PK
     text park_id FK
-    uuid owner_user_id FK
+    uuid owner_user_id FK "assigned by admin, see admin.users.tsx"
     text name
     text tagline
     text status "draft|pending|approved|rejected"
-    bool is_published
-    timestamptz created_at
+    bool is_active "public visibility gate, set true only on approve"
+    text rejection_note
+    timestamptz submitted_at
+    timestamptz reviewed_at
   }
   exhibition_products {
     uuid id PK
     text company_id FK
     text name
-    numeric price
-    text currency
+    text description
+    text image_url
+    text video_url
+    text catalog_url
+    text link_url
   }
   exhibition_images {
     uuid id PK
@@ -361,7 +380,7 @@ erDiagram
   user_roles {
     uuid id PK
     uuid user_id FK
-    text role "admin|moderator|user"
+    text role "admin|company_owner"
   }
   auth_users {
     uuid id PK
@@ -380,22 +399,29 @@ erDiagram
 
 ### Company workflow state machine
 
-`status` and `is_published` are independent on purpose: an admin can hide an
-approved company without losing its review trail.
+There is no public self-signup for companies — `/register-company` is a
+static page that tells visitors to email the admin team. An admin always
+creates the company row and assigns its owner first (`/admin/users`); only
+then can that user log in and fill in the profile. Full step-by-step in
+[Authentication & Company Onboarding](#authentication--company-onboarding).
+
+`status` and `is_active` are independent on purpose: an admin can hide an
+approved company (`is_active = false`) without losing its review trail
+(`status` stays `approved`).
 
 ```mermaid
 stateDiagram-v2
-  [*] --> draft: owner creates
-  draft --> pending: owner submits
+  [*] --> draft: admin creates row + assigns owner
+  draft --> pending: owner submits for review
   pending --> approved: admin approves
-  pending --> rejected: admin rejects (with reason)
-  rejected --> draft: owner edits + resubmits
-  approved --> pending: owner edits sensitive field
-  approved --> approved: is_published toggled by admin
+  pending --> rejected: admin rejects with a note
+  rejected --> pending: owner edits + resubmits
+  approved --> hidden: admin toggles is_active off
 
   note right of approved
     Public visibility requires
-    status = approved AND is_published = true
+    status = approved AND is_active = true
+    AND the parent park.is_active = true
   end note
 ```
 
@@ -407,7 +433,7 @@ stateDiagram-v2
 | `park_content`         | CMS blocks (about, contacts) per park                         | N..1 `parks`                                     |
 | `park_images`          | Gallery slots per park                                        | N..1 `parks`                                     |
 | `park_news`            | Announcements shown on the park detail                        | N..1 `parks`                                     |
-| `exhibition_companies` | Company profile with `status` + `is_published` workflow       | N..1 `parks`, N..1 `auth.users` (owner)          |
+| `exhibition_companies` | Company profile with `status` + `is_active` workflow          | N..1 `parks`, N..1 `auth.users` (owner)          |
 | `exhibition_products`  | Products under a company; canonical share URL                 | N..1 `exhibition_companies`                      |
 | `exhibition_images`    | Media slots per company                                       | N..1 `exhibition_companies`                      |
 | `company_attachments`  | Signed-URL files (brochures, certificates)                    | N..1 `exhibition_companies`                      |
@@ -421,7 +447,7 @@ The canonical rule enforced by RLS and the review console:
 ```text
 public visible(company) :=
   company.status = 'approved'
-  AND company.is_published = true
+  AND company.is_active = true
   AND EXISTS park WHERE park.park_id = company.park_id
                     AND park.is_active = true
 ```
@@ -461,7 +487,7 @@ provided predicate applies."
 | `park_content`         | SELECT      | SELECT                               | full                   |
 | `park_images`          | SELECT      | SELECT                               | full                   |
 | `park_news`            | SELECT      | SELECT                               | full                   |
-| `exhibition_companies` | SELECT (approved+published) | SELECT+UPDATE where `owner_user_id=auth.uid()`, INSERT with `owner_user_id=auth.uid()` | full including `status` transitions |
+| `exhibition_companies` | SELECT (approved+active, parent park active) | SELECT+UPDATE where `owner_user_id=auth.uid()` (cannot set `status`/`is_active`/`owner_user_id`) | full including `status` transitions, and assigning `owner_user_id` (`/admin/users`) |
 | `exhibition_products`  | SELECT (parent approved) | full where parent company owned by user | full |
 | `exhibition_images`    | SELECT (parent approved) | full on own company            | full                   |
 | `company_attachments`  | none        | full on own company                   | full                   |
@@ -598,6 +624,94 @@ explicitly.
 
 ---
 
+## Authentication & Company Onboarding
+
+### How users sign in
+
+`/auth` (`src/routes/auth.tsx`) is the only sign-in surface, shared by every
+role — there's no separate admin login page.
+
+- **Email + password**, via `supabase.auth.signUp` / `signInWithPassword`
+  directly against the Supabase project.
+- **Google**, via `lovable.auth.signInWithOAuth("google", …)`
+  (`src/integrations/lovable/index.ts`) — this goes through Lovable's managed
+  Cloud Auth broker (`@lovable.dev/cloud-auth-js`), not Supabase's own OAuth
+  config, and the resulting tokens are then handed to
+  `supabase.auth.setSession()`. If Google sign-in breaks, check Lovable Cloud
+  Auth status/config first, not Supabase's Auth → Providers screen.
+
+There is no separate "admin login" — a signed-in user's **capabilities**
+come entirely from rows in `public.user_roles`:
+
+| Role            | Grants                                                          | How it's granted |
+| --------------- | ---------------------------------------------------------------- | ----------------- |
+| `admin`         | Every `/admin/*` route; approve/reject companies; grant roles    | First signup is auto-admin (`handle_first_user_admin`); every other admin via SQL (see above) or the "تبدیل به ادمین" button on `/admin/users` (an existing admin promotes another user) |
+| `company_owner` | `/my-company`; edit only the one company they're assigned to     | An admin picks their company from a dropdown on `/admin/users` (`assignCompanyOwner`) — this also upserts the `company_owner` role automatically |
+| *(none)*        | Public pages only                                                 | Default for any signed-up user until an admin does one of the above |
+
+### Optional: SMS two-step verification
+
+A second factor (phone number + SMS code) can be required on every login,
+for every user, regardless of role — implemented in `src/lib/mfa.functions.ts`
+/ `src/integrations/supabase/mfa-middleware.ts`. It ships **off by default**
+so it doesn't affect anyone until deliberately turned on:
+
+1. Get an account + API key with a supported SMS panel (`kavenegar`,
+   `melipayamak`, or `ghasedak` — see `src/lib/sms/send-sms.server.ts`;
+   double-check the request shape against the panel's current docs before
+   relying on it, since it hasn't been exercised against a live account).
+2. Set `SMS_PROVIDER`, `SMS_API_KEY` (and `SMS_SENDER_LINE` if the panel
+   needs one) as app env vars (see [Environment Variables](#environment-variables)).
+3. Set `MFA_ENFORCED=true`.
+
+Once enforced, every login (password or Google) is followed by a phone
+step (first time) or a 6-digit SMS code (returning sessions) before the
+user can reach anything behind `requireMfaVerified` — currently every
+admin and company-owner server function. Phone/OTP state lives in the
+existing Supabase Auth `user_metadata` field (no schema migration needed).
+The MFA status check fails open (falls back to normal login) if it errors,
+by design — there's no direct Supabase dashboard/SQL access documented for
+this project, so a bug in this path must not be able to lock out the admin.
+
+### How a company gets onto the exhibition — step by step
+
+**There is no public "sign up your company" form.** `/register-company` is a
+static page that tells visitors to email the admin team — self-service
+company creation (`createOwnedCompany` in `src/lib/exhibition-api.ts`) exists
+in code but is intentionally not wired into any route.
+
+1. **Admin creates the company shell.** `/admin/exhibition` → "+ افزودن شرکت
+   جدید" → pick a `company_id` slug. This starts life as `status: 'draft'`,
+   `is_active: false` — invisible on the public site.
+2. **Admin assigns the owner.** `/admin/users` → find the user's row (they
+   must have already signed up once via `/auth`) → pick the company from the
+   dropdown in the "شرکت" column. This sets `owner_user_id` on the company
+   row and grants that user the `company_owner` role.
+3. **Owner fills in their profile.** The owner signs in → `/my-company` →
+   fills in identity, contact info, description, uploads a logo, adds
+   products, gallery images, catalog/video. They can save drafts repeatedly;
+   nothing is public yet. (Admins can also edit any company directly from
+   `/admin/exhibition`.)
+4. **Owner submits for review.** The "ارسال برای بررسی" button
+   (`submitCompanyForReview`) sets `status: 'pending'`. The owner cannot set
+   `status`, `is_active`, or `owner_user_id` themselves — those fields are
+   stripped from their update payload client-side (`updateOwnedCompany`) and
+   should also be rejected server-side by RLS if that stripping is ever
+   bypassed.
+5. **Admin reviews.** `/admin/exhibition`, filterable by status
+   (در انتظار / تاییدشده / پیش‌نویس / رد شده):
+   - **"تایید و انتشار"** (`approveCompany`) → `status: 'approved'`,
+     `is_active: true`. The company is now publicly visible (also requires
+     its parent park to have `is_active: true`).
+   - **"رد کردن…"** (`rejectCompany`) → `status: 'rejected'` with a required
+     reason (`rejection_note`), shown to the owner on `/my-company`. The
+     owner can edit and resubmit, which goes straight back to `pending`.
+   - An admin can later flip `is_active` off on an already-approved company
+     (e.g. the checkbox on `/admin/exhibition`) to hide it without losing
+     the approval/review trail.
+
+---
+
 ## API Reference
 
 The Data API is PostgREST. The functions in `src/lib/exhibition-api.ts` and
@@ -607,7 +721,7 @@ The Data API is PostgREST. The functions in `src/lib/exhibition-api.ts` and
 
 | Method | Path (PostgREST)                        | Auth      | Purpose                                | Common errors               |
 | ------ | --------------------------------------- | --------- | -------------------------------------- | --------------------------- |
-| GET    | `/exhibition_companies`                 | anon      | List approved & published companies    | none                        |
+| GET    | `/exhibition_companies`                 | anon      | List approved & active companies       | none                        |
 | GET    | `/exhibition_companies?company_id=eq.X` | anon      | Single company                         | 406 if not found            |
 | POST   | `/exhibition_companies`                 | user      | Create own draft (`owner_user_id` set) | 401, 42501 RLS violation     |
 | PATCH  | `/exhibition_companies?company_id=eq.X` | user/admin| Update fields (owner cannot approve)   | 42501, 400 on bad enum      |
@@ -678,31 +792,57 @@ flowchart LR
 
 ## Deployment
 
-Production runs on Cloudflare Workers with `nodejs_compat`. `bun run build`
-produces the Worker bundle; the platform picks it up automatically.
+Production runs on **Liara** as a plain Node.js container — **not**
+Cloudflare Workers, despite `@lovable.dev/vite-tanstack-config` defaulting
+Nitro to a `cloudflare-module` build. `vite.config.ts` pins the Nitro preset
+to `node-server` unconditionally (Liara's buildpack doesn't forward env vars
+to the build step, so gating this behind an env var silently fell back to
+the Cloudflare preset in practice — see the comment there). `npm run
+build:cloudflare` still exists if this project is ever actually pointed at
+Cloudflare.
 
-Migrations live under `supabase/migrations/*.sql` and are applied in filename
+There is **no automated deploy step**. `liara deploy` uploads from whatever
+is checked out in the *local* directory it's run from — merging a PR on
+GitHub does not, by itself, change what's live. Every release is:
+
+```
+git pull origin main
+liara deploy
+```
+
+run manually, from a clone that's up to date with `main`.
+
+Migrations live under `supabase/migrations/*.sql`, applied in filename
 order. Never edit an applied migration — write a new one that alters the
-previous state. Rollbacks are forward‑only: a bad migration is undone by a
-follow‑up migration, not by deleting the file.
+previous state. **These are not applied automatically either** — there is
+no CI step or script in this repo that runs them against the live project,
+and no Supabase dashboard/CLI access is set up for this project as of this
+writing. If a change here ever needs a new table or column, that gap needs
+to be closed first (e.g. get a Supabase personal access token + link the
+project via the `supabase` CLI, or dashboard access) — until then, prefer
+designs that reuse existing tables/columns (e.g. the SMS-2FA feature stores
+its state in the existing `auth.users.user_metadata` instead of a new
+table, specifically to avoid needing a migration at all).
 
-### Release flow
+### Release flow (as it actually works today)
 
 ```mermaid
 sequenceDiagram
   participant Dev
   participant GH as GitHub
   participant CI as Actions
-  participant CF as Cloudflare
+  participant Op as Operator (local machine)
+  participant Liara
   participant SB as Supabase
-  Dev->>GH: push feat/*
-  GH->>CI: trigger workflow
-  CI->>CI: lint + build + tests
-  CI-->>GH: status green
+  Dev->>GH: push feat/*, open PR
+  GH->>CI: trigger workflow (lint/build/tests)
+  CI-->>GH: status (best-effort; CI runner assignment has been flaky here)
   Dev->>GH: merge to main
-  GH->>CF: deploy Worker bundle
-  GH->>SB: apply new migrations (in order)
-  CF-->>Dev: preview + prod URL live
+  Note over GH,Op: nothing deploys automatically here
+  Op->>GH: git pull origin main
+  Op->>Op: liara deploy (uploads local working directory)
+  Op->>Liara: new Docker/Node build + restart
+  Liara-->>SB: connects at runtime via SUPABASE_* env vars
 ```
 
 ---
@@ -1150,8 +1290,9 @@ column the policy checks (usually `owner_user_id`). Set it explicitly to
 `auth.uid()` on the server side; don't rely on defaults.
 
 **Preview shows a blank company page** — the row was created with a hidden
-state (`draft` or `is_published=false`). The public policy filters it out.
-Add an owner‑scoped fetcher, or navigate to the admin console to inspect.
+state (`status` not yet `approved`, or `is_active=false`). The public
+policy filters it out. Add an owner‑scoped fetcher, or navigate to the
+admin console to inspect.
 
 **`Unauthorized` during `build:dev`** — a public route loader is calling a
 `requireSupabaseAuth` server function. Move the call into a component with
