@@ -5,23 +5,25 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth, useAssetUrl } from "@/lib/use-auth";
 import {
   fetchExhibitionCompany,
-  upsertExhibitionCompany,
-  deleteExhibitionCompany,
   uploadExhibitionAsset,
+  type ExhibitionCompany,
+  type ExhibitionProduct,
+} from "@/lib/exhibition-api";
+import {
+  listAdminCompanies,
+  saveAdminCompany,
+  deleteExhibitionCompanyAdmin,
+  reorderExhibitionCompaniesAdmin,
+  approveCompanyAdmin,
+  rejectCompanyAdmin,
   addExhibitionImage,
   deleteExhibitionImage,
   updateExhibitionImage,
-  reorderExhibitionCompanies,
   reorderExhibitionImages,
   upsertExhibitionProduct,
   deleteExhibitionProduct,
   reorderExhibitionProducts,
-  approveCompany,
-  rejectCompany,
-  type ExhibitionCompany,
-  type ExhibitionProduct,
-} from "@/lib/exhibition-api";
-import { listAdminCompanies, saveAdminCompany } from "@/lib/exhibition-api.functions";
+} from "@/lib/exhibition-api.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { AttachmentsManager } from "@/components/admin/AttachmentsManager";
 import { ZipImporter } from "@/components/admin/ZipImporter";
@@ -75,6 +77,8 @@ function AdminExhibitionPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const listAdminCompaniesFn = useServerFn(listAdminCompanies);
+  const saveAdminCompanyFn = useServerFn(saveAdminCompany);
+  const reorderExhibitionCompaniesAdminFn = useServerFn(reorderExhibitionCompaniesAdmin);
   const [selected, setSelected] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [newId, setNewId] = useState("");
@@ -122,7 +126,7 @@ function AdminExhibitionPage() {
   async function createCompany() {
     const id = newId.trim();
     if (!id) return;
-    await upsertExhibitionCompany({ company_id: id, name: id });
+    await saveAdminCompanyFn({ data: { company_id: id, name: id } as any });
     qc.invalidateQueries({ queryKey: ["admin-exh-companies"] });
     setSelected(id);
     setNewId("");
@@ -134,13 +138,13 @@ function AdminExhibitionPage() {
     const j = idx + dir;
     if (j < 0 || j >= next.length) return;
     [next[idx], next[j]] = [next[j], next[idx]];
-    await reorderExhibitionCompanies(next.map((c) => c.company_id));
+    await reorderExhibitionCompaniesAdminFn({ data: { ids: next.map((c) => c.company_id) } });
     qc.invalidateQueries({ queryKey: ["admin-exh-companies"] });
     qc.invalidateQueries({ queryKey: ["exh-public"] });
   }
 
   async function toggleActive(c: ExhibitionCompany) {
-    await upsertExhibitionCompany({ ...c, is_active: !c.is_active });
+    await saveAdminCompanyFn({ data: { ...c, is_active: !c.is_active } as any });
     qc.invalidateQueries({ queryKey: ["admin-exh-companies"] });
     qc.invalidateQueries({ queryKey: ["exh-public"] });
   }
@@ -252,6 +256,13 @@ function AdminExhibitionPage() {
 function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted: () => void }) {
   const qc = useQueryClient();
   const saveAdminCompanyFn = useServerFn(saveAdminCompany);
+  const deleteExhibitionCompanyAdminFn = useServerFn(deleteExhibitionCompanyAdmin);
+  const approveCompanyAdminFn = useServerFn(approveCompanyAdmin);
+  const rejectCompanyAdminFn = useServerFn(rejectCompanyAdmin);
+  const addExhibitionImageFn = useServerFn(addExhibitionImage);
+  const reorderExhibitionImagesFn = useServerFn(reorderExhibitionImages);
+  const deleteExhibitionImageFn = useServerFn(deleteExhibitionImage);
+  const updateExhibitionImageFn = useServerFn(updateExhibitionImage);
   const { data, isLoading } = useQuery({
     queryKey: ["admin-exh-company", companyId],
     queryFn: () => fetchExhibitionCompany(companyId),
@@ -324,7 +335,7 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
       const path = await uploadExhibitionAsset(companyId, file);
       const next = { ...form, [field]: path };
       setForm(next);
-      await upsertExhibitionCompany(next);
+      await saveAdminCompanyFn({ data: next as any });
       invalidate();
       setMsg("بارگذاری شد ✓");
     } catch (e: any) { setMsg("خطا: " + (e.message ?? e)); }
@@ -334,7 +345,7 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
   async function clearField(field: "video_url" | "catalog_url") {
     const next = { ...form, [field]: "" };
     setForm(next);
-    await upsertExhibitionCompany(next);
+    await saveAdminCompanyFn({ data: next as any });
     invalidate();
   }
 
@@ -343,7 +354,7 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
     setBusy(true);
     try {
       const path = await uploadExhibitionAsset(companyId, file);
-      await addExhibitionImage(companyId, path, null);
+      await addExhibitionImageFn({ data: { company_id: companyId, image_url: path } });
       invalidate();
     } catch (e: any) { setMsg("خطا در آپلود: " + (e.message ?? e)); }
     setBusy(false); e.target.value = "";
@@ -353,31 +364,33 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
     const imgs = [...(data?.images ?? [])];
     const j = idx + dir; if (j < 0 || j >= imgs.length) return;
     [imgs[idx], imgs[j]] = [imgs[j], imgs[idx]];
-    await reorderExhibitionImages(imgs.map((x) => x.id));
+    await reorderExhibitionImagesFn({ data: { ids: imgs.map((x) => x.id) } });
     invalidate();
   }
 
   async function removeCompany() {
     if (!confirm("حذف کامل این شرکت؟")) return;
-    await deleteExhibitionCompany(companyId);
+    await deleteExhibitionCompanyAdminFn({ data: { company_id: companyId } });
     invalidate();
     onDeleted();
   }
 
   async function doApprove() {
     setBusy(true); setMsg(null);
-    const { error } = await approveCompany(companyId);
-    if (error) setMsg("خطا: " + error.message);
-    else { setMsg("تایید و منتشر شد ✓"); setForm((f) => ({ ...f, status: "approved", is_active: true })); invalidate(); }
+    try {
+      await approveCompanyAdminFn({ data: { company_id: companyId } });
+      setMsg("تایید و منتشر شد ✓"); setForm((f) => ({ ...f, status: "approved", is_active: true })); invalidate();
+    } catch (e: any) { setMsg("خطا: " + (e?.message ?? e)); }
     setBusy(false);
   }
   async function doReject() {
     const note = prompt("دلیل رد (به صاحب شرکت نمایش داده می‌شود):", form.rejection_note ?? "");
     if (note === null) return;
     setBusy(true); setMsg(null);
-    const { error } = await rejectCompany(companyId, note);
-    if (error) setMsg("خطا: " + error.message);
-    else { setMsg("رد شد"); setForm((f) => ({ ...f, status: "rejected", rejection_note: note })); invalidate(); }
+    try {
+      await rejectCompanyAdminFn({ data: { company_id: companyId, note } });
+      setMsg("رد شد"); setForm((f) => ({ ...f, status: "rejected", rejection_note: note })); invalidate();
+    } catch (e: any) { setMsg("خطا: " + (e?.message ?? e)); }
     setBusy(false);
   }
 
@@ -584,10 +597,10 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10 }}>
           {data?.images.map((img, i) => (
             <GalleryItem key={img.id} url={img.image_url} caption={img.caption}
-              onCaption={async (v) => { await updateExhibitionImage(img.id, { caption: v }); invalidate(); }}
+              onCaption={async (v) => { await updateExhibitionImageFn({ data: { id: img.id, caption: v } }); invalidate(); }}
               onUp={() => moveImage(i, -1)}
               onDown={() => moveImage(i, 1)}
-              onDelete={async () => { await deleteExhibitionImage(img.id); invalidate(); }}
+              onDelete={async () => { await deleteExhibitionImageFn({ data: { id: img.id } }); invalidate(); }}
             />
           ))}
           {!data?.images.length && <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>هنوز عکسی اضافه نشده.</div>}
@@ -601,17 +614,19 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
 }
 
 function ProductsEditor({ companyId, products, onChange }: { companyId: string; products: ExhibitionProduct[]; onChange: () => void }) {
+  const upsertExhibitionProductFn = useServerFn(upsertExhibitionProduct);
+  const reorderExhibitionProductsFn = useServerFn(reorderExhibitionProducts);
   const [newName, setNewName] = useState("");
 
   async function add() {
     const name = newName.trim(); if (!name) return;
-    await upsertExhibitionProduct({ company_id: companyId, name, sort_order: products.length });
+    await upsertExhibitionProductFn({ data: { company_id: companyId, name, sort_order: products.length } });
     setNewName(""); onChange();
   }
   async function move(idx: number, dir: -1 | 1) {
     const arr = [...products]; const j = idx + dir; if (j < 0 || j >= arr.length) return;
     [arr[idx], arr[j]] = [arr[j], arr[idx]];
-    await reorderExhibitionProducts(arr.map((p) => p.id)); onChange();
+    await reorderExhibitionProductsFn({ data: { ids: arr.map((p) => p.id) } }); onChange();
   }
 
   return (
@@ -635,6 +650,8 @@ function ProductsEditor({ companyId, products, onChange }: { companyId: string; 
 
 function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionProduct; companyId: string; onChange: () => void; onUp: () => void; onDown: () => void }) {
   const qc = useQueryClient();
+  const upsertExhibitionProductFn = useServerFn(upsertExhibitionProduct);
+  const deleteExhibitionProductFn = useServerFn(deleteExhibitionProduct);
   const [form, setForm] = useState(p);
   const [busy, setBusy] = useState(false);
   useEffect(() => setForm(p), [p]);
@@ -656,7 +673,7 @@ function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionPro
 
   async function save() {
     setBusy(true);
-    await upsertExhibitionProduct(form);
+    await upsertExhibitionProductFn({ data: form as any });
     onChange(); setBusy(false);
   }
   async function upload(field: "image_url" | "video_url" | "catalog_url", file: File) {
@@ -664,7 +681,7 @@ function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionPro
     const path = await uploadExhibitionAsset(companyId, file);
     const next = { ...form, [field]: path };
     setForm(next);
-    await upsertExhibitionProduct(next);
+    await upsertExhibitionProductFn({ data: next as any });
     onChange(); setBusy(false);
   }
   async function addGalleryImage(file: File) {
@@ -688,7 +705,7 @@ function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionPro
   }
   async function remove() {
     if (!confirm("حذف این محصول؟")) return;
-    await deleteExhibitionProduct(p.id); onChange();
+    await deleteExhibitionProductFn({ data: { id: p.id } }); onChange();
   }
   const cat = useAssetUrl(form.catalog_url);
 

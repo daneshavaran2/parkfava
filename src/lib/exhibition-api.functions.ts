@@ -112,3 +112,212 @@ export const saveOwnedCompany = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// Shared by every mutation below: admins can edit any company, owners only
+// their own. These run through the RLS-scoped user client (context.supabase,
+// not the service-role client), so this check is defense-in-depth on top of
+// RLS, matching the pattern already used by saveAdminCompany/listAdminCompanies.
+async function assertCanEditCompany(context: { supabase: any; userId: string }, company_id: string) {
+  const [{ data: isAdmin, error: roleError }, { data: company, error: companyError }] = await Promise.all([
+    context.supabase.from("user_roles").select("role").eq("user_id", context.userId).eq("role", "admin").maybeSingle(),
+    context.supabase.from("exhibition_companies").select("owner_user_id").eq("company_id", company_id).maybeSingle(),
+  ]);
+  if (roleError) throw new Error(roleError.message);
+  if (companyError) throw new Error(companyError.message);
+  if (isAdmin) return;
+  if (company?.owner_user_id === context.userId) return;
+  throw new Error("Forbidden");
+}
+
+export const submitCompanyForReview = createServerFn({ method: "POST" })
+  .middleware([requireMfaVerified])
+  .inputValidator((i) => z.object({ company_id: z.string().trim().min(1).max(120) }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertCanEditCompany(context, data.company_id);
+    const { error } = await context.supabase
+      .from("exhibition_companies")
+      .update({ status: "pending", submitted_at: new Date().toISOString() } as any)
+      .eq("company_id", data.company_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const addExhibitionImage = createServerFn({ method: "POST" })
+  .middleware([requireMfaVerified])
+  .inputValidator((i) => z.object({
+    company_id: z.string().trim().min(1).max(120),
+    image_url: z.string().trim().min(1).max(1000),
+    caption: nullableText,
+  }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertCanEditCompany(context, data.company_id);
+    const { error } = await context.supabase
+      .from("exhibition_images")
+      .insert({ company_id: data.company_id, image_url: data.image_url, caption: data.caption ?? null, sort_order: 0 } as any);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteExhibitionImage = createServerFn({ method: "POST" })
+  .middleware([requireMfaVerified])
+  .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { data: img, error: imgErr } = await context.supabase
+      .from("exhibition_images").select("company_id").eq("id", data.id).maybeSingle();
+    if (imgErr) throw new Error(imgErr.message);
+    if (!img) throw new Error("یافت نشد");
+    await assertCanEditCompany(context, img.company_id);
+    const { error } = await context.supabase.from("exhibition_images").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+const productWriteSchema = z.object({
+  id: z.string().uuid().optional(),
+  company_id: z.string().trim().min(1).max(120),
+  name: z.string().trim().min(1).max(255),
+  description: nullableText,
+  image_url: nullableUrlText,
+  video_url: nullableUrlText,
+  catalog_url: nullableUrlText,
+  link_url: nullableUrlText,
+  sort_order: z.number().int().nullable().optional(),
+});
+
+export const upsertExhibitionProduct = createServerFn({ method: "POST" })
+  .middleware([requireMfaVerified])
+  .inputValidator((i) => productWriteSchema.parse(i))
+  .handler(async ({ data, context }) => {
+    await assertCanEditCompany(context, data.company_id);
+    const { id, ...rest } = data;
+    const table = context.supabase.from("exhibition_products" as any);
+    const { error } = id
+      ? await table.update(rest as any).eq("id", id)
+      : await table.insert(rest as any);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteExhibitionProduct = createServerFn({ method: "POST" })
+  .middleware([requireMfaVerified])
+  .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { data: prod, error: prodErr } = await context.supabase
+      .from("exhibition_products" as any).select("company_id").eq("id", data.id).maybeSingle();
+    if (prodErr) throw new Error(prodErr.message);
+    if (!prod) throw new Error("یافت نشد");
+    await assertCanEditCompany(context, (prod as any).company_id);
+    const { error } = await context.supabase.from("exhibition_products" as any).delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+async function assertIsAdmin(context: { supabase: any; userId: string }) {
+  const { data: isAdmin, error } = await context.supabase
+    .from("user_roles").select("role").eq("user_id", context.userId).eq("role", "admin").maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!isAdmin) throw new Error("Forbidden");
+}
+
+export const deleteExhibitionCompanyAdmin = createServerFn({ method: "POST" })
+  .middleware([requireMfaVerified])
+  .inputValidator((i) => z.object({ company_id: z.string().trim().min(1).max(120) }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertIsAdmin(context);
+    const { error } = await context.supabase.from("exhibition_companies").delete().eq("company_id", data.company_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const reorderExhibitionCompaniesAdmin = createServerFn({ method: "POST" })
+  .middleware([requireMfaVerified])
+  .inputValidator((i) => z.object({ ids: z.array(z.string().trim().min(1).max(120)) }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertIsAdmin(context);
+    const results = await Promise.all(
+      data.ids.map((id, i) => context.supabase.from("exhibition_companies").update({ sort_order: i }).eq("company_id", id)),
+    );
+    const err = results.find((r: any) => r.error);
+    if (err) throw new Error(err.error!.message);
+    return { ok: true };
+  });
+
+export const approveCompanyAdmin = createServerFn({ method: "POST" })
+  .middleware([requireMfaVerified])
+  .inputValidator((i) => z.object({ company_id: z.string().trim().min(1).max(120) }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertIsAdmin(context);
+    const { error } = await context.supabase
+      .from("exhibition_companies")
+      .update({
+        status: "approved", is_active: true,
+        reviewed_at: new Date().toISOString(), reviewed_by: context.userId, rejection_note: null,
+      } as any)
+      .eq("company_id", data.company_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const rejectCompanyAdmin = createServerFn({ method: "POST" })
+  .middleware([requireMfaVerified])
+  .inputValidator((i) => z.object({ company_id: z.string().trim().min(1).max(120), note: z.string().trim().max(2000) }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertIsAdmin(context);
+    const { error } = await context.supabase
+      .from("exhibition_companies")
+      .update({
+        status: "rejected",
+        reviewed_at: new Date().toISOString(), reviewed_by: context.userId, rejection_note: data.note,
+      } as any)
+      .eq("company_id", data.company_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const updateExhibitionImage = createServerFn({ method: "POST" })
+  .middleware([requireMfaVerified])
+  .inputValidator((i) => z.object({ id: z.string().uuid(), caption: nullableText }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { data: img, error: imgErr } = await context.supabase
+      .from("exhibition_images").select("company_id").eq("id", data.id).maybeSingle();
+    if (imgErr) throw new Error(imgErr.message);
+    if (!img) throw new Error("یافت نشد");
+    await assertCanEditCompany(context, img.company_id);
+    const { error } = await context.supabase.from("exhibition_images").update({ caption: data.caption ?? null }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const reorderExhibitionImages = createServerFn({ method: "POST" })
+  .middleware([requireMfaVerified])
+  .inputValidator((i) => z.object({ ids: z.array(z.string().uuid()).min(1) }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { data: img, error: imgErr } = await context.supabase
+      .from("exhibition_images").select("company_id").eq("id", data.ids[0]).maybeSingle();
+    if (imgErr) throw new Error(imgErr.message);
+    if (!img) throw new Error("یافت نشد");
+    await assertCanEditCompany(context, img.company_id);
+    const results = await Promise.all(
+      data.ids.map((id, i) => context.supabase.from("exhibition_images").update({ sort_order: i }).eq("id", id)),
+    );
+    const err = results.find((r: any) => r.error);
+    if (err) throw new Error(err.error!.message);
+    return { ok: true };
+  });
+
+export const reorderExhibitionProducts = createServerFn({ method: "POST" })
+  .middleware([requireMfaVerified])
+  .inputValidator((i) => z.object({ ids: z.array(z.string().uuid()).min(1) }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { data: prod, error: prodErr } = await context.supabase
+      .from("exhibition_products" as any).select("company_id").eq("id", data.ids[0]).maybeSingle();
+    if (prodErr) throw new Error(prodErr.message);
+    if (!prod) throw new Error("یافت نشد");
+    await assertCanEditCompany(context, (prod as any).company_id);
+    const results = await Promise.all(
+      data.ids.map((id, i) => context.supabase.from("exhibition_products" as any).update({ sort_order: i }).eq("id", id)),
+    );
+    const err = results.find((r: any) => r.error);
+    if (err) throw new Error(err.error!.message);
+    return { ok: true };
+  });

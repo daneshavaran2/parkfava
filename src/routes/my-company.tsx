@@ -7,17 +7,18 @@ import { useAssetUrl } from "@/lib/use-auth";
 import {
   fetchMyCompany,
   fetchExhibitionCompany,
-  updateOwnedCompany,
-  submitCompanyForReview,
   uploadExhibitionAsset,
+  type ExhibitionCompany,
+  type ExhibitionProduct,
+} from "@/lib/exhibition-api";
+import {
+  saveOwnedCompany,
+  submitCompanyForReview,
   addExhibitionImage,
   deleteExhibitionImage,
   upsertExhibitionProduct,
   deleteExhibitionProduct,
-  type ExhibitionCompany,
-  type ExhibitionProduct,
-} from "@/lib/exhibition-api";
-import { saveOwnedCompany } from "@/lib/exhibition-api.functions";
+} from "@/lib/exhibition-api.functions";
 import { parseLatLng } from "@/lib/geo";
 import { useTranslation } from "react-i18next";
 
@@ -72,6 +73,9 @@ function MyCompanyPage() {
 
 function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOut: () => void; qc: ReturnType<typeof useQueryClient> }) {
   const saveOwnedCompanyFn = useServerFn(saveOwnedCompany);
+  const submitCompanyForReviewFn = useServerFn(submitCompanyForReview);
+  const addExhibitionImageFn = useServerFn(addExhibitionImage);
+  const deleteExhibitionImageFn = useServerFn(deleteExhibitionImage);
   const { data, isLoading } = useQuery({
     queryKey: ["my-company", companyId],
     queryFn: () => fetchExhibitionCompany(companyId),
@@ -131,10 +135,13 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
 
   async function submitReview() {
     setBusy(true); setMsg(null);
-    await saveOwnedCompanyFn({ data: { company_id: companyId, patch: form as any } });
-    const { error } = await submitCompanyForReview(companyId);
-    if (error) setMsg("خطا: " + error.message);
-    else { setMsg("برای بررسی ارسال شد. منتظر تایید ادمین بمانید."); invalidate(); }
+    try {
+      await saveOwnedCompanyFn({ data: { company_id: companyId, patch: form as any } });
+      await submitCompanyForReviewFn({ data: { company_id: companyId } });
+      setMsg("برای بررسی ارسال شد. منتظر تایید ادمین بمانید."); invalidate();
+    } catch (e: any) {
+      setMsg("خطا: " + (e?.message ?? e));
+    }
     setBusy(false);
   }
 
@@ -144,7 +151,7 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
       const path = await uploadExhibitionAsset(companyId, file);
       const next = { ...form, logo_url: path };
       setForm(next);
-      await updateOwnedCompany(companyId, { logo_url: path });
+      await saveOwnedCompanyFn({ data: { company_id: companyId, patch: { logo_url: path } } });
       invalidate(); setMsg("لوگو بارگذاری شد ✓");
     } catch (e: any) { setMsg("خطا: " + (e.message ?? e)); }
     setBusy(false);
@@ -155,7 +162,7 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
     setBusy(true);
     try {
       const path = await uploadExhibitionAsset(companyId, file);
-      await addExhibitionImage(companyId, path, null);
+      await addExhibitionImageFn({ data: { company_id: companyId, image_url: path } });
       invalidate();
     } catch (e: any) { setMsg("خطا: " + (e.message ?? e)); }
     setBusy(false); e.target.value = "";
@@ -163,7 +170,7 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
 
   async function removeImage(id: string) {
     if (!confirm("حذف این تصویر؟")) return;
-    await deleteExhibitionImage(id); invalidate();
+    await deleteExhibitionImageFn({ data: { id } }); invalidate();
   }
 
   if (isLoading) return <div className="view"><div className="shell" style={{ padding: 40 }}>در حال بارگذاری…</div></div>;
@@ -322,6 +329,8 @@ function ProductsPanel({ companyId, products, canEdit, onChanged }: {
   canEdit: boolean;
   onChanged: () => void;
 }) {
+  const upsertExhibitionProductFn = useServerFn(upsertExhibitionProduct);
+  const deleteExhibitionProductFn = useServerFn(deleteExhibitionProduct);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
@@ -330,13 +339,13 @@ function ProductsPanel({ companyId, products, canEdit, onChanged }: {
   async function create() {
     if (!name.trim()) return;
     setBusy(true);
-    await upsertExhibitionProduct({ company_id: companyId, name: name.trim(), description: desc || null, sort_order: products.length });
+    await upsertExhibitionProductFn({ data: { company_id: companyId, name: name.trim(), description: desc || null, sort_order: products.length } });
     setBusy(false); setName(""); setDesc(""); setCreating(false); onChanged();
   }
 
   async function remove(id: string) {
     if (!confirm("حذف این محصول؟")) return;
-    await deleteExhibitionProduct(id); onChanged();
+    await deleteExhibitionProductFn({ data: { id } }); onChanged();
   }
 
   return (

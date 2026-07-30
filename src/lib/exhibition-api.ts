@@ -97,47 +97,6 @@ export async function createOwnedCompany(payload: {
   } as any);
 }
 
-export async function updateOwnedCompany(company_id: string, patch: Partial<ExhibitionCompany>) {
-  // owner cannot flip status to approved or set is_active=true (RLS enforces this too)
-  const { status, is_active, owner_user_id, reviewed_at, reviewed_by, ...safe } = patch as any;
-  return supabase.from("exhibition_companies").update(safe).eq("company_id", company_id);
-}
-
-export async function submitCompanyForReview(company_id: string) {
-  return supabase
-    .from("exhibition_companies")
-    .update({ status: "pending", submitted_at: new Date().toISOString() } as any)
-    .eq("company_id", company_id);
-}
-
-export async function approveCompany(company_id: string) {
-  const { data: userRes } = await supabase.auth.getUser();
-  return supabase
-    .from("exhibition_companies")
-    .update({
-      status: "approved",
-      is_active: true,
-      reviewed_at: new Date().toISOString(),
-      reviewed_by: userRes.user?.id ?? null,
-      rejection_note: null,
-    } as any)
-    .eq("company_id", company_id);
-}
-
-export async function rejectCompany(company_id: string, note: string) {
-  const { data: userRes } = await supabase.auth.getUser();
-  return supabase
-    .from("exhibition_companies")
-    .update({
-      status: "rejected",
-      reviewed_at: new Date().toISOString(),
-      reviewed_by: userRes.user?.id ?? null,
-      rejection_note: note,
-    } as any)
-    .eq("company_id", company_id);
-}
-
-
 export async function fetchExhibitionCompanies() {
   const { data } = await supabase
     .from("exhibition_companies")
@@ -181,42 +140,16 @@ export async function fetchExhibitionCompany(id: string) {
   };
 }
 
+// Still used by ZipImporter.tsx (admin-only bulk import tool). Every other
+// mutation path has been moved to MFA-gated server functions in
+// exhibition-api.functions.ts — see the security review notes there.
 export async function upsertExhibitionCompany(c: Partial<ExhibitionCompany> & { company_id: string; name: string }) {
   return supabase.from("exhibition_companies").upsert(c as any, { onConflict: "company_id" });
 }
 
-export async function deleteExhibitionCompany(company_id: string) {
-  return supabase.from("exhibition_companies").delete().eq("company_id", company_id);
-}
-
-export async function addExhibitionImage(company_id: string, image_url: string, caption: string | null = null) {
-  return supabase.from("exhibition_images").insert({ company_id, image_url, caption, sort_order: 0 });
-}
-
-export async function updateExhibitionImage(id: string, patch: Partial<Pick<ExhibitionImage, "caption" | "sort_order">>) {
-  return supabase.from("exhibition_images").update(patch).eq("id", id);
-}
-
-export async function deleteExhibitionImage(id: string) {
-  return supabase.from("exhibition_images").delete().eq("id", id);
-}
-
-export async function reorderExhibitionCompanies(ids: string[]) {
-  await Promise.all(
-    ids.map((id, i) =>
-      supabase.from("exhibition_companies").update({ sort_order: i }).eq("company_id", id),
-    ),
-  );
-}
-
-export async function reorderExhibitionImages(ids: string[]) {
-  await Promise.all(
-    ids.map((id, i) => supabase.from("exhibition_images").update({ sort_order: i }).eq("id", id)),
-  );
-}
-
 /* ============ PRODUCTS ============ */
 
+// Still used by ZipImporter.tsx (admin-only bulk import tool) — see note above.
 export async function upsertExhibitionProduct(p: Partial<ExhibitionProduct> & { company_id: string; name: string }) {
   const table = supabase.from("exhibition_products" as any);
   if (p.id) {
@@ -224,18 +157,6 @@ export async function upsertExhibitionProduct(p: Partial<ExhibitionProduct> & { 
     return table.update(rest as any).eq("id", id);
   }
   return table.insert(p as any);
-}
-
-export async function deleteExhibitionProduct(id: string) {
-  return supabase.from("exhibition_products" as any).delete().eq("id", id);
-}
-
-export async function reorderExhibitionProducts(ids: string[]) {
-  await Promise.all(
-    ids.map((id, i) =>
-      supabase.from("exhibition_products" as any).update({ sort_order: i }).eq("id", id),
-    ),
-  );
 }
 
 export async function uploadExhibitionAsset(company_id: string, file: File) {
