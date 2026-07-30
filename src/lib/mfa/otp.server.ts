@@ -8,6 +8,13 @@ export const OTP_TTL_MS = 5 * 60 * 1000;
 export const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
 export const OTP_MAX_ATTEMPTS = 5;
 export const MFA_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+// A phone number can be typed by anyone (its ownership is only proven once
+// the OTP is actually verified) — without a hard daily cap, a signed-up
+// account could be used to repeatedly SMS an arbitrary third-party number
+// (once every OTP_RESEND_COOLDOWN_MS, forever) purely for harassment or to
+// burn the SMS panel's budget. This caps real sends regardless of cooldown.
+export const OTP_MAX_SENDS_PER_WINDOW = 5;
+export const OTP_SEND_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export function generateOtpCode(): string {
   return String(randomInt(0, 1_000_000)).padStart(OTP_LENGTH, "0");

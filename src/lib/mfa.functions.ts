@@ -49,10 +49,25 @@ export const requestOtp = createServerFn({ method: "POST" })
     const phone = meta.phone as string | undefined;
     if (!phone) throw new Error("ابتدا شماره موبایل را ثبت کنید");
 
-    const { OTP_RESEND_COOLDOWN_MS, OTP_TTL_MS, generateOtpCode, hashOtpCode } = await import("@/lib/mfa/otp.server");
+    const {
+      OTP_RESEND_COOLDOWN_MS, OTP_TTL_MS, OTP_MAX_SENDS_PER_WINDOW, OTP_SEND_WINDOW_MS,
+      generateOtpCode, hashOtpCode,
+    } = await import("@/lib/mfa/otp.server");
     const lastSent = meta.otp_last_sent_at ? new Date(meta.otp_last_sent_at).getTime() : 0;
     if (Date.now() - lastSent < OTP_RESEND_COOLDOWN_MS) {
       throw new Error("لطفاً کمی صبر کنید و دوباره تلاش کنید");
+    }
+
+    // Per-account cap on real SMS sends, independent of which phone number is
+    // targeted — a phone number's ownership is only proven once the OTP is
+    // verified, so without this an account could be used to repeatedly text
+    // an arbitrary third-party number (or hop between numbers) purely to
+    // harass someone or burn the SMS panel's budget.
+    const windowStart = meta.otp_send_window_start ? new Date(meta.otp_send_window_start).getTime() : 0;
+    const windowActive = Date.now() - windowStart < OTP_SEND_WINDOW_MS;
+    const sendsInWindow = windowActive ? (meta.otp_send_count ?? 0) : 0;
+    if (sendsInWindow >= OTP_MAX_SENDS_PER_WINDOW) {
+      throw new Error("تعداد درخواست کد پیامکی امروز شما به سقف مجاز رسیده است، فردا دوباره تلاش کنید");
     }
 
     const code = generateOtpCode();
@@ -66,6 +81,8 @@ export const requestOtp = createServerFn({ method: "POST" })
         otp_expires_at: new Date(Date.now() + OTP_TTL_MS).toISOString(),
         otp_attempts: 0,
         otp_last_sent_at: new Date().toISOString(),
+        otp_send_window_start: windowActive ? meta.otp_send_window_start : new Date().toISOString(),
+        otp_send_count: sendsInWindow + 1,
       },
     });
     if (error) throw new Error(error.message);
