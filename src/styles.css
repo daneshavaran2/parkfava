@@ -102,7 +102,7 @@ body[data-accent='calm'] { --panel: rgba(16, 22, 38, 0.82); }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body { height: 100%; }
+html, body { height: 100%; overflow-x: hidden; }
 body {
   font-family: var(--font);
   background: var(--bg);
@@ -140,7 +140,7 @@ h1, h2, h3, h4, h5, .h1, .h2 { font-family: var(--font-display); letter-spacing:
 
 /* numbers always tabular & LTR-aligned within RTL */
 .num { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
-.mono { font-family: var(--mono); letter-spacing: 0.02em; }
+.mono { font-family: var(--mono); letter-spacing: 0; }
 
 /* ===================== NAV ===================== */
 .nav {
@@ -221,7 +221,10 @@ h1, h2, h3, h4, h5, .h1, .h2 { font-family: var(--font-display); letter-spacing:
 }
 
 .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: calc(var(--gap) * 1.4); flex-wrap: wrap; }
-.eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; color: var(--accent-glow); text-transform: uppercase; }
+/* letter-spacing kept at 0 — --mono is a Persian webfont (Shabnam), and
+   spacing tuned for a Latin monospace font breaks joined-letter shaping
+   in Perso-Arabic script, making the text look visibly mangled. */
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px; letter-spacing: 0; color: var(--accent-glow); text-transform: uppercase; }
 .eyebrow::before { content: ''; width: 22px; height: 1px; background: var(--accent); }
 .h1 { font-size: clamp(30px, 5vw, 52px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
 .h2 { font-size: clamp(24px, 3.4vw, 34px); font-weight: 800; letter-spacing: -0.01em; }
@@ -239,6 +242,13 @@ h1, h2, h3, h4, h5, .h1, .h2 { font-family: var(--font-display); letter-spacing:
 .home-view { min-height: calc(100vh - 200px); }
 .home-view .hero { padding-bottom: 80px; }
 .hero-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 46px; align-items: center; }
+/* Grid items default to min-width:auto — the intrinsic (unshrinkable)
+   content size of everything inside, including nowrap chip labels in
+   .ai-sugg — so this column refused to shrink below ~380px even inside a
+   320px-wide grid on mobile, pushing part of the page (including the
+   header, since it's positioned relative to the resulting oversized
+   document) off-screen. min-width:0 lets it actually respect the track. */
+.hero-grid > * { min-width: 0; }
 .hero h1 { margin: 18px 0 18px; }
 .hero h1 .grad {
   background: linear-gradient(110deg, var(--c-red), var(--c-gold) 32%, var(--c-green) 64%, var(--c-blue));
@@ -521,7 +531,7 @@ body[data-theme='light'] .stat-bar { background: var(--panel); backdrop-filter: 
 }
 @keyframes parkDetailIn { from { opacity: .3; transform: translateY(8px); } }
 .park-detail::before { content: ''; position: absolute; inset-inline-start: 0; top: 0; bottom: 0; width: 4px; background: var(--cc); }
-.park-detail-prov { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: color-mix(in oklab, var(--cc) 60%, var(--ink)); }
+.park-detail-prov { font-family: var(--mono); font-size: 12px; letter-spacing: 0; color: color-mix(in oklab, var(--cc) 60%, var(--ink)); }
 .park-detail-name { font-size: 21px; font-weight: 800; margin-top: 4px; line-height: 1.25; }
 .park-detail-city { display: flex; align-items: center; gap: 6px; margin-top: 7px; font-size: 13.5px; color: var(--ink-soft); }
 .park-detail-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0; }
@@ -530,7 +540,7 @@ body[data-theme='light'] .stat-bar { background: var(--panel); backdrop-filter: 
 .park-detail-stats span { font-size: 11px; color: var(--ink-mute); margin-top: 2px; display: block; }
 .park-detail-btn { width: 100%; justify-content: center; background: var(--cc); border-color: transparent; color: #fff; box-shadow: 0 10px 24px -10px var(--cc); }
 .park-detail-btn:hover { filter: brightness(1.06); }
-.park-list-label { font-size: 11.5px; letter-spacing: .08em; color: var(--ink-mute); padding-inline-start: 4px; }
+.park-list-label { font-size: 11.5px; letter-spacing: 0; color: var(--ink-mute); padding-inline-start: 4px; }
 .park-side .park-list { max-height: 340px; }
 
 /* exhibition: park filter banner */
@@ -942,7 +952,7 @@ body[data-theme='light'] .btn-primary {
 }
 .ai-go:hover { filter: brightness(1.1); }
 .ai-sugg { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
-.ai-sugg-lbl { font-size: 11px; font-weight: 700; color: var(--accent-glow); border: 1px solid color-mix(in oklab, var(--accent) 40%, transparent); border-radius: 6px; padding: 3px 7px; letter-spacing: .1em; }
+.ai-sugg-lbl { font-size: 11px; font-weight: 700; color: var(--accent-glow); border: 1px solid color-mix(in oklab, var(--accent) 40%, transparent); border-radius: 6px; padding: 3px 7px; letter-spacing: 0; }
 .ai-chip { font-family: var(--font); font-size: 13px; font-weight: 600; color: var(--ink-soft); cursor: pointer; background: rgba(124,152,200,0.08); border: 1px solid var(--stroke); border-radius: 999px; padding: 7px 13px; transition: color .16s, border-color .16s; }
 .ai-chip:hover { color: var(--ink); border-color: var(--accent); }
 
@@ -1561,8 +1571,8 @@ body[data-theme='light'] .k-tile-ico { background: rgba(255,255,255,0.8); border
 .lead { font-weight: 400; line-height: 1.75; color: var(--ink-soft); }
 body[data-theme='light'] { --ink: #122039; --ink-soft: #51607d; --ink-mute: #93a0b8; }
 
-/* eyebrow — softer */
-.eyebrow { letter-spacing: 0.16em; font-size: 11.5px; opacity: 0.9; }
+/* eyebrow — softer (letter-spacing stays 0, see the base .eyebrow rule) */
+.eyebrow { letter-spacing: 0; font-size: 11.5px; opacity: 0.9; }
 
 /* more air around hero & sections */
 .hero { padding: 64px 0 34px; }
