@@ -195,6 +195,23 @@ h1, h2, h3, h4, h5, .h1, .h2 { font-family: var(--font-display); letter-spacing:
 
 .nav-toggle { display: none; }
 
+/* Admin nav (9 links) never fits in a single row at any realistic screen
+   width — always collapse to the hamburger menu, at every breakpoint,
+   rather than trying to cram it in. Unconditional (no media query) so it
+   overrides the width-based rules below regardless of viewport. */
+.nav-inner--many-links .nav-links,
+.nav-inner--many-links .nav-search { display: none; }
+.nav-inner--many-links .nav-links.open {
+  display: flex; flex-direction: column; align-items: stretch;
+  position: absolute; top: 100%; inset-inline: 12px; margin-top: 8px;
+  background: var(--panel-solid); border: 1px solid var(--stroke); border-radius: 16px; padding: 10px;
+  box-shadow: 0 20px 50px -20px #000;
+}
+.nav-inner--many-links .nav-toggle {
+  display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px;
+  background: rgba(124,152,200,0.08); border: 1px solid var(--stroke); cursor: pointer; color: var(--ink);
+}
+
 /* ===================== BUTTONS ===================== */
 .btn {
   display: inline-flex; align-items: center; gap: 9px;
