@@ -149,7 +149,7 @@ h1, h2, h3, h4, h5, .h1, .h2 { font-family: var(--font-display); letter-spacing:
   max-width: var(--maxw); margin: 0 auto; padding: 12px 24px;
   display: flex; align-items: center; gap: 18px;
 }
-.brand { display: flex; align-items: center; gap: 12px; cursor: pointer; min-width: 0; flex-shrink: 1; }
+.brand { display: flex; align-items: center; gap: 12px; cursor: pointer; flex-shrink: 0; }
 .brand .word { display: flex; flex-direction: column; line-height: 1.05; min-width: 0; }
 .brand .word b { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .nav-logo-img {
@@ -182,8 +182,8 @@ h1, h2, h3, h4, h5, .h1, .h2 { font-family: var(--font-display); letter-spacing:
 .nav-search {
   display: flex; align-items: center; gap: 8px;
   background: rgba(124,152,200,0.08); border: 1px solid var(--stroke);
-  border-radius: 999px; padding: 8px 14px; min-width: 210px;
-  color: var(--ink-mute); transition: border-color .18s;
+  border-radius: 999px; padding: 8px 14px; width: 210px; min-width: 90px;
+  flex-shrink: 1; color: var(--ink-mute); transition: border-color .18s;
 }
 .nav-search:focus-within { border-color: var(--accent); }
 .nav-search input { background: none; border: none; outline: none; color: var(--ink); font-family: var(--font); font-size: 14px; width: 100%; }
@@ -621,10 +621,23 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
   .map-layout { grid-template-columns: 1fr; }
   .profile-grid { grid-template-columns: 1fr; }
 }
-@media (max-width: 720px) {
-  .brand .word b { font-size: 13px; }
-  .nav-links, .nav-search { display: none; }
+/* Between the hamburger breakpoint and a genuinely roomy desktop
+   (--maxw, the point past which .nav-inner stops growing with the
+   viewport), the full row is tight — trim spacing rather than overflow. */
+@media (min-width: 1280px) and (max-width: 1450px) {
   .nav-inner { gap: 10px; }
+  .nav-links { gap: 2px; }
+  .nav-link { padding: 8px 10px; }
+  .nav-search { min-width: 60px; }
+}
+
+/* Nav links + search collapse into the hamburger menu well before that —
+   the full row (brand + 5 links + search + language/theme/login) needs
+   close to 1280px to actually fit even at its most compact; anything
+   narrower (phones in landscape, ~700-930px, tablets, and small laptops)
+   used to cram it in anyway and crush the brand text to zero width. */
+@media (max-width: 1279px) {
+  .nav-links, .nav-search { display: none; }
   .nav-links.open {
     display: flex; flex-direction: column; align-items: stretch;
     position: absolute; top: 100%; inset-inline: 12px; margin-top: 8px;
@@ -632,6 +645,11 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
     box-shadow: 0 20px 50px -20px #000;
   }
   .nav-toggle { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: rgba(124,152,200,0.08); border: 1px solid var(--stroke); cursor: pointer; color: var(--ink); }
+}
+
+@media (max-width: 720px) {
+  .brand .word b { font-size: 13px; }
+  .nav-inner { gap: 10px; }
 
   /* Tighten the home hero so it comes much closer to fitting a phone
      screen without scrolling — full elimination isn't realistic on the
