@@ -87,7 +87,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "preload", as: "font", type: "font/woff2", crossOrigin: "anonymous",
         href: "https://cdn.jsdelivr.net/gh/rastikerdar/shabnam-font@v5.0.1/dist/Shabnam-Bold.woff2",
       },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" },
     ],
   }),
   shellComponent: RootShell,
