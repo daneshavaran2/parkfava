@@ -86,7 +86,11 @@
   --maxw: 1280px;
   --font: 'Shabnam', 'Shabnam Fallback', Tahoma, 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Shabnam', 'Shabnam Fallback', Tahoma, 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
-  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  /* Was 'JetBrains Mono' — Latin-only, so every Persian label using --mono
+     (eyebrows, city/category tags, product badges, etc.) silently fell back
+     to a different, unstyled system font, creating a visible mismatch next
+     to the rest of the site. Unified onto the same webfont everywhere. */
+  --mono: 'Shabnam', 'Shabnam Fallback', Tahoma, 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
   --mx: 0; --my: 0;
 }
 
