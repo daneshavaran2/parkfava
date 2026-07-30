@@ -14,7 +14,6 @@ import { Route as PerfRouteImport } from './routes/perf'
 import { Route as ParksRouteImport } from './routes/parks'
 import { Route as MyCompanyRouteImport } from './routes/my-company'
 import { Route as McpRouteImport } from './routes/mcp'
-import { Route as HeroRouteImport } from './routes/hero'
 import { Route as ExhibitionRouteImport } from './routes/exhibition'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -59,11 +58,6 @@ const MyCompanyRoute = MyCompanyRouteImport.update({
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HeroRoute = HeroRouteImport.update({
-  id: '/hero',
-  path: '/hero',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExhibitionRoute = ExhibitionRouteImport.update({
@@ -176,7 +170,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/exhibition': typeof ExhibitionRoute
-  '/hero': typeof HeroRoute
   '/mcp': typeof McpRoute
   '/my-company': typeof MyCompanyRoute
   '/parks': typeof ParksRoute
@@ -204,7 +197,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/exhibition': typeof ExhibitionRoute
-  '/hero': typeof HeroRoute
   '/mcp': typeof McpRoute
   '/my-company': typeof MyCompanyRoute
   '/parks': typeof ParksRoute
@@ -233,7 +225,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/exhibition': typeof ExhibitionRoute
-  '/hero': typeof HeroRoute
   '/mcp': typeof McpRoute
   '/my-company': typeof MyCompanyRoute
   '/parks': typeof ParksRoute
@@ -263,7 +254,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categories'
     | '/exhibition'
-    | '/hero'
     | '/mcp'
     | '/my-company'
     | '/parks'
@@ -291,7 +281,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categories'
     | '/exhibition'
-    | '/hero'
     | '/mcp'
     | '/my-company'
     | '/parks'
@@ -319,7 +308,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categories'
     | '/exhibition'
-    | '/hero'
     | '/mcp'
     | '/my-company'
     | '/parks'
@@ -348,7 +336,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CategoriesRoute: typeof CategoriesRoute
   ExhibitionRoute: typeof ExhibitionRoute
-  HeroRoute: typeof HeroRoute
   McpRoute: typeof McpRoute
   MyCompanyRoute: typeof MyCompanyRoute
   ParksRoute: typeof ParksRoute
@@ -406,13 +393,6 @@ declare module '@tanstack/react-router' {
       path: '/mcp'
       fullPath: '/mcp'
       preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hero': {
-      id: '/hero'
-      path: '/hero'
-      fullPath: '/hero'
-      preLoaderRoute: typeof HeroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/exhibition': {
@@ -564,7 +544,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CategoriesRoute: CategoriesRoute,
   ExhibitionRoute: ExhibitionRoute,
-  HeroRoute: HeroRoute,
   McpRoute: McpRoute,
   MyCompanyRoute: MyCompanyRoute,
   ParksRoute: ParksRoute,
