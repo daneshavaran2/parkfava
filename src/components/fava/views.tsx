@@ -103,9 +103,14 @@ export function Nav({ view, query, setQuery, theme, toggleTheme }) {
     ] : [])),
   ];
   const active = view === "company" ? "exhibition" : view;
+  // Admins get 4 extra links (9 total) — that never fits in a single row at
+  // any realistic screen width (measured ~2000px needed), so always collapse
+  // to the hamburger menu instead of trying to cram it in. Regular/owner nav
+  // (5-6 links) still uses the width-based breakpoints in styles.css.
+  const manyLinks = links.length > 6;
   return (
     <nav className="nav">
-      <div className="nav-inner">
+      <div className={"nav-inner" + (manyLinks ? " nav-inner--many-links" : "")}>
         <Link to="/" className="brand" style={{ textDecoration: "none", color: "inherit" }}>
           <img
             src={logoSpin}
