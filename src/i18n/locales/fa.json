@@ -57,6 +57,24 @@
     "park_filter_prefix": "نمایش شرکت‌های مستقر در",
     "empty": "موردی یافت نشد."
   },
+  "park": {
+    "companies_stat": "شرکت",
+    "jobs_stat": "شغل",
+    "area_stat": "هکتار",
+    "about_park": "درباره پارک",
+    "gallery": "گالری",
+    "news_events": "اخبار و رویدادها",
+    "resident_companies": "شرکت‌های مستقر ({{count}})",
+    "all_park_companies": "همه شرکت‌های پارک",
+    "other_parks": "سایر پارک‌ها"
+  },
+  "categories": {
+    "eyebrow": "شاخه‌های فناوری",
+    "title": "شاخه‌ها و حوزه‌های فناوری",
+    "lead": "شرکت‌ها بر اساس حوزه تخصصی در شاخه‌های زیر دسته‌بندی می‌شوند.",
+    "active_companies": "شرکت فعال",
+    "in_exhibition": "{{count}} در نمایشگاه"
+  },
   "company": {
     "full_time": "تمام‌وقت",
     "part_time": "پاره‌وقت",

@@ -1162,6 +1162,7 @@ export function ParksMap({ selectedId }) {
 }
 
 function ParkDashboard({ park, PARKS, parkCompanies, onSelect, sel, navigate }) {
+  const { t } = useTranslation();
   const { data } = useQuery({
     queryKey: ["park-public", park?.id],
     queryFn: () => fetchParkContent(park.id),
@@ -1184,21 +1185,21 @@ function ParkDashboard({ park, PARKS, parkCompanies, onSelect, sel, navigate }) 
       </div>
 
       <div className="park-detail-stats">
-        <div><b className="num">{toFa(park.companies)}</b><span>شرکت</span></div>
-        <div><b className="num">{faNum(park.jobs)}</b><span>شغل</span></div>
-        <div><b className="num">{toFa(park.area)}</b><span>هکتار</span></div>
+        <div><b className="num">{toFa(park.companies)}</b><span>{t("park.companies_stat")}</span></div>
+        <div><b className="num">{faNum(park.jobs)}</b><span>{t("park.jobs_stat")}</span></div>
+        <div><b className="num">{toFa(park.area)}</b><span>{t("park.area_stat")}</span></div>
       </div>
 
       {data?.content?.description && (
         <div className="pd-section">
-          <div className="pd-section-title">درباره پارک</div>
+          <div className="pd-section-title">{t("park.about_park")}</div>
           <p className="pd-desc">{data.content.description}</p>
         </div>
       )}
 
       {data?.images && data.images.length > 0 && (
         <div className="pd-section">
-          <div className="pd-section-title">گالری</div>
+          <div className="pd-section-title">{t("park.gallery")}</div>
           <div className="pd-gallery">
             {data.images.map((img) => <PdImage key={img.id} path={img.image_url} caption={img.caption} />)}
           </div>
@@ -1207,7 +1208,7 @@ function ParkDashboard({ park, PARKS, parkCompanies, onSelect, sel, navigate }) 
 
       {data?.news && data.news.length > 0 && (
         <div className="pd-section">
-          <div className="pd-section-title">اخبار و رویدادها</div>
+          <div className="pd-section-title">{t("park.news_events")}</div>
           <div className="pd-news">
             {data.news.slice(0, 5).map((n) => (
               <div key={n.id} className="pd-news-item">
@@ -1221,7 +1222,7 @@ function ParkDashboard({ park, PARKS, parkCompanies, onSelect, sel, navigate }) 
 
       {parkCompanies.length > 0 && (
         <div className="pd-section">
-          <div className="pd-section-title">شرکت‌های مستقر ({toFa(parkCompanies.length)})</div>
+          <div className="pd-section-title">{t("park.resident_companies", { count: parkCompanies.length })}</div>
           <div className="pd-companies">
             {parkCompanies.slice(0, 6).map((c) => (
               <Link key={c.id} to="/company/$id" params={{ id: c.id }} className="pd-company"
@@ -1236,13 +1237,13 @@ function ParkDashboard({ park, PARKS, parkCompanies, onSelect, sel, navigate }) 
           </div>
           <button className="btn btn-primary" style={{ width: "100%", marginTop: 8 }}
             onClick={() => navigate({ to: "/exhibition", search: { park: park.id } as any })}>
-            <Icon name="store" size={15} /> همه شرکت‌های پارک
+            <Icon name="store" size={15} /> {t("park.all_park_companies")}
           </button>
         </div>
       )}
 
       <div className="pd-section">
-        <div className="pd-section-title">سایر پارک‌ها</div>
+        <div className="pd-section-title">{t("park.other_parks")}</div>
         <div className="pd-park-list">
           {PARKS.filter((p) => p.id !== sel).map((p) => (
             <button key={p.id} className="pd-park-row" style={{ "--cc": colorVar(p.color) }} onClick={() => onSelect(p.id)}>
@@ -1275,6 +1276,7 @@ function PdImage({ path, caption }) {
 /* ===================== CATEGORIES ===================== */
 export function Categories() {
   useFavaReady();
+  const { t } = useTranslation();
   const fava = F();
   if (!fava) return <HomeFallback />;
   const { CATEGORIES, COMPANIES } = fava;
@@ -1282,8 +1284,8 @@ export function Categories() {
     <div className="view">
       <div className="shell">
         <div className="section-head">
-          <div><span className="eyebrow">Technology Domains</span><h2 className="h2">شاخه‌ها و حوزه‌های فناوری</h2></div>
-          <p className="lead" style={{ maxWidth: 360 }}>شرکت‌ها بر اساس حوزه تخصصی در شاخه‌های زیر دسته‌بندی می‌شوند.</p>
+          <div><span className="eyebrow">{t("categories.eyebrow")}</span><h2 className="h2">{t("categories.title")}</h2></div>
+          <p className="lead" style={{ maxWidth: 360 }}>{t("categories.lead")}</p>
         </div>
         <div className="cat-grid">
           {CATEGORIES.map((c) => {
@@ -1297,6 +1299,7 @@ export function Categories() {
 }
 
 function CatCard({ c, real }) {
+  const { t } = useTranslation();
   const tilt = useTilt(8);
   return (
     <Link to="/exhibition" search={{ cat: c.id } as any} className="cat-card tilt" style={{ "--cc": colorVar(c.color), textDecoration: "none", color: "inherit" }} {...tilt}>
@@ -1304,7 +1307,7 @@ function CatCard({ c, real }) {
       <div className="cat-ico"><Icon name={CAT_ICON[c.id]} size={26} /></div>
       <h3>{c.title}</h3>
       <p>{c.desc}</p>
-      <div className="count"><b className="num">{toFa(c.companies)}</b><span>شرکت فعال{real ? ` · ${toFa(real)} در نمایشگاه` : ""}</span></div>
+      <div className="count"><b className="num">{toFa(c.companies)}</b><span>{t("categories.active_companies")}{real ? ` · ${t("categories.in_exhibition", { count: real })}` : ""}</span></div>
     </Link>
   );
 }
