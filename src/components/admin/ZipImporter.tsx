@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useServerFn } from "@tanstack/react-start";
 import JSZip from "jszip";
 import { useQueryClient } from "@tanstack/react-query";
@@ -33,6 +34,7 @@ export function ZipImporter({
   ownerId: string;
   existingCompany?: ExhibitionCompany | null;
 }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const saveAdminCompanyFn = useServerFn(saveAdminCompany);
   const upsertExhibitionProductFn = useServerFn(upsertExhibitionProduct);
@@ -93,7 +95,7 @@ export function ZipImporter({
     setLog([]);
     try {
       const allEntries = await loadEntries(file);
-      push("ok", `${allEntries.length} فایل در آرشیو یافت شد`);
+      push("ok", t("zipImporter.files_found", { count: allEntries.length }));
 
       // Detect single wrapping root folder
       const allPaths = allEntries
@@ -166,10 +168,10 @@ export function ZipImporter({
             }
           }
           await saveAdminCompanyFn({ data: patch as any });
-          push("ok", `اطلاعات شرکت به‌روزرسانی شد (${counts.fields} فیلد)`);
+          push("ok", t("zipImporter.company_updated", { count: counts.fields }));
         } catch (e: any) {
           counts.errors++;
-          push("err", "خطا در پردازش company.json: " + (e.message ?? e));
+          push("err", `${t("zipImporter.company_json_error")}: ${e.message ?? e}`);
         }
       }
 
@@ -201,9 +203,9 @@ export function ZipImporter({
                 logo_url: stored,
               } as any,
             });
-            await uploadAttachmentFromBlob({ ownerType, ownerId, kind: "logo", blob, filename, title: "لوگو" });
+            await uploadAttachmentFromBlob({ ownerType, ownerId, kind: "logo", blob, filename, title: t("zipImporter.logo_title") });
             counts.attachments++;
-            push("ok", "لوگو بارگذاری شد");
+            push("ok", t("zipImporter.logo_uploaded"));
             continue;
           }
 
@@ -217,7 +219,7 @@ export function ZipImporter({
               await supabase.from("company_attachments" as any).update({ sort_order: gallerySort++ }).eq("id", (att as any).id);
             } catch {}
             counts.attachments++;
-            push("ok", `گالری: ${filename}`);
+            push("ok", t("zipImporter.gallery_item", { filename }));
             continue;
           }
 
@@ -245,11 +247,11 @@ export function ZipImporter({
               blob, filename, title: filename,
             });
             counts.attachments++;
-            push("ok", `سند: ${filename}`);
+            push("ok", t("zipImporter.document_item", { filename }));
             continue;
           }
 
-          push("warn", `نادیده گرفته شد: ${path}`);
+          push("warn", t("zipImporter.ignored", { path }));
         } catch (e: any) {
           counts.errors++;
           push("err", `${path}: ${e.message ?? e}`);
@@ -328,7 +330,7 @@ export function ZipImporter({
               } as any,
             });
             counts.products++;
-            push("ok", `محصول: ${name}${image_url ? " 🖼" : ""}${video_url ? " 🎬" : ""}`);
+            push("ok", `${t("zipImporter.product_item", { name })}${image_url ? " 🖼" : ""}${video_url ? " 🎬" : ""}`);
 
             // extra images/videos beyond the first → product gallery attachments
             for (const en of imageEntries.slice(1)) {
@@ -351,7 +353,7 @@ export function ZipImporter({
             }
           } catch (e: any) {
             counts.errors++;
-            push("err", `محصول ${folder}: ${e.message ?? e}`);
+            push("err", `${t("zipImporter.product_error_prefix", { name: folder })}: ${e.message ?? e}`);
           }
         }
 
@@ -371,22 +373,22 @@ export function ZipImporter({
               } as any,
             });
             counts.products++;
-            push("ok", `محصول (از company.json): ${n}`);
+            push("ok", t("zipImporter.product_from_json", { name: n }));
           } catch (e: any) {
             counts.errors++;
-            push("err", `محصول ${n}: ${e.message ?? e}`);
+            push("err", `${t("zipImporter.product_error_prefix", { name: n })}: ${e.message ?? e}`);
           }
         }
       }
 
-      push("ok", `پایان: ${counts.fields} فیلد، ${counts.attachments} ضمیمه، ${counts.products} محصول، ${counts.errors} خطا`);
+      push("ok", t("zipImporter.summary", { fields: counts.fields, attachments: counts.attachments, products: counts.products, errors: counts.errors }));
       qc.invalidateQueries({ queryKey: ["attachments", ownerType, ownerId] });
       qc.invalidateQueries({ queryKey: ["admin-exh-company", ownerId] });
       qc.invalidateQueries({ queryKey: ["admin-exh-companies"] });
       qc.invalidateQueries({ queryKey: ["admin-exh-products", ownerId] });
       qc.invalidateQueries({ queryKey: ["all-attachments"] });
     } catch (e: any) {
-      push("err", "ZIP نامعتبر: " + (e.message ?? e));
+      push("err", `${t("zipImporter.invalid_zip")}: ${e.message ?? e}`);
     }
     setBusy(false);
   }
@@ -395,17 +397,17 @@ export function ZipImporter({
     <div className="panel" style={{ padding: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <div>
-          <h3 style={{ margin: 0 }}>بارگذاری بسته ZIP الگو</h3>
+          <h3 style={{ margin: 0 }}>{t("zipImporter.title")}</h3>
           <p style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 4 }}>
-            ساختار: <code>company.json</code>, <code>logo.*</code>, <code>gallery/</code>, <code>products/&lt;نام&gt;/</code>, <code>catalog.pdf</code>, <code>form_fa.docx</code>, <code>form_en.docx</code>, <code>documents/</code>
+            {t("zipImporter.structure_intro")} <code>company.json</code>, <code>logo.*</code>, <code>gallery/</code>, <code>products/&lt;{t("zipImporter.name_placeholder")}&gt;/</code>, <code>catalog.pdf</code>, <code>form_fa.docx</code>, <code>form_en.docx</code>, <code>documents/</code>
           </p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <a href="/templates/template-company.zip" download className="btn btn-ghost" style={{ fontSize: 12 }}>
-            دانلود قالب نمونه
+            {t("zipImporter.download_template")}
           </a>
           <label className="btn btn-primary" style={{ fontSize: 12, cursor: busy ? "wait" : "pointer" }}>
-            {busy ? "درحال پردازش…" : "انتخاب فایل ZIP/RAR"}
+            {busy ? t("zipImporter.processing") : t("zipImporter.select_file")}
             <input
               type="file"
               accept=".zip,.rar,.7z,.tar,application/zip,application/x-rar-compressed,application/x-7z-compressed,application/x-tar"

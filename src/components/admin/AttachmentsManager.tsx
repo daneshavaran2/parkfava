@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAssetUrl } from "@/lib/use-auth";
 import { AttachmentPreviewButton } from "@/components/admin/AttachmentPreview";
 import {
@@ -30,6 +31,7 @@ export function AttachmentsManager({
   ownerType: "exhibition" | "park";
   ownerId: string;
 }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const queryKey = ["attachments", ownerType, ownerId];
   const { data: items = [], isLoading } = useQuery({
@@ -49,9 +51,9 @@ export function AttachmentsManager({
     try {
       await uploadAttachment({ ownerType, ownerId, kind, file, title });
       invalidate();
-      setMsg("بارگذاری شد ✓");
+      setMsg(t("attachmentsManager.uploaded"));
     } catch (e: any) {
-      setMsg("خطا: " + (e?.message ?? e));
+      setMsg(`${t("common.error")}: ${e?.message ?? e}`);
     }
     setBusy(false);
   }
@@ -65,10 +67,10 @@ export function AttachmentsManager({
   return (
     <div className="panel" style={{ padding: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h3>ضمیمه‌ها و مستندات</h3>
+        <h3>{t("attachmentsManager.title")}</h3>
         {msg && <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{msg}</span>}
       </div>
-      {isLoading && <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>درحال بارگذاری…</div>}
+      {isLoading && <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("common.loading")}</div>}
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {KINDS.map((kind) => (
           <KindSection
@@ -98,6 +100,7 @@ function KindSection({
   onUpload: (file: File, title?: string) => void;
   onChange: () => void;
 }) {
+  const { t } = useTranslation();
   const label = KIND_LABELS[kind];
   const accept = KIND_ACCEPT[kind];
 
@@ -115,7 +118,7 @@ function KindSection({
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <strong style={{ fontSize: 14 }}>{label} <span style={{ color: "var(--ink-soft)", fontSize: 12, fontWeight: 400 }}>({items.length})</span></strong>
         <label className="btn btn-ghost" style={{ fontSize: 12, cursor: busy ? "wait" : "pointer" }}>
-          + افزودن
+          {t("attachmentsManager.add")}
           <input
             type="file"
             accept={accept}
@@ -130,7 +133,7 @@ function KindSection({
         </label>
       </div>
       {!items.length ? (
-        <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>فایلی بارگذاری نشده.</div>
+        <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("attachmentsManager.no_files_uploaded")}</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {items.map((it, i) => (
@@ -159,6 +162,7 @@ function AttachmentRow({
   onDown: () => void;
   onChange: () => void;
 }) {
+  const { t } = useTranslation();
   const url = useAssetUrl(att.file_url);
   const [title, setTitle] = useState(att.title ?? "");
   const isImage = (att.mime_type || "").startsWith("image/");
@@ -170,7 +174,7 @@ function AttachmentRow({
   }
 
   async function remove() {
-    if (!confirm("حذف این فایل؟")) return;
+    if (!confirm(t("attachmentsManager.confirm_delete_file"))) return;
     await deleteAttachment(att);
     onChange();
   }
@@ -198,7 +202,7 @@ function AttachmentRow({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onBlur={saveTitle}
-          placeholder="عنوان"
+          placeholder={t("attachmentsManager.title_placeholder")}
           style={{ background: "var(--panel)", border: "1px solid var(--stroke)", borderRadius: 6, padding: "4px 8px", color: "inherit", fontSize: 12, fontFamily: "inherit" }}
         />
         <div style={{ fontSize: 11, color: "var(--ink-soft)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -209,14 +213,14 @@ function AttachmentRow({
         <AttachmentPreviewButton att={att} />
         {url && (
           <a href={url} download className="btn btn-ghost" style={{ fontSize: 11, padding: "4px 8px" }}>
-            دانلود
+            {t("attachmentsManager.download")}
           </a>
         )}
         <button className="btn btn-ghost" onClick={toggleActive} style={{ fontSize: 11, padding: "4px 8px" }}>
-          {att.is_active ? "غیرفعال" : "فعال"}
+          {att.is_active ? t("attachmentsManager.inactive") : t("attachmentsManager.active")}
         </button>
         <button className="btn btn-ghost" onClick={remove} style={{ fontSize: 11, padding: "4px 8px" }}>
-          حذف
+          {t("attachmentsManager.delete")}
         </button>
       </div>
     </div>

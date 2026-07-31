@@ -124,7 +124,7 @@ function AuthPage() {
       await requestOtp();
       setResendAt(Date.now() + 60_000);
     } catch (e: any) {
-      setErr(e?.message ?? "خطا در ارسال کد");
+      setErr(e?.message ?? t("auth.otp_send_failed"));
     }
   }
 
@@ -133,7 +133,7 @@ function AuthPage() {
     setErr(null);
     const normalized = normalizePhone(mfaPhoneInput);
     if (!normalized) {
-      setErr("شماره موبایل نامعتبر است (فرمت صحیح: 09xxxxxxxxx)");
+      setErr(t("auth.phone_invalid"));
       return;
     }
     setBusy(true);
@@ -158,7 +158,7 @@ function AuthPage() {
       const dest = await resolveDestination(fallback);
       window.location.assign(dest);
     } catch (e: any) {
-      setErr(e?.message ?? "کد نامعتبر است");
+      setErr(e?.message ?? t("auth.otp_invalid"));
       setBusy(false);
     }
   }
@@ -177,9 +177,9 @@ function AuthPage() {
       <div className="view">
         <div className="shell" style={{ maxWidth: 460, margin: "60px auto" }}>
           <div className="panel" style={{ padding: 28 }}>
-            <h2 className="h2" style={{ fontSize: 24 }}>ثبت شماره موبایل</h2>
+            <h2 className="h2" style={{ fontSize: 24 }}>{t("auth.phone_title")}</h2>
             <p className="lead" style={{ marginTop: 6, fontSize: 14 }}>
-              برای ورود دو‌مرحله‌ای، ابتدا شماره موبایل خود را ثبت کنید. کد تایید به همین شماره پیامک می‌شود.
+              {t("auth.phone_lead")}
             </p>
             <form onSubmit={submitPhone} style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 18 }}>
               <input
@@ -188,20 +188,20 @@ function AuthPage() {
                 dir="ltr"
                 value={mfaPhoneInput}
                 onChange={(e) => setMfaPhoneInput(e.target.value)}
-                placeholder="09xxxxxxxxx"
-                aria-label="شماره موبایل"
+                placeholder={t("auth.phone_placeholder")}
+                aria-label={t("auth.phone_label")}
                 className="input"
                 style={inputStyle}
               />
               {err && <div role="alert" style={{ color: "#ff7676", fontSize: 13 }}>{err}</div>}
               <button type="submit" className="btn btn-primary" disabled={busy}>
-                {busy ? "…" : "ارسال کد تایید"}
+                {busy ? "…" : t("auth.send_otp")}
               </button>
             </form>
             <div style={{ marginTop: 18, textAlign: "center" }}>
               <button type="button" onClick={backToCredentials}
                 style={{ background: "transparent", color: "var(--ink-soft)", border: 0, cursor: "pointer", fontSize: 12 }}>
-                بازگشت به صفحه ورود
+                {t("auth.back_to_signin")}
               </button>
             </div>
           </div>
@@ -215,9 +215,9 @@ function AuthPage() {
       <div className="view">
         <div className="shell" style={{ maxWidth: 460, margin: "60px auto" }}>
           <div className="panel" style={{ padding: 28 }}>
-            <h2 className="h2" style={{ fontSize: 24 }}>کد تایید پیامکی</h2>
+            <h2 className="h2" style={{ fontSize: 24 }}>{t("auth.otp_title")}</h2>
             <p className="lead" style={{ marginTop: 6, fontSize: 14 }}>
-              کد ۶ رقمی ارسال‌شده به {mfaPhone ? maskPhone(mfaPhone) : "شماره شما"} را وارد کنید.
+              {t("auth.otp_lead", { phone: mfaPhone ? maskPhone(mfaPhone) : t("auth.otp_lead_your_number") })}
             </p>
             <form onSubmit={submitOtp} style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 18 }}>
               <input
@@ -228,24 +228,24 @@ function AuthPage() {
                 maxLength={6}
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                placeholder="------"
-                aria-label="کد تایید"
+                placeholder={t("auth.otp_placeholder")}
+                aria-label={t("auth.otp_label")}
                 className="input"
                 style={{ ...inputStyle, letterSpacing: 6, textAlign: "center", fontSize: 20 }}
               />
               {err && <div role="alert" style={{ color: "#ff7676", fontSize: 13 }}>{err}</div>}
               <button type="submit" className="btn btn-primary" disabled={busy || otpCode.length < 4}>
-                {busy ? "…" : "تایید"}
+                {busy ? "…" : t("auth.confirm")}
               </button>
             </form>
             <div style={{ marginTop: 14, display: "flex", justifyContent: "space-between", fontSize: 12 }}>
               <button type="button" onClick={triggerRequestOtp} disabled={Date.now() < resendAt}
                 style={{ background: "transparent", color: "var(--accent-glow)", border: 0, cursor: "pointer" }}>
-                ارسال دوباره کد
+                {t("auth.resend_otp")}
               </button>
               <button type="button" onClick={backToCredentials}
                 style={{ background: "transparent", color: "var(--ink-soft)", border: 0, cursor: "pointer" }}>
-                بازگشت به صفحه ورود
+                {t("auth.back_to_signin")}
               </button>
             </div>
           </div>
