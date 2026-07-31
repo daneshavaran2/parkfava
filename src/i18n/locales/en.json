@@ -57,6 +57,24 @@
     "park_filter_prefix": "Showing companies located in",
     "empty": "No results found."
   },
+  "park": {
+    "companies_stat": "Companies",
+    "jobs_stat": "Jobs",
+    "area_stat": "Hectares",
+    "about_park": "About the park",
+    "gallery": "Gallery",
+    "news_events": "News & events",
+    "resident_companies": "Resident companies ({{count}})",
+    "all_park_companies": "All companies in this park",
+    "other_parks": "Other parks"
+  },
+  "categories": {
+    "eyebrow": "Technology Domains",
+    "title": "Technology categories",
+    "lead": "Companies are grouped below by their area of specialization.",
+    "active_companies": "Active companies",
+    "in_exhibition": "{{count}} in exhibition"
+  },
   "company": {
     "full_time": "Full-time",
     "part_time": "Part-time",
