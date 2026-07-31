@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth, useAssetUrl } from "@/lib/use-auth";
 import {
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/admin/parks")({
 });
 
 function AdminParksPage() {
+  const { t } = useTranslation();
   const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const [parks, setParks] = useState<{ id: string; name: string; city: string }[]>([]);
@@ -47,14 +49,14 @@ function AdminParksPage() {
     tryLoad();
   }, []);
 
-  if (loading) return <div className="view"><div className="shell" style={{ padding: 40 }}>درحال بارگذاری…</div></div>;
+  if (loading) return <div className="view"><div className="shell" style={{ padding: 40 }}>{t("common.loading")}</div></div>;
   if (!user) return null;
   if (!isAdmin) {
     return (
       <div className="view"><div className="shell" style={{ padding: 40 }}>
-        <h2 className="h2">دسترسی ندارید</h2>
-        <p className="lead">حساب شما نقش ادمین ندارد.</p>
-        <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>خروج</button>
+        <h2 className="h2">{t("adminExhibition.no_admin_access_title")}</h2>
+        <p className="lead">{t("adminParks.no_admin_access_lead")}</p>
+        <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
       </div></div>
     );
   }
@@ -65,14 +67,14 @@ function AdminParksPage() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div>
             <span className="eyebrow">Admin</span>
-            <h2 className="h2" style={{ fontSize: 24 }}>مدیریت محتوای پارک‌ها</h2>
+            <h2 className="h2" style={{ fontSize: 24 }}>{t("adminParks.manage_title")}</h2>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <Link to="/parks" className="btn btn-ghost">مشاهده نقشه</Link>
-            <Link to="/admin/kahkeshan" className="btn btn-ghost">کهکشان (پارک‌ها)</Link>
-            <Link to="/admin/attachments" className="btn btn-ghost">داشبورد ضمیمه‌ها</Link>
-            <Link to="/admin/exhibition" className="btn btn-ghost">نمایشگاه</Link>
-            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>خروج</button>
+            <Link to="/parks" className="btn btn-ghost">{t("adminParks.view_map")}</Link>
+            <Link to="/admin/kahkeshan" className="btn btn-ghost">{t("adminParks.kahkeshan_link")}</Link>
+            <Link to="/admin/attachments" className="btn btn-ghost">{t("adminParks.attachments_dashboard")}</Link>
+            <Link to="/admin/exhibition" className="btn btn-ghost">{t("adminParks.exhibition_link")}</Link>
+            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 16 }}>
@@ -98,6 +100,7 @@ function AdminParksPage() {
 }
 
 function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; name: string }[] }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const meta = parks.find((p) => p.id === parkId);
   const { data, isLoading } = useQuery({
@@ -120,9 +123,9 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
     setBusy(true);
     setMsg(null);
     const { error } = await upsertParkContent(form);
-    if (error) setMsg("خطا: " + error.message);
+    if (error) setMsg(`${t("common.error")}: ${error.message}`);
     else {
-      setMsg("ذخیره شد ✓");
+      setMsg(t("common.saved"));
       qc.invalidateQueries({ queryKey: ["park-admin", parkId] });
       qc.invalidateQueries({ queryKey: ["park-public", parkId] });
     }
@@ -138,9 +141,9 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
       setForm((f) => ({ ...f, logo_url: path }));
       await upsertParkContent({ ...form, logo_url: path });
       qc.invalidateQueries({ queryKey: ["park-public", parkId] });
-      setMsg("لوگو بارگذاری شد ✓");
+      setMsg(t("adminParks.logo_uploaded"));
     } catch (e: any) {
-      setMsg("خطا در آپلود: " + (e.message ?? e));
+      setMsg(`${t("adminParks.upload_error")}: ${e.message ?? e}`);
     }
     setBusy(false);
   }
@@ -155,35 +158,35 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
       qc.invalidateQueries({ queryKey: ["park-admin", parkId] });
       qc.invalidateQueries({ queryKey: ["park-public", parkId] });
     } catch (e: any) {
-      setMsg("خطا در آپلود: " + (e.message ?? e));
+      setMsg(`${t("adminParks.upload_error")}: ${e.message ?? e}`);
     }
     setBusy(false);
     e.target.value = "";
   }
 
-  if (isLoading) return <div className="panel" style={{ padding: 24 }}>درحال بارگذاری…</div>;
+  if (isLoading) return <div className="panel" style={{ padding: 24 }}>{t("common.loading")}</div>;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div className="panel" style={{ padding: 20 }}>
-        <h3 style={{ marginBottom: 12 }}>اطلاعات اصلی — {meta?.name}</h3>
+        <h3 style={{ marginBottom: 12 }}>{t("adminParks.main_info_title")} — {meta?.name}</h3>
         <div style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: 16, alignItems: "start" }}>
           <div>
             <div style={{ width: 120, height: 120, borderRadius: 14, background: "var(--panel-2)", border: "1px solid var(--stroke)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {logoUrl ? <img src={logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>بدون لوگو</span>}
+              {logoUrl ? <img src={logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("adminParks.no_logo")}</span>}
             </div>
             <label className="btn btn-ghost" style={{ marginTop: 8, width: 120, fontSize: 12, cursor: "pointer", display: "flex", justifyContent: "center" }}>
-              آپلود لوگو
+              {t("adminParks.upload_logo")}
               <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: "none" }} />
             </label>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <input value={form.display_name ?? ""} onChange={(e) => setForm({ ...form, display_name: e.target.value })}
-              placeholder="نام نمایشی" style={field} />
+              placeholder={t("adminParks.display_name_placeholder")} style={field} />
             <textarea value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="توضیحات کامل پارک…" rows={6} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
+              placeholder={t("adminParks.description_placeholder")} rows={6} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              <button className="btn btn-primary" onClick={save} disabled={busy}>ذخیره</button>
+              <button className="btn btn-primary" onClick={save} disabled={busy}>{t("adminParks.save")}</button>
               {msg && <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>{msg}</span>}
             </div>
           </div>
@@ -192,9 +195,9 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
 
       <div className="panel" style={{ padding: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <h3>گالری تصاویر</h3>
+          <h3>{t("adminParks.gallery_images")}</h3>
           <label className="btn btn-ghost" style={{ fontSize: 12, cursor: "pointer" }}>
-            + افزودن عکس
+            {t("adminParks.add_photo")}
             <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: "none" }} />
           </label>
         </div>
@@ -206,7 +209,7 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
               qc.invalidateQueries({ queryKey: ["park-public", parkId] });
             }} />
           ))}
-          {!data?.images.length && <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>هنوز عکسی اضافه نشده.</div>}
+          {!data?.images.length && <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("adminParks.no_photos_yet")}</div>}
         </div>
       </div>
 
@@ -219,19 +222,21 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
 }
 
 function GalleryItem({ img, onDelete }: { img: { id: string; image_url: string }; onDelete: () => void }) {
+  const { t } = useTranslation();
   const url = useAssetUrl(img.image_url);
   return (
     <div style={{ position: "relative", aspectRatio: "1/1", borderRadius: 10, overflow: "hidden", background: "var(--panel-2)" }}>
       {url && <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
       <button onClick={onDelete}
         style={{ position: "absolute", top: 6, left: 6, background: "rgba(0,0,0,0.7)", color: "#fff", border: 0, borderRadius: 6, padding: "4px 8px", fontSize: 11, cursor: "pointer" }}>
-        حذف
+        {t("adminParks.delete")}
       </button>
     </div>
   );
 }
 
 function NewsEditor({ parkId, news }: { parkId: string; news: ParkNews[] }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -249,11 +254,11 @@ function NewsEditor({ parkId, news }: { parkId: string; news: ParkNews[] }) {
   }
   return (
     <div className="panel" style={{ padding: 20 }}>
-      <h3 style={{ marginBottom: 12 }}>اخبار و رویدادها</h3>
+      <h3 style={{ marginBottom: 12 }}>{t("adminParks.news_events")}</h3>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="عنوان خبر" style={field} />
-        <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="متن کوتاه (اختیاری)" rows={3} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
-        <button className="btn btn-primary" onClick={add} style={{ alignSelf: "flex-start" }}>افزودن</button>
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("adminParks.news_title_placeholder")} style={field} />
+        <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder={t("adminParks.news_body_placeholder")} rows={3} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
+        <button className="btn btn-primary" onClick={add} style={{ alignSelf: "flex-start" }}>{t("adminParks.add")}</button>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {news.map((n) => (
@@ -262,10 +267,10 @@ function NewsEditor({ parkId, news }: { parkId: string; news: ParkNews[] }) {
               <div style={{ fontWeight: 700 }}>{n.title}</div>
               {n.body && <div style={{ fontSize: 13, color: "var(--ink-soft)", marginTop: 4 }}>{n.body}</div>}
             </div>
-            <button onClick={() => del(n.id)} className="btn btn-ghost" style={{ fontSize: 11, padding: "4px 10px" }}>حذف</button>
+            <button onClick={() => del(n.id)} className="btn btn-ghost" style={{ fontSize: 11, padding: "4px 10px" }}>{t("adminParks.delete")}</button>
           </div>
         ))}
-        {!news.length && <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>هنوز خبری ثبت نشده.</div>}
+        {!news.length && <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("adminParks.no_news_yet")}</div>}
       </div>
     </div>
   );

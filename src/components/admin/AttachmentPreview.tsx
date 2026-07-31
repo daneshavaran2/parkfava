@@ -1,16 +1,18 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAssetUrl } from "@/lib/use-auth";
 import type { CompanyAttachment } from "@/lib/attachments-api";
 
 export function AttachmentPreviewButton({
   att,
-  label = "پیش‌نمایش",
+  label,
   style,
 }: {
   att: CompanyAttachment;
   label?: string;
   style?: React.CSSProperties;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const url = useAssetUrl(att.file_url);
   if (!url) return null;
@@ -22,7 +24,7 @@ export function AttachmentPreviewButton({
         onClick={() => setOpen(true)}
         style={{ fontSize: 11, padding: "4px 8px", ...style }}
       >
-        {label}
+        {label ?? t("common.preview")}
       </button>
       {open && <AttachmentPreviewDialog att={att} url={url} onClose={() => setOpen(false)} />}
     </>
@@ -38,6 +40,7 @@ export function AttachmentPreviewDialog({
   url: string;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const mime = att.mime_type || guessMime(att.file_url);
   const isImage = mime.startsWith("image/");
   const isVideo = mime.startsWith("video/");
@@ -73,7 +76,7 @@ export function AttachmentPreviewDialog({
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <strong style={{ flex: 1, fontSize: 14 }}>{att.title || "فایل"}</strong>
+          <strong style={{ flex: 1, fontSize: 14 }}>{att.title || t("common.file")}</strong>
           <a
             href={url}
             download={att.title || true}
@@ -82,10 +85,10 @@ export function AttachmentPreviewDialog({
             className="btn btn-ghost"
             style={{ fontSize: 12 }}
           >
-            دانلود
+            {t("common.download")}
           </a>
           <button className="btn btn-ghost" onClick={onClose} style={{ fontSize: 12 }}>
-            بستن
+            {t("common.close")}
           </button>
         </div>
         <div
@@ -125,7 +128,7 @@ export function AttachmentPreviewDialog({
           {!isImage && !isVideo && !isPdf && (
             <div style={{ padding: 40, textAlign: "center", color: "var(--ink-soft)" }}>
               <div style={{ fontSize: 40 }}>📄</div>
-              <p style={{ marginTop: 10 }}>پیش‌نمایش این فایل پشتیبانی نمی‌شود.</p>
+              <p style={{ marginTop: 10 }}>{t("attachmentPreview.not_supported")}</p>
               <a
                 href={url}
                 target="_blank"
@@ -133,7 +136,7 @@ export function AttachmentPreviewDialog({
                 className="btn btn-primary"
                 style={{ marginTop: 10 }}
               >
-                دانلود فایل
+                {t("attachmentPreview.download_file")}
               </a>
             </div>
           )}

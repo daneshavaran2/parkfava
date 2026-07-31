@@ -28,6 +28,7 @@ export const Route = createFileRoute("/my-company")({
 });
 
 function MyCompanyPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [checking, setChecking] = useState(true);
@@ -47,21 +48,20 @@ function MyCompanyPage() {
   }, [navigate]);
 
   if (checking) {
-    return <div className="view"><div className="shell" style={{ padding: 40 }}>در حال بارگذاری…</div></div>;
+    return <div className="view"><div className="shell" style={{ padding: 40 }}>{t("common.loading")}</div></div>;
   }
   if (notAssigned) {
     return (
       <div className="view"><div className="shell" style={{ padding: 40, maxWidth: 560 }}>
-        <h2 className="h2">حساب شما هنوز به شرکتی تخصیص نیافته است</h2>
+        <h2 className="h2">{t("myCompany.not_assigned_title")}</h2>
         <p className="lead" style={{ marginTop: 8 }}>
-          برای ویرایش پروفایل شرکت، لازم است ادمین شبکه، حساب شما را به‌عنوان نماینده‌ی یک شرکت تخصیص دهد.
-          لطفاً با تیم مدیریت نمایشگاه تماس بگیرید و شناسه‌ی زیر را ارسال کنید:
+          {t("myCompany.not_assigned_lead")}
         </p>
         <code style={{ display: "inline-block", marginTop: 12, background: "var(--panel-2)", padding: "8px 10px", borderRadius: 6, fontSize: 13 }}>
           {/* user id shown for admin lookup */}
         </code>
         <div style={{ marginTop: 20, display: "flex", gap: 8 }}>
-          <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/" }); }}>خروج</button>
+          <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/" }); }}>{t("common.logout")}</button>
         </div>
       </div></div>
     );
@@ -138,9 +138,9 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
     try {
       await saveOwnedCompanyFn({ data: { company_id: companyId, patch: form as any } });
       await submitCompanyForReviewFn({ data: { company_id: companyId } });
-      setMsg("برای بررسی ارسال شد. منتظر تایید ادمین بمانید."); invalidate();
+      setMsg(t("myCompany.submit_success")); invalidate();
     } catch (e: any) {
-      setMsg("خطا: " + (e?.message ?? e));
+      setMsg(`${t("common.error")}: ${e?.message ?? e}`);
     }
     setBusy(false);
   }
@@ -152,8 +152,8 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
       const next = { ...form, logo_url: path };
       setForm(next);
       await saveOwnedCompanyFn({ data: { company_id: companyId, patch: { logo_url: path } } });
-      invalidate(); setMsg("لوگو بارگذاری شد ✓");
-    } catch (e: any) { setMsg("خطا: " + (e.message ?? e)); }
+      invalidate(); setMsg(t("myCompany.logo_uploaded"));
+    } catch (e: any) { setMsg(`${t("common.error")}: ${e.message ?? e}`); }
     setBusy(false);
   }
 
@@ -164,28 +164,28 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
       const path = await uploadExhibitionAsset(companyId, file);
       await addExhibitionImageFn({ data: { company_id: companyId, image_url: path } });
       invalidate();
-    } catch (e: any) { setMsg("خطا: " + (e.message ?? e)); }
+    } catch (e: any) { setMsg(`${t("common.error")}: ${e.message ?? e}`); }
     setBusy(false); e.target.value = "";
   }
 
   async function removeImage(id: string) {
-    if (!confirm("حذف این تصویر؟")) return;
+    if (!confirm(t("myCompany.confirm_delete_image"))) return;
     await deleteExhibitionImageFn({ data: { id } }); invalidate();
   }
 
-  if (isLoading) return <div className="view"><div className="shell" style={{ padding: 40 }}>در حال بارگذاری…</div></div>;
+  if (isLoading) return <div className="view"><div className="shell" style={{ padding: 40 }}>{t("common.loading")}</div></div>;
 
   return (
     <div className="view">
       <div className="shell" style={{ padding: "20px 16px", maxWidth: 1100, margin: "0 auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div>
-            <span className="eyebrow">داشبورد صاحب شرکت</span>
+            <span className="eyebrow">{t("myCompany.dashboard_eyebrow")}</span>
             <h2 className="h2" style={{ fontSize: 24 }}>{form.name || companyId}</h2>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <Link to="/exhibition" className="btn btn-ghost">نمایشگاه</Link>
-            <button className="btn btn-ghost" onClick={onSignOut}>خروج</button>
+            <Link to="/exhibition" className="btn btn-ghost">{t("myCompany.exhibition_link")}</Link>
+            <button className="btn btn-ghost" onClick={onSignOut}>{t("common.logout")}</button>
           </div>
         </div>
 
@@ -199,41 +199,41 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
                 border: "1px dashed var(--stroke)", display: "flex", alignItems: "center",
                 justifyContent: "center", overflow: "hidden",
               }}>
-                {logoUrl ? <img src={logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>لوگو</span>}
+                {logoUrl ? <img src={logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("myCompany.logo_placeholder")}</span>}
               </div>
               {canEdit && (
                 <label className="btn btn-ghost" style={{ marginTop: 8, fontSize: 12, cursor: "pointer", display: "block", textAlign: "center" }}>
-                  بارگذاری لوگو
+                  {t("myCompany.upload_logo")}
                   <input type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0])} />
                 </label>
               )}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <F label="نام" full><input disabled={!canEdit} style={inp} value={form.name ?? ""} onChange={(e) => setForm({ ...form, name: e.target.value })} /></F>
-              <F label="دسته"><input disabled={!canEdit} style={inp} value={form.category ?? ""} onChange={(e) => setForm({ ...form, category: e.target.value })} /></F>
-              <F label="شهر"><input disabled={!canEdit} style={inp} value={form.city ?? ""} onChange={(e) => setForm({ ...form, city: e.target.value })} /></F>
-              <F label="شعار" full><input disabled={!canEdit} style={inp} value={form.tagline ?? ""} onChange={(e) => setForm({ ...form, tagline: e.target.value })} /></F>
-              <F label="توضیح" full><textarea disabled={!canEdit} rows={4} style={{ ...inp, resize: "vertical" }} value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></F>
-              <F label="وب‌سایت"><input disabled={!canEdit} style={inp} value={form.website ?? ""} onChange={(e) => setForm({ ...form, website: e.target.value })} /></F>
-              <F label="ایمیل"><input disabled={!canEdit} style={inp} value={form.email ?? ""} onChange={(e) => setForm({ ...form, email: e.target.value })} /></F>
-              <F label="تلفن"><input disabled={!canEdit} style={inp} value={form.phone ?? ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></F>
-              <F label="آدرس"><input disabled={!canEdit} style={inp} value={form.address ?? ""} onChange={(e) => setForm({ ...form, address: e.target.value })} /></F>
-              <F label="عرض جغرافیایی (Latitude)">
+              <F label={t("myCompany.field_name")} full><input disabled={!canEdit} style={inp} value={form.name ?? ""} onChange={(e) => setForm({ ...form, name: e.target.value })} /></F>
+              <F label={t("myCompany.field_category")}><input disabled={!canEdit} style={inp} value={form.category ?? ""} onChange={(e) => setForm({ ...form, category: e.target.value })} /></F>
+              <F label={t("myCompany.field_city")}><input disabled={!canEdit} style={inp} value={form.city ?? ""} onChange={(e) => setForm({ ...form, city: e.target.value })} /></F>
+              <F label={t("myCompany.field_tagline")} full><input disabled={!canEdit} style={inp} value={form.tagline ?? ""} onChange={(e) => setForm({ ...form, tagline: e.target.value })} /></F>
+              <F label={t("myCompany.field_description")} full><textarea disabled={!canEdit} rows={4} style={{ ...inp, resize: "vertical" }} value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></F>
+              <F label={t("myCompany.field_website")}><input disabled={!canEdit} style={inp} value={form.website ?? ""} onChange={(e) => setForm({ ...form, website: e.target.value })} /></F>
+              <F label={t("myCompany.field_email")}><input disabled={!canEdit} style={inp} value={form.email ?? ""} onChange={(e) => setForm({ ...form, email: e.target.value })} /></F>
+              <F label={t("myCompany.field_phone")}><input disabled={!canEdit} style={inp} value={form.phone ?? ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></F>
+              <F label={t("myCompany.field_address")}><input disabled={!canEdit} style={inp} value={form.address ?? ""} onChange={(e) => setForm({ ...form, address: e.target.value })} /></F>
+              <F label={t("myCompany.field_lat")}>
                 <input disabled={!canEdit} dir="ltr" inputMode="decimal" placeholder="35.6892"
                   style={{ ...inp, borderColor: latErr ? "#ff7676" : undefined }}
                   value={latRaw} onChange={(e) => onLatChange(e.target.value)}
                   aria-invalid={!!latErr} data-testid="mycompany-lat-input" />
                 {latErr && <div role="alert" style={{ color: "#ff7676", fontSize: 12, marginTop: 4 }}>{latErr}</div>}
               </F>
-              <F label="طول جغرافیایی (Longitude)">
+              <F label={t("myCompany.field_lng")}>
                 <input disabled={!canEdit} dir="ltr" inputMode="decimal" placeholder="51.3890"
                   style={{ ...inp, borderColor: lngErr ? "#ff7676" : undefined }}
                   value={lngRaw} onChange={(e) => onLngChange(e.target.value)}
                   aria-invalid={!!lngErr} data-testid="mycompany-lng-input" />
                 {lngErr && <div role="alert" style={{ color: "#ff7676", fontSize: 12, marginTop: 4 }}>{lngErr}</div>}
               </F>
-              <F label="چسباندن لینک گوگل/نشان" full>
-                <input disabled={!canEdit} dir="ltr" style={inp} placeholder="https://maps.google.com/…  یا  https://neshan.org/…"
+              <F label={t("myCompany.field_paste_link")} full>
+                <input disabled={!canEdit} dir="ltr" style={inp} placeholder={t("myCompany.paste_link_placeholder")}
                   onPaste={(e) => {
                     const text = e.clipboardData.getData("text");
                     const m = text.match(/(-?\d{1,3}\.\d+)[ ,/@]+(-?\d{1,3}\.\d+)/);
@@ -249,9 +249,9 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
           </div>
 
           <div style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>
-            <button className="btn btn-primary" onClick={save} disabled={!canEdit || busy}>ذخیره تغییرات</button>
+            <button className="btn btn-primary" onClick={save} disabled={!canEdit || busy}>{t("myCompany.save_changes")}</button>
             {(status === "draft" || status === "rejected") && (
-              <button className="btn btn-primary" onClick={submitReview} disabled={busy} style={{ background: "var(--accent-glow)" }}>ارسال برای بررسی</button>
+              <button className="btn btn-primary" onClick={submitReview} disabled={busy} style={{ background: "var(--accent-glow)" }}>{t("myCompany.submit_for_review")}</button>
             )}
             {msg && <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>{msg}</span>}
           </div>
@@ -265,19 +265,20 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
 }
 
 function StatusPanel({ status, note }: { status: string; note: string | null }) {
+  const { t } = useTranslation();
   const cfg = {
-    draft: { bg: "rgba(120,130,140,.12)", stroke: "rgba(120,130,140,.3)", label: "پیش‌نویس", text: "اطلاعات را کامل کنید و برای بررسی ارسال کنید." },
-    pending: { bg: "rgba(255,196,0,.10)", stroke: "rgba(255,196,0,.35)", label: "در انتظار تایید", text: "ارسال شد. تا زمان تایید ادمین در نمایشگاه دیده نمی‌شوید." },
-    approved: { bg: "rgba(70,200,120,.10)", stroke: "rgba(70,200,120,.35)", label: "تاییدشده و منتشرشده", text: "شرکت شما در نمایشگاه دیده می‌شود. ویرایش نیازمند بازبینی مجدد نیست." },
-    rejected: { bg: "rgba(220,80,80,.10)", stroke: "rgba(220,80,80,.35)", label: "رد شده", text: "درخواست شما رد شد. پس از اصلاح، دوباره ارسال کنید." },
+    draft: { bg: "rgba(120,130,140,.12)", stroke: "rgba(120,130,140,.3)", label: t("myCompany.status_draft_label"), text: t("myCompany.status_draft_text") },
+    pending: { bg: "rgba(255,196,0,.10)", stroke: "rgba(255,196,0,.35)", label: t("myCompany.status_pending_label"), text: t("myCompany.status_pending_text") },
+    approved: { bg: "rgba(70,200,120,.10)", stroke: "rgba(70,200,120,.35)", label: t("myCompany.status_approved_label"), text: t("myCompany.status_approved_text") },
+    rejected: { bg: "rgba(220,80,80,.10)", stroke: "rgba(220,80,80,.35)", label: t("myCompany.status_rejected_label"), text: t("myCompany.status_rejected_text") },
   } as const;
   const c = (cfg as any)[status] ?? cfg.draft;
   return (
     <div style={{ background: c.bg, border: `1px solid ${c.stroke}`, borderRadius: 12, padding: "12px 16px" }}>
-      <div style={{ fontWeight: 700, marginBottom: 4 }}>وضعیت: {c.label}</div>
+      <div style={{ fontWeight: 700, marginBottom: 4 }}>{t("myCompany.status_prefix")}: {c.label}</div>
       <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{c.text}</div>
       {status === "rejected" && note && (
-        <div style={{ marginTop: 8, fontSize: 13 }}><b>یادداشت ادمین:</b> {note}</div>
+        <div style={{ marginTop: 8, fontSize: 13 }}><b>{t("myCompany.admin_note")}:</b> {note}</div>
       )}
     </div>
   );
@@ -289,19 +290,20 @@ function ImagesPanel({ images, canEdit, onAdd, onRemove }: {
   onAdd: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemove: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="panel" style={{ padding: 20, marginTop: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h3 style={{ margin: 0 }}>تصاویر گالری</h3>
+        <h3 style={{ margin: 0 }}>{t("myCompany.gallery_images")}</h3>
         {canEdit && (
           <label className="btn btn-ghost" style={{ fontSize: 12, cursor: "pointer" }}>
-            افزودن تصویر
+            {t("myCompany.add_image")}
             <input type="file" accept="image/*" hidden onChange={onAdd} />
           </label>
         )}
       </div>
       {images.length === 0 ? (
-        <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>هنوز تصویری اضافه نشده.</div>
+        <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("myCompany.no_images_yet")}</div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px,1fr))", gap: 10 }}>
           {images.map((im) => <ImageThumb key={im.id} imageUrl={im.image_url} canEdit={canEdit} onRemove={() => onRemove(im.id)} />)}
@@ -312,12 +314,13 @@ function ImagesPanel({ images, canEdit, onAdd, onRemove }: {
 }
 
 function ImageThumb({ imageUrl, canEdit, onRemove }: { imageUrl: string; canEdit: boolean; onRemove: () => void }) {
+  const { t } = useTranslation();
   const url = useAssetUrl(imageUrl);
   return (
     <div style={{ position: "relative", aspectRatio: "4/3", borderRadius: 10, overflow: "hidden", background: "var(--panel-2)", border: "1px solid var(--stroke)" }}>
       {url && <img src={url} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
       {canEdit && (
-        <button onClick={onRemove} style={{ position: "absolute", top: 6, insetInlineEnd: 6, background: "rgba(0,0,0,.6)", color: "#fff", border: 0, borderRadius: 6, padding: "2px 8px", fontSize: 11, cursor: "pointer" }}>حذف</button>
+        <button onClick={onRemove} style={{ position: "absolute", top: 6, insetInlineEnd: 6, background: "rgba(0,0,0,.6)", color: "#fff", border: 0, borderRadius: 6, padding: "2px 8px", fontSize: 11, cursor: "pointer" }}>{t("myCompany.delete")}</button>
       )}
     </div>
   );
@@ -329,6 +332,7 @@ function ProductsPanel({ companyId, products, canEdit, onChanged }: {
   canEdit: boolean;
   onChanged: () => void;
 }) {
+  const { t } = useTranslation();
   const upsertExhibitionProductFn = useServerFn(upsertExhibitionProduct);
   const deleteExhibitionProductFn = useServerFn(deleteExhibitionProduct);
   const [creating, setCreating] = useState(false);
@@ -344,26 +348,26 @@ function ProductsPanel({ companyId, products, canEdit, onChanged }: {
   }
 
   async function remove(id: string) {
-    if (!confirm("حذف این محصول؟")) return;
+    if (!confirm(t("myCompany.confirm_delete_product"))) return;
     await deleteExhibitionProductFn({ data: { id } }); onChanged();
   }
 
   return (
     <div className="panel" style={{ padding: 20, marginTop: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h3 style={{ margin: 0 }}>محصولات</h3>
-        {canEdit && !creating && <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => setCreating(true)}>+ افزودن محصول</button>}
+        <h3 style={{ margin: 0 }}>{t("company.products")}</h3>
+        {canEdit && !creating && <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => setCreating(true)}>{t("myCompany.add_product")}</button>}
       </div>
       {creating && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr auto auto", gap: 8, marginBottom: 12 }}>
-          <input placeholder="نام محصول" value={name} onChange={(e) => setName(e.target.value)} style={inp} />
-          <input placeholder="توضیح کوتاه" value={desc} onChange={(e) => setDesc(e.target.value)} style={inp} />
-          <button className="btn btn-primary" onClick={create} disabled={busy}>ثبت</button>
-          <button className="btn btn-ghost" onClick={() => setCreating(false)}>انصراف</button>
+          <input placeholder={t("myCompany.product_name_placeholder")} value={name} onChange={(e) => setName(e.target.value)} style={inp} />
+          <input placeholder={t("myCompany.product_desc_placeholder")} value={desc} onChange={(e) => setDesc(e.target.value)} style={inp} />
+          <button className="btn btn-primary" onClick={create} disabled={busy}>{t("myCompany.submit")}</button>
+          <button className="btn btn-ghost" onClick={() => setCreating(false)}>{t("myCompany.cancel")}</button>
         </div>
       )}
       {products.length === 0 ? (
-        <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>هنوز محصولی اضافه نشده.</div>
+        <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("myCompany.no_products_yet")}</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {products.map((p) => (
@@ -372,7 +376,7 @@ function ProductsPanel({ companyId, products, canEdit, onChanged }: {
                 <div style={{ fontWeight: 700 }}>{p.name}</div>
                 {p.description && <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>{p.description}</div>}
               </div>
-              {canEdit && <button className="btn btn-ghost" onClick={() => remove(p.id)} style={{ fontSize: 12, color: "#c33" }}>حذف</button>}
+              {canEdit && <button className="btn btn-ghost" onClick={() => remove(p.id)} style={{ fontSize: 12, color: "#c33" }}>{t("myCompany.delete")}</button>}
             </div>
           ))}
         </div>

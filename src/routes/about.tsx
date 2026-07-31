@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { fetchAboutSections, type AboutSection } from "@/lib/exhibition-api";
 import { useAssetUrl } from "@/lib/use-auth";
 
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/about")({
 });
 
 function AboutPage() {
+  const { t } = useTranslation();
   const { data: sections = [] } = useQuery({
     queryKey: ["about-public"],
     queryFn: fetchAboutSections,
@@ -29,10 +31,10 @@ function AboutPage() {
       <div className="view">
         <div className="shell" style={{ paddingTop: 32, paddingBottom: 64 }}>
           <section style={{ marginBottom: 32 }}>
-            <span className="eyebrow">معرفی</span>
-            <h1 className="h1">درباره اطلس</h1>
+            <span className="eyebrow">{t("about.eyebrow")}</span>
+            <h1 className="h1">{t("about.title")}</h1>
             <p className="lead" style={{ maxWidth: 720 }}>
-              اطلس، سکوی هوشمند شبکه ملی پارک‌های فناوری ایران است.
+              {t("about.lead")}
             </p>
           </section>
 
@@ -97,6 +99,7 @@ function SectionView({ s }: { s: AboutSection }) {
 }
 
 function DefaultAbout() {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -108,9 +111,9 @@ function DefaultAbout() {
       className="about-grid"
     >
       <div className="panel" style={{ padding: 24, borderRadius: 16 }}>
-        <h2 className="h2" style={{ marginTop: 0 }}>اطلس در یک نگاه</h2>
+        <h2 className="h2" style={{ marginTop: 0 }}>{t("about.overview_title")}</h2>
         <p className="lead" style={{ marginTop: 12 }}>
-          محتوای این صفحه هنوز توسط ادمین بارگذاری نشده است.
+          {t("about.no_content")}
         </p>
       </div>
       <div
@@ -122,8 +125,8 @@ function DefaultAbout() {
         }}
       >
         <div style={{ padding: 24 }}>
-          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>آواتار تعاملی مصطفی مافی</div>
-          <div style={{ opacity: 0.8, fontSize: 14 }}>به‌زودی.</div>
+          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{t("about.avatar_title")}</div>
+          <div style={{ opacity: 0.8, fontSize: 14 }}>{t("about.coming_soon")}</div>
         </div>
       </div>
       <style>{`@media (max-width: 820px) { .about-grid { grid-template-columns: 1fr !important; } }`}</style>

@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth, useAssetUrl } from "@/lib/use-auth";
 import {
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/admin/about")({
 });
 
 function AdminAboutPage() {
+  const { t } = useTranslation();
   const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -31,18 +33,18 @@ function AdminAboutPage() {
     enabled: !!user && isAdmin,
   });
 
-  if (loading) return <div className="view"><div className="shell" style={{ padding: 40 }}>درحال بارگذاری…</div></div>;
+  if (loading) return <div className="view"><div className="shell" style={{ padding: 40 }}>{t("common.loading")}</div></div>;
   if (!user) return null;
   if (!isAdmin) {
     return (
       <div className="view"><div className="shell" style={{ padding: 40 }}>
-        <h2 className="h2">دسترسی ندارید</h2>
+        <h2 className="h2">{t("adminExhibition.no_admin_access_title")}</h2>
       </div></div>
     );
   }
 
   async function addSection() {
-    const key = prompt("کلید بخش (مثلاً intro، overview، avatar):");
+    const key = prompt(t("adminAbout.prompt_section_key"));
     if (!key) return;
     await upsertAboutSection({ section_key: key, title: "", body: "", sort_order: sections.length });
     qc.invalidateQueries({ queryKey: ["admin-about"] });
@@ -55,14 +57,14 @@ function AdminAboutPage() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div>
             <span className="eyebrow">Admin</span>
-            <h2 className="h2" style={{ fontSize: 24 }}>مدیریت محتوای «درباره اطلس»</h2>
+            <h2 className="h2" style={{ fontSize: 24 }}>{t("adminAbout.manage_title")}</h2>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <Link to="/about" className="btn btn-ghost">مشاهده صفحه</Link>
-            <Link to="/admin/parks" className="btn btn-ghost">پارک‌ها</Link>
-            <Link to="/admin/exhibition" className="btn btn-ghost">نمایشگاه</Link>
-            <button className="btn btn-primary" onClick={addSection}>+ افزودن بخش</button>
-            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>خروج</button>
+            <Link to="/about" className="btn btn-ghost">{t("adminAbout.view_page")}</Link>
+            <Link to="/admin/parks" className="btn btn-ghost">{t("adminAbout.parks_link")}</Link>
+            <Link to="/admin/exhibition" className="btn btn-ghost">{t("adminAbout.exhibition_link")}</Link>
+            <button className="btn btn-primary" onClick={addSection}>{t("adminAbout.add_section")}</button>
+            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
           </div>
         </div>
 
@@ -70,7 +72,7 @@ function AdminAboutPage() {
           {sections.map((s) => <SectionEditor key={s.id} section={s} />)}
           {!sections.length && (
             <div className="panel" style={{ padding: 24, color: "var(--ink-soft)" }}>
-              هنوز بخشی ایجاد نشده. روی «افزودن بخش» کلیک کنید.
+              {t("adminAbout.no_sections_yet")}
             </div>
           )}
         </div>
@@ -80,6 +82,7 @@ function AdminAboutPage() {
 }
 
 function SectionEditor({ section }: { section: AboutSection }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [form, setForm] = useState<AboutSection>(section);
   const [busy, setBusy] = useState(false);
@@ -93,9 +96,9 @@ function SectionEditor({ section }: { section: AboutSection }) {
   async function save() {
     setBusy(true); setMsg(null);
     const { error } = await upsertAboutSection(form);
-    if (error) setMsg("خطا: " + error.message);
+    if (error) setMsg(`${t("common.error")}: ${error.message}`);
     else {
-      setMsg("ذخیره شد ✓");
+      setMsg(t("common.saved"));
       qc.invalidateQueries({ queryKey: ["admin-about"] });
       qc.invalidateQueries({ queryKey: ["about-public"] });
     }
@@ -113,13 +116,13 @@ function SectionEditor({ section }: { section: AboutSection }) {
       await upsertAboutSection(next);
       qc.invalidateQueries({ queryKey: ["admin-about"] });
       qc.invalidateQueries({ queryKey: ["about-public"] });
-      setMsg("بارگذاری شد ✓");
-    } catch (e: any) { setMsg("خطا: " + (e.message ?? e)); }
+      setMsg(t("adminAbout.uploaded"));
+    } catch (e: any) { setMsg(`${t("common.error")}: ${e.message ?? e}`); }
     setBusy(false); e.target.value = "";
   }
 
   async function remove() {
-    if (!confirm("حذف این بخش؟")) return;
+    if (!confirm(t("adminAbout.confirm_delete_section"))) return;
     await deleteAboutSection(section.id);
     qc.invalidateQueries({ queryKey: ["admin-about"] });
     qc.invalidateQueries({ queryKey: ["about-public"] });
@@ -130,7 +133,7 @@ function SectionEditor({ section }: { section: AboutSection }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <div>
           <span className="eyebrow">{form.section_key}</span>
-          <h3 style={{ marginTop: 4 }}>{form.title || "بدون عنوان"}</h3>
+          <h3 style={{ marginTop: 4 }}>{form.title || t("adminAbout.untitled")}</h3>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <input
@@ -138,13 +141,13 @@ function SectionEditor({ section }: { section: AboutSection }) {
             value={form.sort_order}
             onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) || 0 })}
             style={{ ...field, width: 80 }}
-            title="ترتیب"
+            title={t("adminAbout.sort_order_title")}
           />
           <label style={{ fontSize: 13, color: "var(--ink-soft)", display: "flex", gap: 6, alignItems: "center" }}>
             <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
-            فعال
+            {t("adminAbout.active")}
           </label>
-          <button className="btn btn-ghost" onClick={remove} style={{ fontSize: 12 }}>حذف بخش</button>
+          <button className="btn btn-ghost" onClick={remove} style={{ fontSize: 12 }}>{t("adminAbout.delete_section")}</button>
         </div>
       </div>
 
@@ -153,50 +156,50 @@ function SectionEditor({ section }: { section: AboutSection }) {
           <input
             value={form.section_key}
             onChange={(e) => setForm({ ...form, section_key: e.target.value })}
-            placeholder="کلید بخش (انگلیسی)"
+            placeholder={t("adminAbout.section_key_placeholder")}
             style={field}
           />
-          <input value={form.title ?? ""} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="عنوان بخش" style={field} />
+          <input value={form.title ?? ""} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder={t("adminAbout.section_title_placeholder")} style={field} />
           <textarea value={form.body ?? ""} onChange={(e) => setForm({ ...form, body: e.target.value })}
-            placeholder="متن کامل…" rows={8}
+            placeholder={t("adminAbout.body_placeholder")} rows={8}
             style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <button className="btn btn-primary" onClick={save} disabled={busy}>ذخیره</button>
+            <button className="btn btn-primary" onClick={save} disabled={busy}>{t("adminAbout.save")}</button>
             {msg && <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>{msg}</span>}
           </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div>
-            <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 6 }}>تصویر بخش</div>
+            <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 6 }}>{t("adminAbout.section_image")}</div>
             <div style={{ aspectRatio: "16/9", borderRadius: 10, background: "var(--panel-2)", border: "1px solid var(--stroke)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {imgUrl ? <img src={imgUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>بدون تصویر</span>}
+                : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("adminAbout.no_image")}</span>}
             </div>
             <label className="btn btn-ghost" style={{ marginTop: 6, fontSize: 12, cursor: "pointer", display: "block", textAlign: "center" }}>
-              آپلود تصویر
+              {t("adminAbout.upload_image")}
               <input type="file" accept="image/*" onChange={(e) => upload("image", e)} style={{ display: "none" }} />
             </label>
           </div>
           <div>
-            <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 6 }}>ویدئو ۱</div>
+            <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 6 }}>{t("adminAbout.video_1")}</div>
             <div style={{ aspectRatio: "16/9", borderRadius: 10, background: "var(--panel-2)", border: "1px solid var(--stroke)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {videoSrc ? <video src={videoSrc} controls style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>بدون ویدئو</span>}
+                : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("adminAbout.no_video")}</span>}
             </div>
             <label className="btn btn-ghost" style={{ marginTop: 6, fontSize: 12, cursor: "pointer", display: "block", textAlign: "center" }}>
-              {form.video_url ? "جایگزینی ویدئو ۱" : "آپلود ویدئو ۱"}
+              {form.video_url ? t("adminAbout.replace_video_1") : t("adminAbout.upload_video_1")}
               <input type="file" accept="video/*" onChange={(e) => upload("video", e)} style={{ display: "none" }} />
             </label>
           </div>
           <div>
-            <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 6 }}>ویدئو ۲</div>
+            <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 6 }}>{t("adminAbout.video_2")}</div>
             <div style={{ aspectRatio: "16/9", borderRadius: 10, background: "var(--panel-2)", border: "1px solid var(--stroke)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {videoSrc2 ? <video src={videoSrc2} controls style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>بدون ویدئو</span>}
+                : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("adminAbout.no_video")}</span>}
             </div>
             <label className="btn btn-ghost" style={{ marginTop: 6, fontSize: 12, cursor: "pointer", display: "block", textAlign: "center" }}>
-              {form.video_url_2 ? "جایگزینی ویدئو ۲" : "آپلود ویدئو ۲"}
+              {form.video_url_2 ? t("adminAbout.replace_video_2") : t("adminAbout.upload_video_2")}
               <input type="file" accept="video/*" onChange={(e) => upload("video2", e)} style={{ display: "none" }} />
             </label>
           </div>

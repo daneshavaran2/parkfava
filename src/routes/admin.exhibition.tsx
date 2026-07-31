@@ -57,11 +57,12 @@ const emptyCompany = (id: string): ExhibitionCompany => ({
 });
 
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
   const map: Record<string, { bg: string; fg: string; label: string }> = {
-    approved: { bg: "#164e2b", fg: "#a7f3c8", label: "تاییدشده" },
-    pending: { bg: "#5b4408", fg: "#ffe08a", label: "در انتظار" },
-    draft: { bg: "#2b2f38", fg: "#c9cfda", label: "پیش‌نویس" },
-    rejected: { bg: "#5b1414", fg: "#ffb4b4", label: "رد شده" },
+    approved: { bg: "#164e2b", fg: "#a7f3c8", label: t("adminExhibition.status_approved") },
+    pending: { bg: "#5b4408", fg: "#ffe08a", label: t("adminExhibition.status_pending") },
+    draft: { bg: "#2b2f38", fg: "#c9cfda", label: t("adminExhibition.status_draft") },
+    rejected: { bg: "#5b1414", fg: "#ffb4b4", label: t("adminExhibition.status_rejected") },
   };
   const s = map[status] ?? map.draft;
   return (
@@ -73,6 +74,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function AdminExhibitionPage() {
+  const { t } = useTranslation();
   const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -103,22 +105,22 @@ function AdminExhibitionPage() {
     }
   }, [companies, filtered, selected]);
 
-  if (loading) return <div className="view"><div className="shell" style={{ padding: 40 }}>درحال بارگذاری…</div></div>;
+  if (loading) return <div className="view"><div className="shell" style={{ padding: 40 }}>{t("common.loading")}</div></div>;
   if (!user) return null;
   if (!isAdmin) {
     return (
       <div className="view"><div className="shell" style={{ padding: 40 }}>
-        <h2 className="h2">دسترسی ندارید</h2>
-        <p className="lead">حساب شما نقش ادمین ندارد.</p>
+        <h2 className="h2">{t("adminExhibition.no_admin_access_title")}</h2>
+        <p className="lead">{t("adminExhibition.no_admin_access_lead")}</p>
         <p style={{ fontSize: 13, color: "var(--ink-soft)", marginTop: 8, fontFamily: "monospace" }}>User ID: {user.id}</p>
         <p style={{ fontSize: 13, color: "var(--ink-soft)", marginTop: 4 }}>Email: {user.email}</p>
         <p style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 16 }}>
-          برای تبدیل این حساب به ادمین، در دیتابیس اجرا کنید:<br/>
+          {t("adminExhibition.make_admin_instructions")}<br/>
           <code style={{ background: "var(--panel-2)", padding: "4px 6px", borderRadius: 4, display: "inline-block", marginTop: 4 }}>
             INSERT INTO public.user_roles (user_id, role) VALUES ('{user.id}', 'admin');
           </code>
         </p>
-        <button className="btn btn-ghost" style={{ marginTop: 16 }} onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>خروج و ورود مجدد</button>
+        <button className="btn btn-ghost" style={{ marginTop: 16 }} onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("adminExhibition.signout_and_relogin")}</button>
       </div></div>
     );
   }
@@ -155,14 +157,14 @@ function AdminExhibitionPage() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div>
             <span className="eyebrow">Admin</span>
-            <h2 className="h2" style={{ fontSize: 24 }}>مدیریت شرکت‌های نمایشگاه</h2>
+            <h2 className="h2" style={{ fontSize: 24 }}>{t("adminExhibition.manage_companies_title")}</h2>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <Link to="/exhibition" className="btn btn-ghost">مشاهده نمایشگاه</Link>
-            <Link to="/admin/attachments" className="btn btn-ghost">داشبورد ضمیمه‌ها</Link>
-            <Link to="/admin/parks" className="btn btn-ghost">پارک‌ها</Link>
-            <Link to="/admin/about" className="btn btn-ghost">درباره</Link>
-            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>خروج</button>
+            <Link to="/exhibition" className="btn btn-ghost">{t("adminExhibition.view_exhibition")}</Link>
+            <Link to="/admin/attachments" className="btn btn-ghost">{t("adminExhibition.attachments_dashboard")}</Link>
+            <Link to="/admin/parks" className="btn btn-ghost">{t("adminExhibition.parks_link")}</Link>
+            <Link to="/admin/about" className="btn btn-ghost">{t("adminExhibition.about_link")}</Link>
+            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
           </div>
         </div>
 
@@ -172,25 +174,25 @@ function AdminExhibitionPage() {
               className="btn btn-primary"
               style={{ width: "100%", marginBottom: 8 }}
               onClick={() => setCreating((v) => !v)}
-            >+ افزودن شرکت جدید</button>
+            >{t("adminExhibition.add_new_company")}</button>
             {creating && (
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
                 <input
                   value={newId}
                   onChange={(e) => setNewId(e.target.value)}
-                  placeholder="شناسه یکتا (مثلاً: my-company)"
+                  placeholder={t("adminExhibition.new_id_placeholder")}
                   style={field}
                 />
-                <button className="btn btn-ghost" onClick={createCompany}>ایجاد</button>
+                <button className="btn btn-ghost" onClick={createCompany}>{t("adminExhibition.create")}</button>
               </div>
             )}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4, margin: "6px 0 10px" }}>
               {([
-                ["all", "همه"],
-                ["pending", `در انتظار${pendingCount ? ` (${pendingCount})` : ""}`],
-                ["approved", "تاییدشده"],
-                ["draft", "پیش‌نویس"],
-                ["rejected", "رد شده"],
+                ["all", t("adminExhibition.status_all")],
+                ["pending", `${t("adminExhibition.status_pending")}${pendingCount ? ` (${pendingCount})` : ""}`],
+                ["approved", t("adminExhibition.status_approved")],
+                ["draft", t("adminExhibition.status_draft")],
+                ["rejected", t("adminExhibition.status_rejected")],
               ] as const).map(([k, label]) => (
                 <button
                   key={k}
@@ -216,9 +218,9 @@ function AdminExhibitionPage() {
                 opacity: c.is_active ? 1 : 0.6,
               }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  <button onClick={() => move(i, -1)} title="بالا"
+                  <button onClick={() => move(i, -1)} title={t("adminExhibition.move_up")}
                     style={{ background: "var(--panel-2)", border: 0, color: "inherit", borderRadius: 4, cursor: "pointer", padding: "2px 6px", fontSize: 11 }}>▲</button>
-                  <button onClick={() => move(i, 1)} title="پایین"
+                  <button onClick={() => move(i, 1)} title={t("adminExhibition.move_down")}
                     style={{ background: "var(--panel-2)", border: 0, color: "inherit", borderRadius: 4, cursor: "pointer", padding: "2px 6px", fontSize: 11 }}>▼</button>
                 </div>
                 <button onClick={() => setSelected(c.company_id)}
@@ -229,20 +231,20 @@ function AdminExhibitionPage() {
                   </div>
                   <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>{c.city || c.company_id}</div>
                 </button>
-                <label title="فعال/غیرفعال" style={{ display: "flex", alignItems: "center", padding: "0 6px", cursor: "pointer" }}>
+                <label title={t("adminExhibition.toggle_active")} style={{ display: "flex", alignItems: "center", padding: "0 6px", cursor: "pointer" }}>
                   <input type="checkbox" checked={c.is_active} onChange={() => toggleActive(c)} />
                 </label>
               </div>
             ))}
-            {companiesLoading && <div style={{ fontSize: 13, color: "var(--ink-soft)", padding: 10 }}>در حال بارگیری…</div>}
+            {companiesLoading && <div style={{ fontSize: 13, color: "var(--ink-soft)", padding: 10 }}>{t("common.loading")}</div>}
             {companiesError && <div style={{ fontSize: 13, color: "#ff8888", padding: 10, lineHeight: 1.8 }}>
-              خطا در بارگیری شرکت‌ها: {String((companiesErr as any)?.message ?? companiesErr)}
+              {t("adminExhibition.load_companies_error")}: {String((companiesErr as any)?.message ?? companiesErr)}
             </div>}
             {!companiesLoading && !companiesError && !filtered.length && (
               <div style={{ fontSize: 13, color: "var(--ink-soft)", padding: 10 }}>
                 {companies.length === 0
-                  ? "هیچ شرکتی در دیتابیس یافت نشد. اگر شرکت‌ها در نمایشگاه عمومی دیده می‌شوند، دسترسی ادمین یا اتصال داده را بررسی کنید."
-                  : "موردی در این وضعیت نیست."}
+                  ? t("adminExhibition.no_companies_found")
+                  : t("adminExhibition.no_companies_in_status")}
               </div>
             )}
           </aside>
@@ -337,8 +339,8 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
       setForm(next);
       await saveAdminCompanyFn({ data: next as any });
       invalidate();
-      setMsg("بارگذاری شد ✓");
-    } catch (e: any) { setMsg("خطا: " + (e.message ?? e)); }
+      setMsg(t("adminExhibition.uploaded"));
+    } catch (e: any) { setMsg(`${t("common.error")}: ${e.message ?? e}`); }
     setBusy(false);
   }
 
@@ -356,7 +358,7 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
       const path = await uploadExhibitionAsset(companyId, file);
       await addExhibitionImageFn({ data: { company_id: companyId, image_url: path } });
       invalidate();
-    } catch (e: any) { setMsg("خطا در آپلود: " + (e.message ?? e)); }
+    } catch (e: any) { setMsg(`${t("adminExhibition.upload_error")}: ${e.message ?? e}`); }
     setBusy(false); e.target.value = "";
   }
 
@@ -369,7 +371,7 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
   }
 
   async function removeCompany() {
-    if (!confirm("حذف کامل این شرکت؟")) return;
+    if (!confirm(t("adminExhibition.confirm_delete_company"))) return;
     await deleteExhibitionCompanyAdminFn({ data: { company_id: companyId } });
     invalidate();
     onDeleted();
@@ -379,22 +381,22 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
     setBusy(true); setMsg(null);
     try {
       await approveCompanyAdminFn({ data: { company_id: companyId } });
-      setMsg("تایید و منتشر شد ✓"); setForm((f) => ({ ...f, status: "approved", is_active: true })); invalidate();
-    } catch (e: any) { setMsg("خطا: " + (e?.message ?? e)); }
+      setMsg(t("adminExhibition.approved_and_published")); setForm((f) => ({ ...f, status: "approved", is_active: true })); invalidate();
+    } catch (e: any) { setMsg(`${t("common.error")}: ${e?.message ?? e}`); }
     setBusy(false);
   }
   async function doReject() {
-    const note = prompt("دلیل رد (به صاحب شرکت نمایش داده می‌شود):", form.rejection_note ?? "");
+    const note = prompt(t("adminExhibition.reject_prompt"), form.rejection_note ?? "");
     if (note === null) return;
     setBusy(true); setMsg(null);
     try {
       await rejectCompanyAdminFn({ data: { company_id: companyId, note } });
-      setMsg("رد شد"); setForm((f) => ({ ...f, status: "rejected", rejection_note: note })); invalidate();
-    } catch (e: any) { setMsg("خطا: " + (e?.message ?? e)); }
+      setMsg(t("adminExhibition.rejected")); setForm((f) => ({ ...f, status: "rejected", rejection_note: note })); invalidate();
+    } catch (e: any) { setMsg(`${t("common.error")}: ${e?.message ?? e}`); }
     setBusy(false);
   }
 
-  if (isLoading) return <div className="panel" style={{ padding: 24 }}>درحال بارگذاری…</div>;
+  if (isLoading) return <div className="panel" style={{ padding: 24 }}>{t("common.loading")}</div>;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -403,34 +405,34 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div>
-              <span className="eyebrow">شرکت</span>
+              <span className="eyebrow">{t("adminExhibition.company_eyebrow")}</span>
               <h3 style={{ marginTop: 2 }}>{form.name || companyId}</h3>
             </div>
             <StatusBadge status={form.status ?? "draft"} />
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {form.status !== "approved" && (
-              <button className="btn btn-primary" onClick={doApprove} disabled={busy}>تایید و انتشار</button>
+              <button className="btn btn-primary" onClick={doApprove} disabled={busy}>{t("adminExhibition.approve_and_publish")}</button>
             )}
             {form.status !== "rejected" && (
-              <button className="btn btn-ghost" onClick={doReject} disabled={busy}>رد کردن…</button>
+              <button className="btn btn-ghost" onClick={doReject} disabled={busy}>{t("adminExhibition.reject")}</button>
             )}
-            <button className="btn btn-ghost" onClick={removeCompany} style={{ fontSize: 12, color: "#c33" }}>حذف شرکت</button>
+            <button className="btn btn-ghost" onClick={removeCompany} style={{ fontSize: 12, color: "#c33" }}>{t("adminExhibition.delete_company")}</button>
           </div>
         </div>
         {form.status === "rejected" && form.rejection_note && (
           <div style={{ marginBottom: 12, padding: 10, background: "rgba(200,60,60,.12)", border: "1px solid rgba(200,60,60,.4)", borderRadius: 8, fontSize: 13 }}>
-            <b>دلیل رد:</b> {form.rejection_note}
+            <b>{t("adminExhibition.rejection_reason")}:</b> {form.rejection_note}
           </div>
         )}
 
         <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 20, alignItems: "start" }}>
           <div>
             <div style={{ width: 160, height: 160, borderRadius: 14, background: "var(--panel-2)", border: "1px solid var(--stroke)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {logoUrl ? <img src={logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>بدون لوگو</span>}
+              {logoUrl ? <img src={logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("adminExhibition.no_logo")}</span>}
             </div>
             <label className="btn btn-ghost" style={{ marginTop: 8, width: 160, fontSize: 12, cursor: "pointer", display: "flex", justifyContent: "center" }}>
-              {form.logo_url ? "تعویض لوگو" : "آپلود لوگو"}
+              {form.logo_url ? t("adminExhibition.replace_logo") : t("adminExhibition.upload_logo")}
               <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadField("logo_url", f); e.target.value = ""; }} style={{ display: "none" }} />
             </label>
           </div>
@@ -438,35 +440,35 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             {/* Identity */}
             <section>
-              <SectionTitle>هویت شرکت</SectionTitle>
+              <SectionTitle>{t("adminExhibition.identity_section")}</SectionTitle>
               <div style={grid2}>
-                <Field label="نام شرکت"><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} style={field} /></Field>
-                <Field label="شعار / یک‌خطی"><input value={form.tagline ?? ""} onChange={(e) => setForm({ ...form, tagline: e.target.value })} style={field} /></Field>
-                <Field label="دسته‌بندی (id)"><input value={form.category ?? ""} onChange={(e) => setForm({ ...form, category: e.target.value })} style={field} /></Field>
-                <Field label="پارک"><ParkSelect value={form.park_id ?? ""} onChange={(v) => setForm({ ...form, park_id: v })} /></Field>
-                <Field label="شهر"><input value={form.city ?? ""} onChange={(e) => setForm({ ...form, city: e.target.value })} style={field} /></Field>
-                <Field label="تاریخ تأسیس (شمسی)">
+                <Field label={t("adminExhibition.field_company_name")}><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} style={field} /></Field>
+                <Field label={t("adminExhibition.field_tagline")}><input value={form.tagline ?? ""} onChange={(e) => setForm({ ...form, tagline: e.target.value })} style={field} /></Field>
+                <Field label={t("adminExhibition.field_category_id")}><input value={form.category ?? ""} onChange={(e) => setForm({ ...form, category: e.target.value })} style={field} /></Field>
+                <Field label={t("adminExhibition.field_park")}><ParkSelect value={form.park_id ?? ""} onChange={(v) => setForm({ ...form, park_id: v })} /></Field>
+                <Field label={t("adminExhibition.field_city")}><input value={form.city ?? ""} onChange={(e) => setForm({ ...form, city: e.target.value })} style={field} /></Field>
+                <Field label={t("adminExhibition.field_founded_shamsi")}>
                   <PersianDateInput value={form.founded_at ?? null} onChange={(v) => setForm({ ...form, founded_at: v })} />
                 </Field>
-                <Field label="مجموع نیروی انسانی"><input type="number" value={form.headcount ?? ""} onChange={(e) => setForm({ ...form, headcount: e.target.value ? parseInt(e.target.value) : null })} style={field} /></Field>
-                <Field label="تمام‌وقت"><input type="number" value={form.headcount_full_time ?? ""} onChange={(e) => setForm({ ...form, headcount_full_time: e.target.value ? parseInt(e.target.value) : null })} style={field} /></Field>
-                <Field label="پاره‌وقت"><input type="number" value={form.headcount_part_time ?? ""} onChange={(e) => setForm({ ...form, headcount_part_time: e.target.value ? parseInt(e.target.value) : null })} style={field} /></Field>
-                <Field label="ترتیب نمایش"><input type="number" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} style={field} /></Field>
+                <Field label={t("adminExhibition.field_headcount_total")}><input type="number" value={form.headcount ?? ""} onChange={(e) => setForm({ ...form, headcount: e.target.value ? parseInt(e.target.value) : null })} style={field} /></Field>
+                <Field label={t("adminExhibition.field_headcount_full_time")}><input type="number" value={form.headcount_full_time ?? ""} onChange={(e) => setForm({ ...form, headcount_full_time: e.target.value ? parseInt(e.target.value) : null })} style={field} /></Field>
+                <Field label={t("adminExhibition.field_headcount_part_time")}><input type="number" value={form.headcount_part_time ?? ""} onChange={(e) => setForm({ ...form, headcount_part_time: e.target.value ? parseInt(e.target.value) : null })} style={field} /></Field>
+                <Field label={t("adminExhibition.field_sort_order")}><input type="number" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} style={field} /></Field>
                 <label style={{ fontSize: 13, color: "var(--ink-soft)", display: "flex", gap: 8, alignItems: "center", gridColumn: "1 / -1", padding: "6px 0" }}>
                   <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
-                  فعال (نمایش در نمایشگاه)
+                  {t("adminExhibition.field_active_in_exhibition")}
                 </label>
               </div>
             </section>
 
             {/* Founders & Team */}
             <section>
-              <SectionTitle>بنیانگذاران و حضور حرفه‌ای</SectionTitle>
+              <SectionTitle>{t("adminExhibition.founders_section")}</SectionTitle>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <Field label="👤 بنیانگذاران" hint="نام بنیانگذاران را با ویرگول جدا کنید">
-                  <input value={form.founders ?? ""} onChange={(e) => setForm({ ...form, founders: e.target.value })} placeholder="مثلاً: علی رضایی، سارا محمدی" style={field} />
+                <Field label={t("adminExhibition.field_founders")} hint={t("adminExhibition.founders_hint")}>
+                  <input value={form.founders ?? ""} onChange={(e) => setForm({ ...form, founders: e.target.value })} placeholder={t("adminExhibition.founders_placeholder")} style={field} />
                 </Field>
-                <Field label="🔗 لینکدین شرکت" hint="آدرس کامل صفحه لینکدین">
+                <Field label={t("adminExhibition.field_linkedin")} hint={t("adminExhibition.linkedin_hint")}>
                   <input value={form.linkedin_url ?? ""} onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })} placeholder="https://linkedin.com/company/..." style={field} dir="ltr" />
                 </Field>
               </div>
@@ -474,33 +476,33 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
 
             {/* Contact */}
             <section>
-              <SectionTitle>راه‌های ارتباطی</SectionTitle>
+              <SectionTitle>{t("company.contact_methods")}</SectionTitle>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-                <Field label="وب‌سایت"><input value={form.website ?? ""} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="example.com" style={field} dir="ltr" /></Field>
-                <Field label="ایمیل"><input value={form.email ?? ""} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="info@example.com" style={field} dir="ltr" /></Field>
-                <Field label="تلفن"><input value={form.phone ?? ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} style={field} /></Field>
+                <Field label={t("company.website")}><input value={form.website ?? ""} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="example.com" style={field} dir="ltr" /></Field>
+                <Field label={t("company.email")}><input value={form.email ?? ""} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="info@example.com" style={field} dir="ltr" /></Field>
+                <Field label={t("company.phone")}><input value={form.phone ?? ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} style={field} /></Field>
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <Field label="آدرس"><input value={form.address ?? ""} onChange={(e) => setForm({ ...form, address: e.target.value })} style={field} /></Field>
+                  <Field label={t("company.address")}><input value={form.address ?? ""} onChange={(e) => setForm({ ...form, address: e.target.value })} style={field} /></Field>
                 </div>
-                <Field label="عرض جغرافیایی (Latitude)">
+                <Field label={t("myCompany.field_lat")}>
                   <input value={latRaw} onChange={(e) => onLatChange(e.target.value)}
                     style={{ ...field, borderColor: latErr ? "#ff7676" : undefined }}
                     dir="ltr" placeholder="35.6892" inputMode="decimal"
                     aria-invalid={!!latErr} data-testid="admin-lat-input" />
                   {latErr && <div role="alert" style={{ color: "#ff7676", fontSize: 12, marginTop: 4 }}>{latErr}</div>}
                 </Field>
-                <Field label="طول جغرافیایی (Longitude)">
+                <Field label={t("myCompany.field_lng")}>
                   <input value={lngRaw} onChange={(e) => onLngChange(e.target.value)}
                     style={{ ...field, borderColor: lngErr ? "#ff7676" : undefined }}
                     dir="ltr" placeholder="51.3890" inputMode="decimal"
                     aria-invalid={!!lngErr} data-testid="admin-lng-input" />
                   {lngErr && <div role="alert" style={{ color: "#ff7676", fontSize: 12, marginTop: 4 }}>{lngErr}</div>}
                 </Field>
-                <Field label="چسباندن از گوگل/نشان">
+                <Field label={t("adminExhibition.field_paste_link")}>
                   <input
                     style={field}
                     dir="ltr"
-                    placeholder="https://maps.google.com/…  یا  https://neshan.org/…"
+                    placeholder={t("myCompany.paste_link_placeholder")}
                     onPaste={(e) => {
                       const text = e.clipboardData.getData("text");
                       const m = text.match(/(-?\d{1,3}\.\d+)[ ,/@]+(-?\d{1,3}\.\d+)/);
@@ -519,18 +521,18 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
 
             {/* Descriptions */}
             <section>
-              <SectionTitle>معرفی و توضیحات</SectionTitle>
+              <SectionTitle>{t("adminExhibition.descriptions_section")}</SectionTitle>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <Field label="معرفی کوتاه">
+                <Field label={t("adminExhibition.field_short_intro")}>
                   <textarea value={form.intro ?? ""} onChange={(e) => setForm({ ...form, intro: e.target.value })} rows={3} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
                 </Field>
-                <Field label="معرفی محصولات دانش‌بنیان">
+                <Field label={t("adminExhibition.field_knowledge_products_intro")}>
                   <textarea value={form.knowledge_products_intro ?? ""} onChange={(e) => setForm({ ...form, knowledge_products_intro: e.target.value })} rows={3} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
                 </Field>
-                <Field label="پتانسیل صادرات">
+                <Field label={t("company.export_potential")}>
                   <textarea value={form.export_potential ?? ""} onChange={(e) => setForm({ ...form, export_potential: e.target.value })} rows={2} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
                 </Field>
-                <Field label="توضیحات کامل">
+                <Field label={t("adminExhibition.field_full_description")}>
                   <textarea value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={5} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
                 </Field>
               </div>
@@ -538,7 +540,7 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
 
             {/* Sticky save bar */}
             <div style={{ position: "sticky", bottom: 0, display: "flex", gap: 12, alignItems: "center", padding: "10px 0", borderTop: "1px solid var(--stroke)", background: "var(--panel)", marginTop: 4 }}>
-              <button className="btn btn-primary" onClick={save} disabled={busy}>{busy ? "در حال ذخیره…" : "ذخیره تغییرات"}</button>
+              <button className="btn btn-primary" onClick={save} disabled={busy}>{busy ? t("adminExhibition.saving") : t("myCompany.save_changes")}</button>
               {msg && <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>{msg}</span>}
             </div>
           </div>
@@ -551,33 +553,33 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
       {/* Video + Catalog */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <div className="panel" style={{ padding: 20 }}>
-          <h3 style={{ marginBottom: 10 }}>ویدئوی معرفی</h3>
+          <h3 style={{ marginBottom: 10 }}>{t("company.intro_video")}</h3>
           {videoUrl ? (
             <video src={videoUrl} controls style={{ width: "100%", borderRadius: 10, background: "#000" }} />
           ) : (
-            <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>ویدئویی بارگذاری نشده.</div>
+            <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("adminExhibition.intro_video_not_uploaded")}</div>
           )}
           <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
             <label className="btn btn-ghost" style={{ fontSize: 12, cursor: "pointer" }}>
-              {form.video_url ? "جایگزینی" : "آپلود ویدئو"}
+              {form.video_url ? t("adminExhibition.replace") : t("adminExhibition.upload_video")}
               <input type="file" accept="video/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadField("video_url", f); e.target.value = ""; }} style={{ display: "none" }} />
             </label>
-            {form.video_url && <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => clearField("video_url")}>حذف</button>}
+            {form.video_url && <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => clearField("video_url")}>{t("myCompany.delete")}</button>}
           </div>
         </div>
         <div className="panel" style={{ padding: 20 }}>
-          <h3 style={{ marginBottom: 10 }}>کاتالوگ (PDF)</h3>
+          <h3 style={{ marginBottom: 10 }}>{t("adminExhibition.catalog_pdf")}</h3>
           {catalogUrl ? (
-            <a href={catalogUrl} target="_blank" rel="noopener" className="btn btn-ghost" style={{ fontSize: 13 }}>📄 مشاهده کاتالوگ</a>
+            <a href={catalogUrl} target="_blank" rel="noopener" className="btn btn-ghost" style={{ fontSize: 13 }}>{t("adminExhibition.view_catalog")}</a>
           ) : (
-            <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>کاتالوگی بارگذاری نشده.</div>
+            <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("adminExhibition.catalog_not_uploaded")}</div>
           )}
           <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
             <label className="btn btn-ghost" style={{ fontSize: 12, cursor: "pointer" }}>
-              {form.catalog_url ? "جایگزینی" : "آپلود کاتالوگ"}
+              {form.catalog_url ? t("adminExhibition.replace") : t("adminExhibition.upload_catalog")}
               <input type="file" accept="application/pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadField("catalog_url", f); e.target.value = ""; }} style={{ display: "none" }} />
             </label>
-            {form.catalog_url && <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => clearField("catalog_url")}>حذف</button>}
+            {form.catalog_url && <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => clearField("catalog_url")}>{t("myCompany.delete")}</button>}
           </div>
         </div>
       </div>
@@ -588,9 +590,9 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
       {/* Gallery */}
       <div className="panel" style={{ padding: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <h3>گالری تصاویر</h3>
+          <h3>{t("company.image_gallery")}</h3>
           <label className="btn btn-ghost" style={{ fontSize: 12, cursor: "pointer" }}>
-            + افزودن عکس
+            {t("adminExhibition.add_photo")}
             <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: "none" }} />
           </label>
         </div>
@@ -603,7 +605,7 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
               onDelete={async () => { await deleteExhibitionImageFn({ data: { id: img.id } }); invalidate(); }}
             />
           ))}
-          {!data?.images.length && <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>هنوز عکسی اضافه نشده.</div>}
+          {!data?.images.length && <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("adminExhibition.no_photos_yet")}</div>}
         </div>
       </div>
 
@@ -614,6 +616,7 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
 }
 
 function ProductsEditor({ companyId, products, onChange }: { companyId: string; products: ExhibitionProduct[]; onChange: () => void }) {
+  const { t } = useTranslation();
   const upsertExhibitionProductFn = useServerFn(upsertExhibitionProduct);
   const reorderExhibitionProductsFn = useServerFn(reorderExhibitionProducts);
   const [newName, setNewName] = useState("");
@@ -632,23 +635,24 @@ function ProductsEditor({ companyId, products, onChange }: { companyId: string; 
   return (
     <div className="panel" style={{ padding: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 8 }}>
-        <h3>محصولات و خدمات</h3>
+        <h3>{t("adminExhibition.products_services")}</h3>
         <div style={{ display: "flex", gap: 6 }}>
-          <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="نام محصول جدید…" style={{ ...field, padding: "6px 10px", fontSize: 13 }} />
-          <button className="btn btn-primary" onClick={add} style={{ fontSize: 12 }}>+ افزودن</button>
+          <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t("adminExhibition.new_product_placeholder")} style={{ ...field, padding: "6px 10px", fontSize: 13 }} />
+          <button className="btn btn-primary" onClick={add} style={{ fontSize: 12 }}>{t("adminExhibition.add")}</button>
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {products.map((p, i) => (
           <ProductRow key={p.id} p={p} companyId={companyId} onChange={onChange} onUp={() => move(i, -1)} onDown={() => move(i, 1)} />
         ))}
-        {!products.length && <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>محصولی ثبت نشده.</div>}
+        {!products.length && <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("adminExhibition.no_products_registered")}</div>}
       </div>
     </div>
   );
 }
 
 function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionProduct; companyId: string; onChange: () => void; onUp: () => void; onDown: () => void }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const upsertExhibitionProductFn = useServerFn(upsertExhibitionProduct);
   const deleteExhibitionProductFn = useServerFn(deleteExhibitionProduct);
@@ -699,12 +703,12 @@ function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionPro
     } finally { setBusy(false); }
   }
   async function removeGalleryImage(att: CompanyAttachment) {
-    if (!confirm("حذف این عکس؟")) return;
+    if (!confirm(t("adminExhibition.confirm_delete_photo"))) return;
     await deleteAttachment(att);
     await refreshGallery();
   }
   async function remove() {
-    if (!confirm("حذف این محصول؟")) return;
+    if (!confirm(t("adminExhibition.confirm_delete_product"))) return;
     await deleteExhibitionProductFn({ data: { id: p.id } }); onChange();
   }
   const cat = useAssetUrl(form.catalog_url);
@@ -717,44 +721,44 @@ function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionPro
       </div>
       <div>
         <div style={{ width: 140, height: 105, background: "#fff", borderRadius: 8, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 6, border: "1px solid var(--stroke)" }}>
-          {img ? <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>عکس اصلی</span>}
+          {img ? <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>{t("adminExhibition.main_image")}</span>}
         </div>
         <label className="btn btn-ghost" style={{ width: 140, fontSize: 11, padding: "4px 6px", cursor: "pointer", display: "flex", justifyContent: "center", marginBottom: 4 }}>
-          عکس اصلی
+          {t("adminExhibition.main_image")}
           <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload("image_url", f); e.target.value = ""; }} />
         </label>
         {vid && <video src={vid} controls style={{ width: 140, borderRadius: 6, marginBottom: 4 }} />}
         <label className="btn btn-ghost" style={{ width: 140, fontSize: 11, padding: "4px 6px", cursor: "pointer", display: "flex", justifyContent: "center", marginBottom: 4 }}>
-          {form.video_url ? "تعویض ویدئو" : "ویدئو"}
+          {form.video_url ? t("adminExhibition.replace_video") : t("adminExhibition.video")}
           <input type="file" accept="video/*" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload("video_url", f); e.target.value = ""; }} />
         </label>
         {cat && (
           <a href={cat} target="_blank" rel="noopener" className="btn btn-ghost" style={{ width: 140, fontSize: 11, padding: "4px 6px", display: "flex", justifyContent: "center", marginBottom: 4 }}>
-            مشاهدهٔ کاتالوگ
+            {t("adminExhibition.view_catalog_short")}
           </a>
         )}
         <label className="btn btn-ghost" style={{ width: 140, fontSize: 11, padding: "4px 6px", cursor: "pointer", display: "flex", justifyContent: "center" }}>
-          {form.catalog_url ? "تعویض کاتالوگ" : "کاتالوگ/PDF"}
+          {form.catalog_url ? t("adminExhibition.replace_catalog") : t("adminExhibition.catalog_pdf_short")}
           <input type="file" accept=".pdf,application/pdf,.doc,.docx" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload("catalog_url", f); e.target.value = ""; }} />
         </label>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="نام" style={field} />
-        <textarea value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="توضیحات کامل (در صفحهٔ محصول نمایش داده می‌شود)" rows={3} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
-        <input value={form.link_url ?? ""} onChange={(e) => setForm({ ...form, link_url: e.target.value })} placeholder="لینک محصول/سایت (با https)" style={field} />
+        <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t("myCompany.field_name")} style={field} />
+        <textarea value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={t("adminExhibition.product_desc_placeholder")} rows={3} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
+        <input value={form.link_url ?? ""} onChange={(e) => setForm({ ...form, link_url: e.target.value })} placeholder={t("adminExhibition.product_link_placeholder")} style={field} />
 
         {/* Per-product gallery */}
         <div style={{ marginTop: 4, padding: 8, border: "1px dashed var(--stroke)", borderRadius: 8 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-            <div style={{ fontSize: 12, fontWeight: 700 }}>گالری عکس‌های این محصول</div>
+            <div style={{ fontSize: 12, fontWeight: 700 }}>{t("adminExhibition.product_gallery_title")}</div>
             <label className="btn btn-ghost" style={{ fontSize: 11, padding: "3px 8px", cursor: "pointer" }}>
-              + عکس
+              {t("adminExhibition.add_photo_short")}
               <input type="file" accept="image/*" style={{ display: "none" }}
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) addGalleryImage(f); e.target.value = ""; }} />
             </label>
           </div>
           {productImages.length === 0 ? (
-            <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>هنوز عکسی برای این محصول اضافه نشده.</div>
+            <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>{t("adminExhibition.no_product_photos")}</div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(70px,1fr))", gap: 6 }}>
               {productImages.map((a) => <ProductGalleryThumb key={a.id} att={a} onDelete={() => removeGalleryImage(a)} />)}
@@ -763,8 +767,8 @@ function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionPro
         </div>
 
         <div style={{ display: "flex", gap: 6 }}>
-          <button className="btn btn-primary" onClick={save} disabled={busy} style={{ fontSize: 12 }}>ذخیره</button>
-          <button className="btn btn-ghost" onClick={remove} style={{ fontSize: 12 }}>حذف محصول</button>
+          <button className="btn btn-primary" onClick={save} disabled={busy} style={{ fontSize: 12 }}>{t("adminExhibition.save")}</button>
+          <button className="btn btn-ghost" onClick={remove} style={{ fontSize: 12 }}>{t("adminExhibition.delete_product")}</button>
         </div>
       </div>
     </div>
@@ -772,11 +776,12 @@ function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionPro
 }
 
 function ProductGalleryThumb({ att, onDelete }: { att: CompanyAttachment; onDelete: () => void }) {
+  const { t } = useTranslation();
   const url = useAssetUrl(att.file_url);
   return (
     <div style={{ position: "relative", aspectRatio: "1/1", borderRadius: 6, overflow: "hidden", background: "#fff", border: "1px solid var(--stroke)" }}>
       {url && <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />}
-      <button onClick={onDelete} title="حذف"
+      <button onClick={onDelete} title={t("myCompany.delete")}
         style={{ position: "absolute", top: 2, left: 2, background: "rgba(180,30,30,0.85)", color: "#fff", border: 0, borderRadius: 4, padding: "1px 5px", fontSize: 11, cursor: "pointer" }}>×</button>
     </div>
   );
@@ -784,6 +789,7 @@ function ProductGalleryThumb({ att, onDelete }: { att: CompanyAttachment; onDele
 
 
 function GalleryItem({ url, caption, onCaption, onUp, onDown, onDelete }: { url: string; caption: string | null; onCaption: (v: string) => void; onUp: () => void; onDown: () => void; onDelete: () => void }) {
+  const { t } = useTranslation();
   const src = useAssetUrl(url);
   const [cap, setCap] = useState(caption ?? "");
   useEffect(() => setCap(caption ?? ""), [caption]);
@@ -797,7 +803,7 @@ function GalleryItem({ url, caption, onCaption, onUp, onDown, onDelete }: { url:
           <button onClick={onDelete} style={{ ...overlayBtn, background: "rgba(180,30,30,0.85)" }}>×</button>
         </div>
       </div>
-      <input value={cap} onChange={(e) => setCap(e.target.value)} onBlur={() => cap !== (caption ?? "") && onCaption(cap)} placeholder="کپشن" style={{ ...field, borderRadius: 0, border: 0, fontSize: 12, padding: "6px 8px" }} />
+      <input value={cap} onChange={(e) => setCap(e.target.value)} onBlur={() => cap !== (caption ?? "") && onCaption(cap)} placeholder={t("adminExhibition.caption_placeholder")} style={{ ...field, borderRadius: 0, border: 0, fontSize: 12, padding: "6px 8px" }} />
     </div>
   );
 }
@@ -866,6 +872,7 @@ function PersianDateInput({ value, onChange }: { value: string | null; onChange:
 }
 
 function ParkSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { t } = useTranslation();
   const { data: parks } = useQuery({ queryKey: ["parks-select"], queryFn: fetchParks });
   const rows = parks ?? [];
   return (
@@ -878,10 +885,10 @@ function ParkSelect({ value, onChange }: { value: string; onChange: (v: string) 
         fontFamily: "inherit", fontSize: 14, width: "100%", boxSizing: "border-box",
       }}
     >
-      <option value="">— بدون پارک —</option>
+      <option value="">{t("adminExhibition.no_park")}</option>
       {rows.map((p) => (
         <option key={p.park_id} value={p.park_id}>
-          {p.name}{p.province ? ` — ${p.province}` : ""}{p.is_active ? "" : " (غیرفعال)"}
+          {p.name}{p.province ? ` — ${p.province}` : ""}{p.is_active ? "" : t("adminExhibition.inactive_suffix")}
         </option>
       ))}
     </select>

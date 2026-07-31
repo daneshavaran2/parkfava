@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth, useAssetUrl } from "@/lib/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/admin/attachments")({
 const KINDS: (AttachmentKind | "")[] = ["", "logo", "gallery_image", "catalog", "form_fa", "form_en", "document", "other"];
 
 function AdminAttachmentsPage() {
+  const { t } = useTranslation();
   const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -68,18 +70,18 @@ function AdminAttachmentsPage() {
     invalidate();
   }
   async function remove(att: CompanyAttachment) {
-    if (!confirm(`حذف «${att.title || "فایل"}»؟`)) return;
+    if (!confirm(t("adminAttachments.confirm_delete", { name: att.title || t("common.file") }))) return;
     await deleteAttachment(att);
     invalidate();
   }
 
-  if (loading) return <div className="view"><div className="shell" style={{ padding: 40 }}>درحال بارگذاری…</div></div>;
+  if (loading) return <div className="view"><div className="shell" style={{ padding: 40 }}>{t("common.loading")}</div></div>;
   if (!user) return null;
   if (!isAdmin) {
     return (
       <div className="view"><div className="shell" style={{ padding: 40 }}>
-        <h2 className="h2">دسترسی ندارید</h2>
-        <p className="lead">حساب شما نقش ادمین ندارد.</p>
+        <h2 className="h2">{t("adminExhibition.no_admin_access_title")}</h2>
+        <p className="lead">{t("adminAttachments.no_admin_access_lead")}</p>
       </div></div>
     );
   }
@@ -93,35 +95,35 @@ function AdminAttachmentsPage() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div>
             <span className="eyebrow">Admin</span>
-            <h2 className="h2" style={{ fontSize: 24 }}>داشبورد ضمیمه‌ها و مستندات</h2>
+            <h2 className="h2" style={{ fontSize: 24 }}>{t("adminAttachments.dashboard_title")}</h2>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <Link to="/admin/exhibition" className="btn btn-ghost">نمایشگاه</Link>
-            <Link to="/admin/parks" className="btn btn-ghost">پارک‌ها</Link>
-            <Link to="/admin/about" className="btn btn-ghost">درباره</Link>
-            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>خروج</button>
+            <Link to="/admin/exhibition" className="btn btn-ghost">{t("adminAttachments.exhibition_link")}</Link>
+            <Link to="/admin/parks" className="btn btn-ghost">{t("adminAttachments.parks_link")}</Link>
+            <Link to="/admin/about" className="btn btn-ghost">{t("adminAttachments.about_link")}</Link>
+            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
           </div>
         </div>
 
         <div className="panel" style={{ padding: 14, marginBottom: 12 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10 }}>
             <select value={ownerType} onChange={(e) => setOwnerType(e.target.value as any)} style={field}>
-              <option value="">همه (نمایشگاه + پارک)</option>
-              <option value="exhibition">نمایشگاه</option>
-              <option value="park">پارک</option>
+              <option value="">{t("adminAttachments.filter_owner_all")}</option>
+              <option value="exhibition">{t("adminAttachments.filter_owner_exhibition")}</option>
+              <option value="park">{t("adminAttachments.filter_owner_park")}</option>
             </select>
             <select value={kind} onChange={(e) => setKind(e.target.value as any)} style={field}>
               {KINDS.map((k) => (
-                <option key={k} value={k}>{k === "" ? "همه انواع" : KIND_LABELS[k as AttachmentKind]}</option>
+                <option key={k} value={k}>{k === "" ? t("adminAttachments.filter_kind_all") : KIND_LABELS[k as AttachmentKind]}</option>
               ))}
             </select>
             <select value={active} onChange={(e) => setActive(e.target.value as any)} style={field}>
-              <option value="">همه وضعیت‌ها</option>
-              <option value="yes">فعال</option>
-              <option value="no">غیرفعال</option>
+              <option value="">{t("adminAttachments.filter_status_all")}</option>
+              <option value="yes">{t("adminAttachments.filter_status_active")}</option>
+              <option value="no">{t("adminAttachments.filter_status_inactive")}</option>
             </select>
             <select value={companyFilter} onChange={(e) => setCompanyFilter(e.target.value)} style={field}>
-              <option value="">همه شرکت‌ها</option>
+              <option value="">{t("adminAttachments.filter_company_all")}</option>
               {companies.map((c) => (
                 <option key={c.company_id} value={c.company_id}>{c.name}</option>
               ))}
@@ -129,32 +131,32 @@ function AdminAttachmentsPage() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="جستجوی عنوان…"
+              placeholder={t("adminAttachments.search_placeholder")}
               style={{ ...field, gridColumn: "span 2" }}
             />
           </div>
           <div style={{ marginTop: 8, fontSize: 12, color: "var(--ink-soft)" }}>
-            {filtered.length} مورد
+            {t("adminAttachments.item_count", { count: filtered.length })}
           </div>
         </div>
 
         <div className="panel" style={{ padding: 0, overflow: "hidden" }}>
           {isLoading ? (
-            <div style={{ padding: 30, color: "var(--ink-soft)" }}>درحال بارگذاری…</div>
+            <div style={{ padding: 30, color: "var(--ink-soft)" }}>{t("common.loading")}</div>
           ) : !filtered.length ? (
-            <div style={{ padding: 30, color: "var(--ink-soft)" }}>چیزی یافت نشد.</div>
+            <div style={{ padding: 30, color: "var(--ink-soft)" }}>{t("adminAttachments.no_results")}</div>
           ) : (
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                 <thead style={{ background: "var(--panel-2)" }}>
                   <tr>
-                    <Th>شرکت</Th>
-                    <Th>نوع</Th>
-                    <Th>دسته</Th>
-                    <Th>عنوان</Th>
-                    <Th>حجم</Th>
-                    <Th>وضعیت</Th>
-                    <Th>اقدامات</Th>
+                    <Th>{t("adminAttachments.col_company")}</Th>
+                    <Th>{t("adminAttachments.col_type")}</Th>
+                    <Th>{t("adminAttachments.col_kind")}</Th>
+                    <Th>{t("adminAttachments.col_title")}</Th>
+                    <Th>{t("adminAttachments.col_size")}</Th>
+                    <Th>{t("adminAttachments.col_status")}</Th>
+                    <Th>{t("adminAttachments.col_actions")}</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -188,30 +190,31 @@ function Row({
   onToggle: () => void;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation();
   const url = useAssetUrl(att.file_url);
   return (
     <tr style={{ borderTop: "1px solid var(--stroke)", opacity: att.is_active ? 1 : 0.55 }}>
       <Td>{companyName}</Td>
-      <Td><span className="badge">{att.owner_type === "exhibition" ? "نمایشگاه" : "پارک"}</span></Td>
+      <Td><span className="badge">{att.owner_type === "exhibition" ? t("adminAttachments.filter_owner_exhibition") : t("adminAttachments.filter_owner_park")}</span></Td>
       <Td>{KIND_LABELS[att.kind]}</Td>
       <Td style={{ maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
         {att.title || "—"}
       </Td>
       <Td>{att.size_bytes ? Math.round(att.size_bytes / 1024) + " KB" : "—"}</Td>
-      <Td>{att.is_active ? "فعال" : "غیرفعال"}</Td>
+      <Td>{att.is_active ? t("adminAttachments.filter_status_active") : t("adminAttachments.filter_status_inactive")}</Td>
       <Td>
         <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
           <AttachmentPreviewButton att={att} />
           {url && (
             <a href={url} download className="btn btn-ghost" style={{ fontSize: 11, padding: "4px 8px" }}>
-              دانلود
+              {t("adminAttachments.download")}
             </a>
           )}
           <button onClick={onToggle} className="btn btn-ghost" style={{ fontSize: 11, padding: "4px 8px" }}>
-            {att.is_active ? "غیرفعال" : "فعال"}
+            {att.is_active ? t("adminAttachments.filter_status_inactive") : t("adminAttachments.filter_status_active")}
           </button>
           <button onClick={onRemove} className="btn btn-ghost" style={{ fontSize: 11, padding: "4px 8px" }}>
-            حذف
+            {t("adminAttachments.delete")}
           </button>
         </div>
       </Td>
