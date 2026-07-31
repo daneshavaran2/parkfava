@@ -223,8 +223,8 @@ function Portal({ p }) {
 
 /* ===================== EXHIBITION ===================== */
 export function Exhibition({ query, setQuery, sort, initialCat, park }) {
-  useFavaReady();
-  const fava = F();
+  const favaReady = useFavaReady();
+  const fava = favaReady ? F() : null;
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [cat, setCat] = useState(initialCat || "all");
@@ -455,8 +455,8 @@ function AttachmentGallery({ atts }: { atts: CompanyAttachment[] }) {
 
 
 export function CompanyProfile({ id }) {
-  useFavaReady();
-  const fava = F();
+  const favaReady = useFavaReady();
+  const fava = favaReady ? F() : null;
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -1060,8 +1060,8 @@ const LABEL_POS = { mazand: "top", tehran: "left", semnan: "right", razavi: "rig
 const LABEL_TF = { top: "translate(-50%,-275%)", bottom: "translate(-50%,190%)", left: "translate(-112%,-50%)", right: "translate(12%,-50%)" };
 
 export function ParksMap({ selectedId }) {
-  useFavaReady();
-  const fava = F();
+  const favaReady = useFavaReady();
+  const fava = favaReady ? F() : null;
   const navigate = useNavigate();
   const firstParkId = fava ? fava.PARKS[0].id : "tehran";
   const [sel, setSel] = useState(selectedId || firstParkId);
@@ -1275,9 +1275,9 @@ function PdImage({ path, caption }) {
 
 /* ===================== CATEGORIES ===================== */
 export function Categories() {
-  useFavaReady();
+  const favaReady = useFavaReady();
   const { t } = useTranslation();
-  const fava = F();
+  const fava = favaReady ? F() : null;
   if (!fava) return <HomeFallback />;
   const { CATEGORIES, COMPANIES } = fava;
   return (
