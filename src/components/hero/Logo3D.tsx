@@ -362,6 +362,49 @@ export function Logo3D({
     );
   });
 
+  // Mirror of sliceEls, rotated 180° so each strip's *readable* side faces
+  // backward instead of forward. `sliceEls` above only ever satisfies
+  // backfaceVisibility during the front-facing half of the spin (roughly
+  // -90°..90°) — for the other half the object showed only the flat back
+  // face with no depth cue at all, so the logo visibly flattened to 2D for
+  // half of every rotation. This set becomes visible exactly for that other
+  // half, at the same depths, so the extrusion reads as solid throughout
+  // the full 360°. Shading is inverted (t, not 1-t) because "closest to the
+  // viewer" flips meaning when viewed from behind: the strip nearest the
+  // back face (tz closest to -depth, t=1) is now the near one.
+  const backSliceEls = Array.from({ length: SLICES }, (_, idx) => {
+    const i = SLICES - idx;
+    const t = i / SLICES;
+    const tz = -(i * depth) / SLICES;
+    const hidden = i < SLICES * 0.25;
+    const brightness = 0.22 + t * 0.34;
+    const saturate = 0.72 + t * 0.20;
+    return (
+      <img
+        key={t.toFixed(4)}
+        src={logoSpin}
+        alt=""
+        draggable={false}
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          width: size,
+          height: size,
+          display: "block",
+          pointerEvents: "none",
+          backfaceVisibility: "hidden",
+          transformOrigin: "50% 50%",
+          transform: `translateZ(${tz.toFixed(2)}px) rotateY(180deg)`,
+          animation: `${sliceFadeKf} 120ms ease-out both`,
+          filter: hidden
+            ? undefined
+            : `brightness(${brightness.toFixed(3)}) saturate(${saturate.toFixed(3)}) contrast(1.26)`,
+        }}
+      />
+    );
+  });
+
 
   const tiltDeg = Math.round((pivot.tiltDeg ?? DEFAULT_PIVOT.tiltDeg) * 10) / 10;
   const pv: LogoPivot = pivot;
@@ -436,6 +479,7 @@ export function Logo3D({
             }}
           >
             {showHeavy ? sliceEls : null}
+            {showHeavy ? backSliceEls : null}
           </div>
 
 
