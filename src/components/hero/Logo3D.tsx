@@ -344,7 +344,13 @@ export function Logo3D({
           height: size,
           display: "block",
           pointerEvents: "none",
-          backfaceVisibility: "visible",
+          // Hidden, not visible: these strips represent one-sided extrusion
+          // geometry (same idiom as the front/back face elements below). With
+          // "visible" the un-mirrored backside of every slice stays painted
+          // once the whole assembly rotates past ~90°, so it overlaps the
+          // still-visible front-facing slices and reads as a fanned/gapped
+          // mess mid-spin instead of a clean solid block.
+          backfaceVisibility: "hidden",
           transformOrigin: "50% 50%",
           transform: `translateZ(${tz.toFixed(2)}px)`,
           animation: `${sliceFadeKf} 120ms ease-out both`,
