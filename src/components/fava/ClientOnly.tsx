@@ -15,9 +15,15 @@ export function useMounted() {
 }
 
 /** Waits for window.FAVA (loaded from src/lib/fava/data.js) to be available.
- *  Returns true once it's ready; forces re-render of consumers. */
+ *  Returns true once it's ready; forces re-render of consumers.
+ *  Always starts `false` (matching SSR, which never has `window.FAVA`) even
+ *  though the client may already have it by mount time — reading it
+ *  synchronously in the initializer would make the client's first render
+ *  diverge from the server's and trigger a hydration mismatch. The switch to
+ *  `true` happens in the effect below instead, which only runs after the
+ *  hydration commit, so it's always a safe, ordinary post-mount re-render. */
 export function useFavaReady() {
-  const [ready, setReady] = useState(typeof window !== "undefined" && !!(window as any).FAVA);
+  const [ready, setReady] = useState(false);
   useEffect(() => {
     if ((window as any).FAVA) { setReady(true); return; }
     let cancelled = false;
