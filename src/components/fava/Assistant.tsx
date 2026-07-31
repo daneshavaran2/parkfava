@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Icon, RobotFace, colorVar, toFa } from "./primitives";
 import { fetchExhibitionCompanies, fetchPublicExhibitionProducts } from "@/lib/exhibition-api";
 import { fetchActiveParks } from "@/lib/parks-api";
@@ -48,44 +49,46 @@ function searchParks(question, parks) {
     return t.some((term) => hay.includes(term));
   });
   if (matched.length) return matched.slice(0, 4);
-  // "پارک‌های فعال" / "چه پارک‌هایی" — no specific park named, but the
-  // question is clearly about parks in general.
-  if (norm(question).includes("پارک")) return parks.slice(0, 6);
+  // "پارک‌های فعال" / "active parks" — no specific park named, but the
+  // question is clearly about parks in general (checked in both languages
+  // since the UI, and thus the question, can be in English).
+  const n = norm(question);
+  if (n.includes("پارک") || n.includes("park")) return parks.slice(0, 6);
   return [];
 }
 
-function describeCompany({ c, matchedProducts }) {
+function describeCompany(tr, { c, matchedProducts }) {
   const bits = [`**${c.name}**${c.tagline ? " — " + c.tagline : ""}`];
   const meta = [];
-  if (c.city) meta.push(`شهر: ${c.city}`);
+  if (c.city) meta.push(`${tr("assistant.label_city")}: ${c.city}`);
   if (c.founded_at) {
     const y = new Date(c.founded_at).getFullYear();
-    if (!Number.isNaN(y)) meta.push(`تأسیس: ${toFa(y)}`);
+    if (!Number.isNaN(y)) meta.push(`${tr("assistant.label_founded")}: ${toFa(y)}`);
   }
   const headcount = (c.headcount_full_time || 0) + (c.headcount_part_time || 0);
-  if (headcount) meta.push(`نیرو: ${toFa(headcount)} نفر`);
+  if (headcount) meta.push(`${tr("assistant.label_workforce")}: ${toFa(headcount)} ${tr("assistant.workforce_unit")}`);
   if (meta.length) bits.push(meta.join(" | "));
-  if (matchedProducts.length) bits.push("محصولات: " + matchedProducts.slice(0, 4).map((p) => p.name).join("، "));
-  if (c.website) bits.push(`وب‌سایت: ${c.website}`);
+  if (matchedProducts.length) bits.push(`${tr("assistant.label_products")}: ` + matchedProducts.slice(0, 4).map((p) => p.name).join("، "));
+  if (c.website) bits.push(`${tr("assistant.label_website")}: ${c.website}`);
   return bits.join("\n");
 }
 
-function describePark(p) {
-  return `**${p.name}** — ${p.city || p.province || ""}${p.companies_hint ? ` | ${toFa(p.companies_hint)} شرکت` : ""}`;
+function describePark(tr, p) {
+  return `**${p.name}** — ${p.city || p.province || ""}${p.companies_hint ? ` | ${toFa(p.companies_hint)} ${tr("assistant.park_companies_unit")}` : ""}`;
 }
 
-function buildAnswer(question, companyResults, parkResults) {
+function buildAnswer(tr, question, companyResults, parkResults) {
   if (companyResults.length) {
     const head = companyResults.length === 1
-      ? "این مورد را در سامانه پیدا کردم:"
-      : `${toFa(companyResults.length)} مورد مرتبط در سامانه پیدا کردم:`;
-    return head + "\n\n" + companyResults.map(describeCompany).join("\n\n");
+      ? tr("assistant.found_one_company")
+      : tr("assistant.found_many_companies", { count: companyResults.length });
+    return head + "\n\n" + companyResults.map((r) => describeCompany(tr, r)).join("\n\n");
   }
   if (parkResults.length) {
-    const head = parkResults.length === 1 ? "این پارک را در سامانه پیدا کردم:" : "پارک‌های ثبت‌شده در سامانه:";
-    return head + "\n\n" + parkResults.map(describePark).join("\n");
+    const head = parkResults.length === 1 ? tr("assistant.found_one_park") : tr("assistant.found_many_parks");
+    return head + "\n\n" + parkResults.map((p) => describePark(tr, p)).join("\n");
   }
-  return "چیزی با این عنوان در سامانه ثبت نشده — از دقیق‌بودن اطلاعات مطمئن نیستم، پس ترجیح می‌دهم بگویم پیدا نکردم تا اطلاعات نادرست ندهم. می‌توانید نام حوزه فناوری، شهر یا محصول را امتحان کنید.";
+  return tr("assistant.not_found");
 }
 
 function renderRich(text) {
@@ -106,15 +109,32 @@ function renderRich(text) {
 }
 
 export function Assistant() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState([
-    { role: "bot", text: "سلام! من دستیار هوشمند فاوا هستم. هر چه بپرسید فقط از روی اطلاعات واقعی ثبت‌شده در سامانه (شرکت‌ها، محصولات و پارک‌ها) پاسخ می‌دهم.", chips: [] },
+    { role: "bot", text: t("assistant.welcome"), chips: [] },
   ]);
   const bodyRef = useRef(null);
-  const quick = ["شرکت‌های هوش مصنوعی", "شرکت‌های مشهد", "پارک‌های فعال", "اینترنت اشیا"];
+  // Query terms stay Persian regardless of UI language, since they're
+  // matched against company/park data that only exists in Persian — only
+  // the displayed chip label is translated.
+  const quick = [
+    { label: t("assistant.quick_ai"), q: "شرکت‌های هوش مصنوعی" },
+    { label: t("assistant.quick_mashhad"), q: "شرکت‌های مشهد" },
+    { label: t("assistant.quick_parks"), q: "پارک‌های فعال" },
+    { label: t("assistant.quick_iot"), q: "اینترنت اشیا" },
+  ];
+
+  // Keep the still-untouched welcome message in sync if the user switches
+  // language before asking anything; once a real conversation exists, past
+  // messages are left as-is rather than retranslated.
+  useEffect(() => {
+    setMsgs((m) => (m.length === 1 && m[0].role === "bot" ? [{ role: "bot", text: t("assistant.welcome"), chips: [] }] : m));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t]);
 
   const companiesQ = useQuery({
     queryKey: ["exh-public"],
@@ -177,7 +197,7 @@ export function Assistant() {
     });
     const companyResults = searchCompanies(question, liveCompanies, productsByCompany);
     const parkResults = companyResults.length ? [] : searchParks(question, liveParks);
-    const answer = buildAnswer(question, companyResults, parkResults);
+    const answer = buildAnswer(t, question, companyResults, parkResults);
     const chips = companyResults.map(({ c }) => ({ id: c.company_id, name: c.name, color: "blue" }));
 
     setMsgs((m) => [...m, { role: "bot", text: answer, chips }]);
@@ -186,18 +206,18 @@ export function Assistant() {
 
   return (
     <>
-      <button className={"asst-fab" + (open ? " hide" : "")} onClick={() => setOpen(true)} aria-label="دستیار هوشمند">
+      <button className={"asst-fab" + (open ? " hide" : "")} onClick={() => setOpen(true)} aria-label={t("assistant.fab_label")}>
         <span className="asst-fab-core"><RobotFace size={38} /></span>
-        <span className="asst-fab-label">دستیار هوشمند</span>
+        <span className="asst-fab-label">{t("assistant.fab_label")}</span>
       </button>
 
-      <div className={"asst-panel" + (open ? " open" : "")} role="dialog" aria-label="دستیار هوشمند فاوا">
+      <div className={"asst-panel" + (open ? " open" : "")} role="dialog" aria-label={t("assistant.panel_title")}>
         <div className="asst-head">
           <div className="asst-id">
             <span className="asst-avatar"><RobotFace size={42} talking={busy} /></span>
-            <div><b>دستیار هوشمند فاوا</b><span className="mono">آنلاین</span></div>
+            <div><b>{t("assistant.panel_title")}</b><span className="mono">{t("assistant.online")}</span></div>
           </div>
-          <button className="asst-x" onClick={() => setOpen(false)} aria-label="بستن"><Icon name="close" size={18} /></button>
+          <button className="asst-x" onClick={() => setOpen(false)} aria-label={t("common.close")}><Icon name="close" size={18} /></button>
         </div>
 
         <div className="asst-body" ref={bodyRef} role="log" aria-live="polite">
@@ -228,11 +248,11 @@ export function Assistant() {
         </div>
 
         <div className="asst-quick">
-          {quick.map((qz, i) => <button key={i} onClick={() => ask(qz)}>{qz}</button>)}
+          {quick.map((qz, i) => <button key={i} onClick={() => ask(qz.q)}>{qz.label}</button>)}
         </div>
         <form className="asst-input" onSubmit={(e) => { e.preventDefault(); ask(input); }}>
-          <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="سؤال خود را بنویسید…" aria-label="پیام" />
-          <button type="submit" disabled={busy} aria-label="ارسال"><Icon name="send" size={17} /></button>
+          <input value={input} onChange={(e) => setInput(e.target.value)} placeholder={t("assistant.input_placeholder")} aria-label={t("assistant.input_placeholder")} />
+          <button type="submit" disabled={busy} aria-label={t("assistant.send")}><Icon name="send" size={17} /></button>
         </form>
       </div>
     </>
