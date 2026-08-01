@@ -443,6 +443,7 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
               <SectionTitle>{t("adminExhibition.identity_section")}</SectionTitle>
               <div style={grid2}>
                 <Field label={t("adminExhibition.field_company_name")}><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} style={field} /></Field>
+                <Field label={t("adminExhibition.field_company_name_en")}><input value={form.name_en ?? ""} onChange={(e) => setForm({ ...form, name_en: e.target.value })} style={{ ...field, direction: "ltr", textAlign: "left" }} placeholder={t("adminExhibition.field_company_name_en_placeholder")} /></Field>
                 <Field label={t("adminExhibition.field_tagline")}><input value={form.tagline ?? ""} onChange={(e) => setForm({ ...form, tagline: e.target.value })} style={field} /></Field>
                 <Field label={t("adminExhibition.field_category_id")}><input value={form.category ?? ""} onChange={(e) => setForm({ ...form, category: e.target.value })} style={field} /></Field>
                 <Field label={t("adminExhibition.field_park")}><ParkSelect value={form.park_id ?? ""} onChange={(v) => setForm({ ...form, park_id: v })} /></Field>

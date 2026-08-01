@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Icon, RobotFace, colorVar, toFa } from "./primitives";
+import { Icon, RobotFace, colorVar, toFa, pickName } from "./primitives";
 import { fetchExhibitionCompanies, fetchPublicExhibitionProducts } from "@/lib/exhibition-api";
 import { fetchActiveParks } from "@/lib/parks-api";
 
@@ -25,7 +25,7 @@ function searchCompanies(question, companies, productsByCompany) {
   return companies
     .map((c) => {
       const myProducts = productsByCompany.get(c.company_id) || [];
-      const hay = norm([c.name, c.tagline, c.city, c.category, c.description].join(" "));
+      const hay = norm([c.name, c.name_en, c.tagline, c.city, c.category, c.description].join(" "));
       let score = 0;
       const matchedProducts = [];
       t.forEach((term) => {
@@ -45,7 +45,7 @@ function searchParks(question, parks) {
   const t = terms(question);
   if (!t.length) return [];
   const matched = parks.filter((p) => {
-    const hay = norm([p.name, p.city, p.province].join(" "));
+    const hay = norm([p.name, p.name_en, p.city, p.province].join(" "));
     return t.some((term) => hay.includes(term));
   });
   if (matched.length) return matched.slice(0, 4);
@@ -57,8 +57,8 @@ function searchParks(question, parks) {
   return [];
 }
 
-function describeCompany(tr, { c, matchedProducts }) {
-  const bits = [`**${c.name}**${c.tagline ? " — " + c.tagline : ""}`];
+function describeCompany(tr, lang, { c, matchedProducts }) {
+  const bits = [`**${pickName(c, lang)}**${c.tagline ? " — " + c.tagline : ""}`];
   const meta = [];
   if (c.city) meta.push(`${tr("assistant.label_city")}: ${c.city}`);
   if (c.founded_at) {
@@ -73,20 +73,20 @@ function describeCompany(tr, { c, matchedProducts }) {
   return bits.join("\n");
 }
 
-function describePark(tr, p) {
-  return `**${p.name}** — ${p.city || p.province || ""}${p.companies_hint ? ` | ${toFa(p.companies_hint)} ${tr("assistant.park_companies_unit")}` : ""}`;
+function describePark(tr, lang, p) {
+  return `**${pickName(p, lang)}** — ${p.city || p.province || ""}${p.companies_hint ? ` | ${toFa(p.companies_hint)} ${tr("assistant.park_companies_unit")}` : ""}`;
 }
 
-function buildAnswer(tr, question, companyResults, parkResults) {
+function buildAnswer(tr, lang, question, companyResults, parkResults) {
   if (companyResults.length) {
     const head = companyResults.length === 1
       ? tr("assistant.found_one_company")
       : tr("assistant.found_many_companies", { count: companyResults.length });
-    return head + "\n\n" + companyResults.map((r) => describeCompany(tr, r)).join("\n\n");
+    return head + "\n\n" + companyResults.map((r) => describeCompany(tr, lang, r)).join("\n\n");
   }
   if (parkResults.length) {
     const head = parkResults.length === 1 ? tr("assistant.found_one_park") : tr("assistant.found_many_parks");
-    return head + "\n\n" + parkResults.map((p) => describePark(tr, p)).join("\n");
+    return head + "\n\n" + parkResults.map((p) => describePark(tr, lang, p)).join("\n");
   }
   return tr("assistant.not_found");
 }
@@ -109,7 +109,7 @@ function renderRich(text) {
 }
 
 export function Assistant() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -197,8 +197,8 @@ export function Assistant() {
     });
     const companyResults = searchCompanies(question, liveCompanies, productsByCompany);
     const parkResults = companyResults.length ? [] : searchParks(question, liveParks);
-    const answer = buildAnswer(t, question, companyResults, parkResults);
-    const chips = companyResults.map(({ c }) => ({ id: c.company_id, name: c.name, color: "blue" }));
+    const answer = buildAnswer(t, i18n.language, question, companyResults, parkResults);
+    const chips = companyResults.map(({ c }) => ({ id: c.company_id, name: pickName(c, i18n.language), color: "blue" }));
 
     setMsgs((m) => [...m, { role: "bot", text: answer, chips }]);
     setBusy(false);

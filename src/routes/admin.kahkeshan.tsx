@@ -128,6 +128,7 @@ function AdminKahkeshanPage() {
                 return (
                   <div key={p.park_id} className="parks-admin-row" style={{ background: "var(--panel-2)", borderRadius: 10, padding: 12, display: "grid", gap: 8, alignItems: "center" }}>
                     <input value={d.name ?? ""} onChange={(e) => edit(p, { name: e.target.value })} placeholder={t("adminKahkeshan.field_name")} style={field} />
+                    <input value={d.name_en ?? ""} onChange={(e) => edit(p, { name_en: e.target.value })} placeholder={t("adminKahkeshan.field_name_en")} style={{ ...field, direction: "ltr", textAlign: "left" }} />
                     <input value={d.province ?? ""} onChange={(e) => edit(p, { province: e.target.value })} placeholder={t("adminKahkeshan.field_province")} style={field} />
                     <input value={d.city ?? ""} onChange={(e) => edit(p, { city: e.target.value })} placeholder={t("adminKahkeshan.field_city")} style={field} />
                     <input value={p.park_id} disabled style={{ ...field, opacity: 0.6 }} />
