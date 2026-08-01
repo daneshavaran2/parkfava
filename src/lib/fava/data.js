@@ -10,15 +10,20 @@ window.FAVA = (function () {
   };
 
   // ---- Technology branches / categories ----
+  // title/desc are Persian (the primary data); title_en/desc_en are the
+  // English display variants picked by catTitle()/catDesc() in
+  // src/components/fava/primitives.tsx when the site is switched to
+  // English — the numeric fields (id/color/icon/companies) stay
+  // language-neutral.
   const CATEGORIES = [
-    { id: 'soft',    title: 'نرم‌افزار و سامانه‌های سازمانی', color: 'blue',  icon: 'chip',   companies: 15,  desc: 'ERP، CRM، نرم‌افزارهای مالی و سامانه‌های سفارشی' },
-    { id: 'telecom', title: 'مخابرات و زیرساخت ارتباطی',     color: 'gold',  icon: 'globe',  companies: 12, desc: 'تجهیزات مخابراتی، فیبر نوری، شبکه و مراکز داده' },
-    { id: 'hw',      title: 'الکترونیک و سخت‌افزار',          color: 'red',   icon: 'bolt',   companies: 7,  desc: 'بردهای الکترونیکی، تجهیزات پردازشی و کیوسک' },
-    { id: 'auto',    title: 'اتوماسیون و هوشمندسازی',         color: 'green', icon: 'robot',  companies: 5,  desc: 'اتوماسیون صنعتی، اسکادا، BMS و کنترل تردد' },
-    { id: 'sec',     title: 'امنیت اطلاعات',                  color: 'red',   icon: 'spark',  companies: 3,  desc: 'امنیت شبکه، آنتی‌ویروس و خدمات امن سازمانی' },
-    { id: 'fintech', title: 'فین‌تک و خدمات مالی',            color: 'gold',  icon: 'wallet', companies: 3,  desc: 'پلتفرم‌های مالی، بیمه و شتاب‌دهی فین‌تک' },
-    { id: 'cloud',   title: 'خدمات ابری و میزبانی',           color: 'blue',  icon: 'layers', companies: 2,  desc: 'زیرساخت ابری، هاستینگ و سرویس‌های آنلاین' },
-    { id: 'health',  title: 'سلامت دیجیتال',                  color: 'green', icon: 'dna',    companies: 1,  desc: 'سلامت الکترونیک و سامانه‌های درمان دیجیتال' },
+    { id: 'soft',    title: 'نرم‌افزار و سامانه‌های سازمانی', title_en: 'Software & Enterprise Systems',           color: 'blue',  icon: 'chip',   companies: 15,  desc: 'ERP، CRM، نرم‌افزارهای مالی و سامانه‌های سفارشی', desc_en: 'ERP, CRM, financial software, and custom systems' },
+    { id: 'telecom', title: 'مخابرات و زیرساخت ارتباطی',     title_en: 'Telecom & Communication Infrastructure',   color: 'gold',  icon: 'globe',  companies: 12, desc: 'تجهیزات مخابراتی، فیبر نوری، شبکه و مراکز داده',   desc_en: 'Telecom equipment, fiber optics, networking, and data centers' },
+    { id: 'hw',      title: 'الکترونیک و سخت‌افزار',          title_en: 'Electronics & Hardware',                   color: 'red',   icon: 'bolt',   companies: 7,  desc: 'بردهای الکترونیکی، تجهیزات پردازشی و کیوسک',       desc_en: 'Electronic boards, processing equipment, and kiosks' },
+    { id: 'auto',    title: 'اتوماسیون و هوشمندسازی',         title_en: 'Automation & Smart Systems',               color: 'green', icon: 'robot',  companies: 5,  desc: 'اتوماسیون صنعتی، اسکادا، BMS و کنترل تردد',        desc_en: 'Industrial automation, SCADA, BMS, and access control' },
+    { id: 'sec',     title: 'امنیت اطلاعات',                  title_en: 'Information Security',                     color: 'red',   icon: 'spark',  companies: 3,  desc: 'امنیت شبکه، آنتی‌ویروس و خدمات امن سازمانی',       desc_en: 'Network security, antivirus, and enterprise security services' },
+    { id: 'fintech', title: 'فین‌تک و خدمات مالی',            title_en: 'Fintech & Financial Services',             color: 'gold',  icon: 'wallet', companies: 3,  desc: 'پلتفرم‌های مالی، بیمه و شتاب‌دهی فین‌تک',          desc_en: 'Financial platforms, insurance, and fintech acceleration' },
+    { id: 'cloud',   title: 'خدمات ابری و میزبانی',           title_en: 'Cloud & Hosting Services',                 color: 'blue',  icon: 'layers', companies: 2,  desc: 'زیرساخت ابری، هاستینگ و سرویس‌های آنلاین',         desc_en: 'Cloud infrastructure, hosting, and online services' },
+    { id: 'health',  title: 'سلامت دیجیتال',                  title_en: 'Digital Health',                           color: 'green', icon: 'dna',    companies: 1,  desc: 'سلامت الکترونیک و سامانه‌های درمان دیجیتال',       desc_en: 'E-health and digital treatment systems' },
   ];
 
   // ---- Technology parks across provinces ----
