@@ -85,7 +85,13 @@ function SectionView({ s }: { s: AboutSection }) {
             <video src={vid2} controls style={{ width: "100%", borderRadius: 12, background: "#000" }} />
           )}
           {img && (
-            <img src={img} alt={s.title ?? ""} style={{ width: "100%", borderRadius: 12, display: "block" }} />
+            // Fixed aspect ratio + object-fit: cover so every section's
+            // image occupies the same-size frame regardless of the
+            // uploaded file's own dimensions — otherwise a portrait photo
+            // next to a wide one made each section a different height.
+            <div style={{ aspectRatio: "16 / 9", borderRadius: 12, overflow: "hidden", background: "var(--panel-2)" }}>
+              <img src={img} alt={s.title ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            </div>
           )}
         </div>
       )}
