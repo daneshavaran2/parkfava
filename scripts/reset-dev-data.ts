@@ -29,6 +29,7 @@ async function main() {
   await purge("exhibition_companies", "name");
   await sb.from("park_content").delete().like("hero_title", "[SEED]%");
   await purge("parks", "name");
+  await purge("about_sections", "title");
   console.log("\nSeed data cleared.");
 }
 

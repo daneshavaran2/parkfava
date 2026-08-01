@@ -54,6 +54,32 @@ const productsFor = (cid: string) => [
   { company_id: cid, name: `[SEED] محصول ثانویه ${cid}`, tagline: "نسخه سبک", description: "نسخه سبک‌تر برای بازار کوچک.", sort_order: 2 },
 ];
 
+// image_url points at an external placeholder service rather than Supabase
+// storage, so these rows render a real image with no separate file upload
+// step — good enough to exercise the "/about" page's multi-section layout.
+// Swap for real uploaded images (via /admin/about) whenever real content is
+// ready; this is dev/demo data only (guarded by the NODE_ENV check above).
+const aboutSections = [
+  {
+    section_key: "seed-intro", title: "[SEED] معرفی اطلس",
+    body: "اطلس، سکوی هوشمند شبکه ملی پارک‌های فناوری ایران است. شرکت‌ها، محصولات و ظرفیت‌های فناورانه کشور را در یک نمایشگاه مجازی هوشمند کشف کنید.",
+    image_url: "https://placehold.co/800x450/eb212f/ffffff?text=Atlas+Intro", video_url: null, video_url_2: null,
+    sort_order: 1, is_active: true,
+  },
+  {
+    section_key: "seed-team", title: "[SEED] تیم ما",
+    body: "تیمی از متخصصان فناوری اطلاعات و ارتباطات که با هدف معرفی توانمندی‌های پارک‌های فناوری ایران گرد هم آمده‌اند.",
+    image_url: "https://placehold.co/800x450/1f7fd6/ffffff?text=Our+Team", video_url: null, video_url_2: null,
+    sort_order: 2, is_active: true,
+  },
+  {
+    section_key: "seed-vision", title: "[SEED] چشم‌انداز",
+    body: "ایجاد شبکه‌ای یکپارچه از دانش و فناوری برای توسعه اقتصاد دانش‌بنیان کشور.",
+    image_url: "https://placehold.co/800x450/00a858/ffffff?text=Vision", video_url: null, video_url_2: null,
+    sort_order: 3, is_active: true,
+  },
+];
+
 async function upsert(table: string, rows: any[], conflict: string) {
   const { error } = await sb.from(table).upsert(rows, { onConflict: conflict });
   if (error) throw new Error(`upsert ${table}: ${error.message}`);
@@ -82,7 +108,15 @@ async function main() {
   if (error) throw new Error(`insert exhibition_products: ${error.message}`);
   console.log(`  ✓ exhibition_products: ${products.length} rows`);
 
-  console.log("\nDone. Run `bun dev` and open http://localhost:8080/exhibition");
+  console.log("Seeding about sections…");
+  // about_sections has no unique constraint on section_key either, so the
+  // same wipe-then-insert approach as products above.
+  await sb.from("about_sections").delete().like("title", "[SEED]%");
+  const { error: aboutError } = await sb.from("about_sections").insert(aboutSections);
+  if (aboutError) throw new Error(`insert about_sections: ${aboutError.message}`);
+  console.log(`  ✓ about_sections: ${aboutSections.length} rows`);
+
+  console.log("\nDone. Run `bun dev` and open http://localhost:8080/exhibition (or /about for the sample sections)");
 }
 
 main().catch((e) => {
