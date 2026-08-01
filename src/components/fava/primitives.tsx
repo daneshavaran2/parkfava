@@ -13,6 +13,9 @@ export function faNum(n) { return toFa(Number(n).toLocaleString("en-US")); }
 // category hasn't been given an English translation yet.
 export function catTitle(c, lang) { return (lang === "en" && c?.title_en) ? c.title_en : c?.title; }
 export function catDesc(c, lang) { return (lang === "en" && c?.desc_en) ? c.desc_en : c?.desc; }
+// Company/park objects (both static and Supabase-backed) carry an optional
+// name_en — falls back to the Persian name if none has been entered yet.
+export function pickName(o, lang) { return (lang === "en" && o?.name_en) ? o.name_en : o?.name; }
 export function faMoney(toman) {
   if (toman >= 1e12) return toFa((toman / 1e12).toFixed(1).replace(/\.0$/, "")) + " هزار میلیارد";
   if (toman >= 1e9) return toFa(Math.round(toman / 1e9)) + " میلیارد";

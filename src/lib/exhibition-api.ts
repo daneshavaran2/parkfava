@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type ExhibitionCompany = {
   company_id: string;
   name: string;
+  name_en?: string | null;
   tagline: string | null;
   category: string | null;
   park_id: string | null;

@@ -28,16 +28,21 @@ window.FAVA = (function () {
 
   // ---- Technology parks across provinces ----
   // mx/my are positions (0..100) on a stylized national map canvas.
+  // name_en follows each park's own standard English name — these are
+  // official-type institution names with a predictable pattern, unlike
+  // company brand names (COMPANIES below), which are proper nouns that
+  // shouldn't be auto-translated; those are left for admins to fill in via
+  // the admin panel with the company's own real English name.
   const PARKS = [
-    { id: 'razavi',  name: 'پارک علم و فناوری خراسان رضوی', province: 'خراسان رضوی', city: 'مشهد',   companies: 312, jobs: 9800,  area: 48, color: 'blue',  mx: 78, my: 30 },
-    { id: 'semnan',  name: 'پارک علم و فناوری سمنان',        province: 'سمنان',       city: 'سمنان',  companies: 96,  jobs: 2400,  area: 21, color: 'gold',  mx: 56, my: 41 },
-    { id: 'mazand',  name: 'پارک علم و فناوری مازندران',     province: 'مازندران',    city: 'ساری',   companies: 128, jobs: 3650,  area: 27, color: 'green', mx: 52, my: 26 },
-    { id: 'tehran',  name: 'پارک فناوری اطلاعات و ارتباطات (فاوا)', province: 'تهران', city: 'تهران', companies: 48, jobs: 2200, area: 40, color: 'red', mx: 50, my: 36 },
-    { id: 'isfahan', name: 'شهرک علمی و تحقیقاتی اصفهان',    province: 'اصفهان',      city: 'اصفهان', companies: 410, jobs: 14200, area: 55, color: 'blue',  mx: 47, my: 52 },
-    { id: 'fars',    name: 'پارک علم و فناوری فارس',         province: 'فارس',        city: 'شیراز',  companies: 176, jobs: 5100,  area: 30, color: 'green', mx: 49, my: 70 },
-    { id: 'eaz',     name: 'پارک علم و فناوری آذربایجان',    province: 'آذربایجان شرقی', city: 'تبریز', companies: 198, jobs: 6300, area: 33, color: 'gold',  mx: 30, my: 22 },
-    { id: 'yazd',    name: 'پارک علم و فناوری یزد',          province: 'یزد',         city: 'یزد',    companies: 88,  jobs: 2050,  area: 19, color: 'red',   mx: 58, my: 58 },
-    { id: 'khz',     name: 'پارک علم و فناوری خوزستان',      province: 'خوزستان',     city: 'اهواز',  companies: 74,  jobs: 1900,  area: 17, color: 'blue',  mx: 33, my: 64 },
+    { id: 'razavi',  name: 'پارک علم و فناوری خراسان رضوی', name_en: 'Khorasan Razavi Science and Technology Park', province: 'خراسان رضوی', city: 'مشهد',   companies: 312, jobs: 9800,  area: 48, color: 'blue',  mx: 78, my: 30 },
+    { id: 'semnan',  name: 'پارک علم و فناوری سمنان',        name_en: 'Semnan Science and Technology Park',          province: 'سمنان',       city: 'سمنان',  companies: 96,  jobs: 2400,  area: 21, color: 'gold',  mx: 56, my: 41 },
+    { id: 'mazand',  name: 'پارک علم و فناوری مازندران',     name_en: 'Mazandaran Science and Technology Park',      province: 'مازندران',    city: 'ساری',   companies: 128, jobs: 3650,  area: 27, color: 'green', mx: 52, my: 26 },
+    { id: 'tehran',  name: 'پارک فناوری اطلاعات و ارتباطات (فاوا)', name_en: 'ICT (FAVA) Technology Park',            province: 'تهران', city: 'تهران', companies: 48, jobs: 2200, area: 40, color: 'red', mx: 50, my: 36 },
+    { id: 'isfahan', name: 'شهرک علمی و تحقیقاتی اصفهان',    name_en: 'Isfahan Science and Technology Town',         province: 'اصفهان',      city: 'اصفهان', companies: 410, jobs: 14200, area: 55, color: 'blue',  mx: 47, my: 52 },
+    { id: 'fars',    name: 'پارک علم و فناوری فارس',         name_en: 'Fars Science and Technology Park',            province: 'فارس',        city: 'شیراز',  companies: 176, jobs: 5100,  area: 30, color: 'green', mx: 49, my: 70 },
+    { id: 'eaz',     name: 'پارک علم و فناوری آذربایجان',    name_en: 'Azerbaijan Science and Technology Park',      province: 'آذربایجان شرقی', city: 'تبریز', companies: 198, jobs: 6300, area: 33, color: 'gold',  mx: 30, my: 22 },
+    { id: 'yazd',    name: 'پارک علم و فناوری یزد',          name_en: 'Yazd Science and Technology Park',            province: 'یزد',         city: 'یزد',    companies: 88,  jobs: 2050,  area: 19, color: 'red',   mx: 58, my: 58 },
+    { id: 'khz',     name: 'پارک علم و فناوری خوزستان',      name_en: 'Khuzestan Science and Technology Park',       province: 'خوزستان',     city: 'اهواز',  companies: 74,  jobs: 1900,  area: 17, color: 'blue',  mx: 33, my: 64 },
   ];
 
   // ---- Companies (virtual exhibition) ----

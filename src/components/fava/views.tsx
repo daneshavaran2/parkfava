@@ -10,7 +10,7 @@ import logoSpin from "@/assets/logo-spin.webp";
 import {
   Icon, HeroOrb, AICommandBar, QRCode,
   useCountUp, useTilt,
-  toFa, faNum, faMoney, colorVar, glowVar, CAT_ICON, catTitle, catDesc,
+  toFa, faNum, faMoney, colorVar, glowVar, CAT_ICON, catTitle, catDesc, pickName,
 } from "./primitives";
 import { ClientOnly, useFavaReady } from "./ClientOnly";
 import { fetchParkContent } from "@/lib/park-content-api";
@@ -226,7 +226,7 @@ export function Exhibition({ query, setQuery, sort, initialCat, park }) {
   const favaReady = useFavaReady();
   const fava = favaReady ? F() : null;
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [cat, setCat] = useState(initialCat || "all");
   useEffect(() => { setCat(initialCat || "all"); }, [initialCat]);
   const STATIC_COMPANIES = fava?.COMPANIES || [];
@@ -250,6 +250,7 @@ export function Exhibition({ query, setQuery, sort, initialCat, park }) {
         ...base,
         id: cc.company_id,
         name: cc.name || base.name,
+        name_en: cc.name_en ?? base.name_en ?? null,
         tagline: cc.tagline ?? base.tagline ?? "",
         category: cc.category || base.category,
         parkId: cc.park_id || base.parkId,
@@ -276,7 +277,7 @@ export function Exhibition({ query, setQuery, sort, initialCat, park }) {
       const okCat = cat === "all" || c.category === cat;
       const okPark = !park || c.parkId === park;
       const q = (query || "").trim();
-      const okQ = !q || (c.name + " " + (c.tagline || "") + " " + (c.products || []).join(" ") + " " + (c.tags || []).join(" ") + " " + (c.city || "")).includes(q);
+      const okQ = !q || (c.name + " " + (c.name_en || "") + " " + (c.tagline || "") + " " + (c.products || []).join(" ") + " " + (c.tags || []).join(" ") + " " + (c.city || "")).includes(q);
       return okCat && okPark && okQ;
     });
     if (sort === "sales") arr = [...arr].sort((a, b) => (b.workers || 0) - (a.workers || 0));
@@ -304,7 +305,7 @@ export function Exhibition({ query, setQuery, sort, initialCat, park }) {
         {parkObj && (
           <div className="filter-banner" style={{ "--cc": colorVar(parkObj.color) }}>
             <span className="fb-dot" />
-            <span>{t("exhibition.park_filter_prefix")} <b>{parkObj.name}</b> ({parkObj.city})</span>
+            <span>{t("exhibition.park_filter_prefix")} <b>{pickName(parkObj, i18n.language)}</b> ({parkObj.city})</span>
             <button className="fb-clear" onClick={() => navigate({ to: "/exhibition" })}><Icon name="close" size={14} /> {t("common.clear_filter")}</button>
           </div>
         )}
@@ -331,7 +332,7 @@ export function CompanyCard({ c }) {
       <div className="co-top">
         <div className="co-logo" onClick={(e) => e.stopPropagation()} style={{ overflow: "hidden", background: logoSrc ? "#fff" : undefined }}>
           {logoSrc ? (
-            <img src={logoSrc} alt={c.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 4, borderRadius: 13 }} />
+            <img src={logoSrc} alt={pickName(c, i18n.language)} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 4, borderRadius: 13 }} />
           ) : (
             <>
               <span className="co-logo-initials">{c.initials}</span>
@@ -344,7 +345,7 @@ export function CompanyCard({ c }) {
             <img src={logoSrc} alt="" aria-hidden style={{ width: 22, height: 22, borderRadius: 6, objectFit: "contain", background: "#fff", padding: 2, border: "1px solid var(--stroke)", flexShrink: 0 }} />
           )}
           <div style={{ minWidth: 0 }}>
-            <div className="co-name" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</div>
+            <div className="co-name" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pickName(c, i18n.language)}</div>
             <div className="co-cat">{cat ? catTitle(cat, i18n.language) : ""}</div>
           </div>
         </div>
@@ -483,6 +484,7 @@ export function CompanyProfile({ id }) {
   const c = {
     id,
     name: cc_data?.name || staticC?.name || id,
+    name_en: cc_data?.name_en ?? staticC?.name_en ?? null,
     tagline: cc_data?.tagline ?? staticC?.tagline ?? "",
     category: cc_data?.category || staticC?.category,
     parkId: cc_data?.park_id || staticC?.parkId,
@@ -526,13 +528,13 @@ export function CompanyProfile({ id }) {
         <div className="profile-hero">
           <div className="ph-logo" style={{ "--cc": cc, background: cc_data?.logo_url ? "#fff" : undefined }}>
             {cc_data?.logo_url
-              ? <AssetImg path={cc_data.logo_url} alt={c.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 8, borderRadius: 20 }} />
+              ? <AssetImg path={cc_data.logo_url} alt={pickName(c, i18n.language)} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 8, borderRadius: 20 }} />
               : <image-slot id={"logo-" + c.id} shape="rounded" radius="20" placeholder={t("company.add_logo")} />}
           </div>
 
           <div style={{ flex: 1, minWidth: 240 }}>
             <span className="eyebrow" style={{ color: glowVar(c.color) }}>{cat ? catTitle(cat, i18n.language) : ""}</span>
-            <h1>{c.name}</h1>
+            <h1>{pickName(c, i18n.language)}</h1>
             <p className="ph-tag">{c.tagline}</p>
             {c.description && <p style={{ marginTop: 8, color: "var(--ink-soft)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{c.description}</p>}
             <div className="co-badges" style={{ marginTop: 12 }}>{c.tags.map((t, i) => <span key={i} className="badge">{t}</span>)}</div>
@@ -663,22 +665,22 @@ export function CompanyProfile({ id }) {
 
               <div className="qr-block">
                 <QRCode size={120}
-                  text={"BEGIN:VCARD\nVERSION:3.0\nN:" + c.name + (c.contact.phone ? "\nTEL:" + c.contact.phone : "") + (c.contact.email ? "\nEMAIL:" + c.contact.email : "") + (websiteHref ? "\nURL:" + websiteHref : "") + "\nADR:;;;" + (c.city || "") + "\nEND:VCARD"} />
+                  text={"BEGIN:VCARD\nVERSION:3.0\nN:" + pickName(c, i18n.language) + (c.contact.phone ? "\nTEL:" + c.contact.phone : "") + (c.contact.email ? "\nEMAIL:" + c.contact.email : "") + (websiteHref ? "\nURL:" + websiteHref : "") + "\nADR:;;;" + (c.city || "") + "\nEND:VCARD"} />
                 <div className="qr-note">
                   <b>{t("company.qr_title")}</b>
-                  <span>{t("company.qr_lead", { name: c.name })}</span>
+                  <span>{t("company.qr_lead", { name: pickName(c, i18n.language) })}</span>
                 </div>
               </div>
             </div>
 
             {c.lat != null && c.lng != null && (
-              <DirectionsPanel lat={Number(c.lat)} lng={Number(c.lng)} accent={cc} name={c.name} address={c.contact?.address} zoom={cc_data?.map_zoom ?? null} />
+              <DirectionsPanel lat={Number(c.lat)} lng={Number(c.lng)} accent={cc} name={pickName(c, i18n.language)} address={c.contact?.address} zoom={cc_data?.map_zoom ?? null} />
             )}
 
             {park && (
               <button className="panel" style={{ cursor: "pointer", textAlign: "right", width: "100%", border: 0, background: "var(--panel)", color: "inherit" }} onClick={() => navigate({ to: "/parks", search: { id: park.id } as any })}>
                 <h3><Icon name="building" size={18} className="pi" /> {t("company.host_park")}</h3>
-                <div style={{ fontWeight: 800, fontSize: 16 }}>{park.name}</div>
+                <div style={{ fontWeight: 800, fontSize: 16 }}>{pickName(park, i18n.language)}</div>
                 <div className="co-cat" style={{ marginTop: 4 }}>{park.province} · {park.city}</div>
                 <div className="go" style={{ marginTop: 12, color: cc, display: "flex", alignItems: "center", gap: 6, fontFamily: "var(--mono)", fontSize: 12 }}>
                   {t("company.view_network_map")} <Icon name="arrowL" size={14} />
@@ -773,7 +775,7 @@ function ProductGalleryThumb({ path, active, onClick, children }: { path?: strin
 
 export function ProductPage({ id, pid }) {
   useFavaReady();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: cloud } = useQuery({
     queryKey: ["exh-public-company", id],
     queryFn: () => fetchExhibitionCompany(id),
@@ -840,7 +842,7 @@ export function ProductPage({ id, pid }) {
           <div style={{ fontSize: 13, color: "var(--ink-soft)", display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <Link to="/exhibition" style={{ color: "inherit", textDecoration: "none" }}>{t("nav.exhibition")}</Link>
             <span style={{ opacity: 0.5 }}>/</span>
-            <Link to="/company/$id" params={{ id }} style={{ color: "inherit", textDecoration: "none" }}>{company?.name || id}</Link>
+            <Link to="/company/$id" params={{ id }} style={{ color: "inherit", textDecoration: "none" }}>{pickName(company, i18n.language) || id}</Link>
             <span style={{ opacity: 0.5 }}>/</span>
             <span style={{ color: "var(--ink)", fontWeight: 700 }}>{product.name}</span>
           </div>
@@ -855,11 +857,11 @@ export function ProductPage({ id, pid }) {
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
               {companyLogo
-                ? <img src={companyLogo} alt={company?.name || ""} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                ? <img src={companyLogo} alt={pickName(company, i18n.language) || ""} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                 : <Icon name="store" size={20} className="pi" />}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 800, fontSize: 14, lineHeight: 1.2 }}>{company?.name}</div>
+              <div style={{ fontWeight: 800, fontSize: 14, lineHeight: 1.2 }}>{pickName(company, i18n.language)}</div>
               <div style={{ fontSize: 11, color: "var(--ink-mute)" }}>
                 {company?.category || ""}{company?.city ? ` · ${company.city}` : ""}
               </div>
@@ -983,7 +985,7 @@ export function ProductPage({ id, pid }) {
 
             {otherProducts.length > 0 && (
               <div className="panel" style={{ padding: 20, borderRadius: 24 }}>
-                <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 14 }}>{t("product.other_products", { name: company?.name })}</div>
+                <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 14 }}>{t("product.other_products", { name: pickName(company, i18n.language) })}</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {otherProducts.map((p) => (
                     <OtherProductRow key={p.id} p={p} companyId={id} />
@@ -1162,7 +1164,7 @@ export function ParksMap({ selectedId }) {
 }
 
 function ParkDashboard({ park, PARKS, parkCompanies, onSelect, sel, navigate }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data } = useQuery({
     queryKey: ["park-public", park?.id],
     queryFn: () => fetchParkContent(park.id),
@@ -1170,7 +1172,7 @@ function ParkDashboard({ park, PARKS, parkCompanies, onSelect, sel, navigate }) 
   });
   const logoUrl = useAssetUrl(data?.content?.logo_url);
   if (!park) return null;
-  const displayName = data?.content?.display_name || park.name;
+  const displayName = data?.content?.display_name || pickName(park, i18n.language);
   return (
     <div className="park-dashboard" style={{ "--cc": colorVar(park.color) }}>
       <div className="pd-header">
@@ -1229,7 +1231,7 @@ function ParkDashboard({ park, PARKS, parkCompanies, onSelect, sel, navigate }) 
                 style={{ textDecoration: "none", color: "inherit" }}>
                 <span className="pd-co-dot" style={{ background: colorVar(c.color) }}>{c.initials}</span>
                 <div>
-                  <div className="pd-co-name">{c.name}</div>
+                  <div className="pd-co-name">{pickName(c, i18n.language)}</div>
                   <div className="pd-co-tag">{c.tagline}</div>
                 </div>
               </Link>

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type Park = {
   park_id: string;
   name: string;
+  name_en?: string | null;
   province: string | null;
   city: string | null;
   mx: number;
