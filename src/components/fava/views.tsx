@@ -10,7 +10,7 @@ import logoSpin from "@/assets/logo-spin.webp";
 import {
   Icon, HeroOrb, AICommandBar, QRCode,
   useCountUp, useTilt,
-  toFa, faNum, faMoney, colorVar, glowVar, CAT_ICON,
+  toFa, faNum, faMoney, colorVar, glowVar, CAT_ICON, catTitle, catDesc,
 } from "./primitives";
 import { ClientOnly, useFavaReady } from "./ClientOnly";
 import { fetchParkContent } from "@/lib/park-content-api";
@@ -322,7 +322,7 @@ export function Exhibition({ query, setQuery, sort, initialCat, park }) {
 
 export function CompanyCard({ c }) {
   const fava = F();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const cat = fava?.CATEGORIES.find((x) => x.id === c.category);
   const tilt = useTilt(7);
   const logoSrc = useAssetUrl(c.logo_url);
@@ -345,7 +345,7 @@ export function CompanyCard({ c }) {
           )}
           <div style={{ minWidth: 0 }}>
             <div className="co-name" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</div>
-            <div className="co-cat">{cat ? cat.title : ""}</div>
+            <div className="co-cat">{cat ? catTitle(cat, i18n.language) : ""}</div>
           </div>
         </div>
       </div>
@@ -458,7 +458,7 @@ export function CompanyProfile({ id }) {
   const favaReady = useFavaReady();
   const fava = favaReady ? F() : null;
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const { data: cloud } = useQuery({
     queryKey: ["exh-public-company", id],
@@ -531,7 +531,7 @@ export function CompanyProfile({ id }) {
           </div>
 
           <div style={{ flex: 1, minWidth: 240 }}>
-            <span className="eyebrow" style={{ color: glowVar(c.color) }}>{cat ? cat.title : ""}</span>
+            <span className="eyebrow" style={{ color: glowVar(c.color) }}>{cat ? catTitle(cat, i18n.language) : ""}</span>
             <h1>{c.name}</h1>
             <p className="ph-tag">{c.tagline}</p>
             {c.description && <p style={{ marginTop: 8, color: "var(--ink-soft)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{c.description}</p>}
@@ -579,7 +579,7 @@ export function CompanyProfile({ id }) {
                   )}
                 </div>
                 <div className="kpi"><b className="num">{cc_data?.founded_at ? toFa(new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numeric" }).format(new Date(cc_data.founded_at))) : (c.founded ? toFa(c.founded) : "—")}</b><span>{t("company.founded_shamsi")}</span></div>
-                <div className="kpi"><b style={{ fontSize: 15, lineHeight: 1.4 }}>{cat ? cat.title : "—"}</b><span>{t("company.activity_branch")}</span></div>
+                <div className="kpi"><b style={{ fontSize: 15, lineHeight: 1.4 }}>{cat ? catTitle(cat, i18n.language) : "—"}</b><span>{t("company.activity_branch")}</span></div>
               </div>
             </div>
 
@@ -1299,14 +1299,14 @@ export function Categories() {
 }
 
 function CatCard({ c, real }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const tilt = useTilt(8);
   return (
     <Link to="/exhibition" search={{ cat: c.id } as any} className="cat-card tilt" style={{ "--cc": colorVar(c.color), textDecoration: "none", color: "inherit" }} {...tilt}>
       <span className="ring" />
       <div className="cat-ico"><Icon name={CAT_ICON[c.id]} size={26} /></div>
-      <h3>{c.title}</h3>
-      <p>{c.desc}</p>
+      <h3>{catTitle(c, i18n.language)}</h3>
+      <p>{catDesc(c, i18n.language)}</p>
       <div className="count"><b className="num">{toFa(c.companies)}</b><span>{t("categories.active_companies")}{real ? ` · ${t("categories.in_exhibition", { count: real })}` : ""}</span></div>
     </Link>
   );

@@ -8,6 +8,11 @@ import { Logo3D } from "@/components/hero/Logo3D";
 const FA_DIGITS = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
 export function toFa(n) { return String(n).replace(/[0-9]/g, (d) => FA_DIGITS[+d]); }
 export function faNum(n) { return toFa(Number(n).toLocaleString("en-US")); }
+// CATEGORIES entries (src/lib/fava/data.js) carry an optional *_en variant
+// for their Persian title/desc — falls back to the Persian value if a
+// category hasn't been given an English translation yet.
+export function catTitle(c, lang) { return (lang === "en" && c?.title_en) ? c.title_en : c?.title; }
+export function catDesc(c, lang) { return (lang === "en" && c?.desc_en) ? c.desc_en : c?.desc; }
 export function faMoney(toman) {
   if (toman >= 1e12) return toFa((toman / 1e12).toFixed(1).replace(/\.0$/, "")) + " هزار میلیارد";
   if (toman >= 1e9) return toFa(Math.round(toman / 1e9)) + " میلیارد";
