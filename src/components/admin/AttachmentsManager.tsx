@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAssetUrl } from "@/lib/use-auth";
 import { AttachmentPreviewButton } from "@/components/admin/AttachmentPreview";
 import {
-  fetchAttachments,
+  fetchAttachmentsAdmin,
   uploadAttachment,
   updateAttachment,
   deleteAttachment,
@@ -36,7 +36,7 @@ export function AttachmentsManager({
   const queryKey = ["attachments", ownerType, ownerId];
   const { data: items = [], isLoading } = useQuery({
     queryKey,
-    queryFn: () => fetchAttachments(ownerType, ownerId),
+    queryFn: () => fetchAttachmentsAdmin(ownerType, ownerId),
   });
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);

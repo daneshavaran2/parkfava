@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { supabase } from "@/integrations/supabase/client";
+import { signOutFn } from "@/lib/auth.functions";
 import { useAuth } from "@/lib/use-auth";
 import {
   listUsers,
@@ -52,7 +52,9 @@ function AdminUsersPage() {
   async function run(key: string, fn: () => Promise<any>) {
     setBusy(key); setErr(null);
     try { await fn(); qc.invalidateQueries({ queryKey: ["admin-users"] }); qc.invalidateQueries({ queryKey: ["admin-exh-companies"] }); }
-    catch (e: any) { setErr(e?.message ?? t("adminUsers.generic_error")); }
+    catch (e: any) {
+      setErr(e?.message === "CANNOT_REVOKE_SELF" ? t("adminUsers.cannot_revoke_self") : t("adminUsers.generic_error"));
+    }
     finally { setBusy(null); }
   }
 
@@ -75,7 +77,7 @@ function AdminUsersPage() {
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <Link to="/admin/exhibition" className="btn btn-ghost">{t("adminUsers.companies_link")}</Link>
           <Link to="/admin/parks" className="btn btn-ghost">{t("adminUsers.parks_link")}</Link>
-          <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
+          <button className="btn btn-ghost" onClick={async () => { await signOutFn(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
         </div>
       </div>
 

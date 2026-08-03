@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth, useAssetUrl } from "@/lib/use-auth";
-import { supabase } from "@/integrations/supabase/client";
+import { signOutFn } from "@/lib/auth.functions";
 import {
   fetchAllAttachments,
   deleteAttachment,
@@ -101,7 +101,7 @@ function AdminAttachmentsPage() {
             <Link to="/admin/exhibition" className="btn btn-ghost">{t("adminAttachments.exhibition_link")}</Link>
             <Link to="/admin/parks" className="btn btn-ghost">{t("adminAttachments.parks_link")}</Link>
             <Link to="/admin/about" className="btn btn-ghost">{t("adminAttachments.about_link")}</Link>
-            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
+            <button className="btn btn-ghost" onClick={async () => { await signOutFn(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
           </div>
         </div>
 

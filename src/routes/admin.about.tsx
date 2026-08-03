@@ -10,7 +10,7 @@ import {
   uploadAboutAsset,
   type AboutSection,
 } from "@/lib/exhibition-api";
-import { supabase } from "@/integrations/supabase/client";
+import { signOutFn } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/admin/about")({
   head: () => ({ meta: [{ title: "مدیریت درباره اطلس" }] }),
@@ -64,7 +64,7 @@ function AdminAboutPage() {
             <Link to="/admin/parks" className="btn btn-ghost">{t("adminAbout.parks_link")}</Link>
             <Link to="/admin/exhibition" className="btn btn-ghost">{t("adminAbout.exhibition_link")}</Link>
             <button className="btn btn-primary" onClick={addSection}>{t("adminAbout.add_section")}</button>
-            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
+            <button className="btn btn-ghost" onClick={async () => { await signOutFn(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
           </div>
         </div>
 
@@ -95,12 +95,13 @@ function SectionEditor({ section }: { section: AboutSection }) {
 
   async function save() {
     setBusy(true); setMsg(null);
-    const { error } = await upsertAboutSection(form);
-    if (error) setMsg(`${t("common.error")}: ${error.message}`);
-    else {
+    try {
+      await upsertAboutSection(form);
       setMsg(t("common.saved"));
       qc.invalidateQueries({ queryKey: ["admin-about"] });
       qc.invalidateQueries({ queryKey: ["about-public"] });
+    } catch (e: any) {
+      setMsg(`${t("common.error")}: ${e?.message ?? e}`);
     }
     setBusy(false);
   }

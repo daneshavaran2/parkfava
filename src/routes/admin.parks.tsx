@@ -14,7 +14,7 @@ import {
   type ParkContent,
   type ParkNews,
 } from "@/lib/park-content-api";
-import { supabase } from "@/integrations/supabase/client";
+import { signOutFn } from "@/lib/auth.functions";
 import { AttachmentsManager } from "@/components/admin/AttachmentsManager";
 import { ZipImporter } from "@/components/admin/ZipImporter";
 
@@ -56,7 +56,7 @@ function AdminParksPage() {
       <div className="view"><div className="shell" style={{ padding: 40 }}>
         <h2 className="h2">{t("adminExhibition.no_admin_access_title")}</h2>
         <p className="lead">{t("adminParks.no_admin_access_lead")}</p>
-        <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
+        <button className="btn btn-ghost" onClick={async () => { await signOutFn(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
       </div></div>
     );
   }
@@ -74,7 +74,7 @@ function AdminParksPage() {
             <Link to="/admin/kahkeshan" className="btn btn-ghost">{t("adminParks.kahkeshan_link")}</Link>
             <Link to="/admin/attachments" className="btn btn-ghost">{t("adminParks.attachments_dashboard")}</Link>
             <Link to="/admin/exhibition" className="btn btn-ghost">{t("adminParks.exhibition_link")}</Link>
-            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
+            <button className="btn btn-ghost" onClick={async () => { await signOutFn(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 16 }}>

@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { Eye, EyeOff } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
+import { signUp, signIn, signOutFn, getCurrentUser } from "@/lib/auth.functions";
 import { getMyRoles } from "@/lib/admin-users.functions";
 import { getMfaStatus, setPhone as setPhoneFn, requestOtp, verifyOtp } from "@/lib/mfa.functions";
 import { normalizePhone, maskPhone } from "@/lib/mfa/phone";
@@ -26,9 +26,35 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+function authErrorMessage(e: any, t: (key: string) => string): string {
+  const code = e?.message;
+  if (code === "EMAIL_ALREADY_REGISTERED") return t("auth.email_already_registered");
+  if (code === "INVALID_CREDENTIALS") return t("auth.invalid_credentials");
+  return t("auth.login_failed");
+}
+
+const MFA_ERROR_KEYS: Record<string, string> = {
+  INVALID_PHONE: "auth.phone_invalid",
+  PHONE_NOT_SET: "auth.phone_not_set",
+  OTP_COOLDOWN: "auth.otp_cooldown",
+  OTP_DAILY_LIMIT: "auth.otp_daily_limit",
+  OTP_NOT_REQUESTED: "auth.otp_not_requested",
+  OTP_EXPIRED: "auth.otp_expired",
+  OTP_MAX_ATTEMPTS: "auth.otp_max_attempts",
+  OTP_INCORRECT: "auth.otp_incorrect",
+};
+
+function mfaErrorMessage(e: any, t: (key: string) => string, fallbackKey: string): string {
+  const key = MFA_ERROR_KEYS[e?.message];
+  return t(key ?? fallbackKey);
+}
+
 function AuthPage() {
   const { next } = Route.useSearch();
   const { t } = useTranslation();
+  const signUpFn = useServerFn(signUp);
+  const signInFn = useServerFn(signIn);
+  const signOutFnRpc = useServerFn(signOutFn);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,8 +63,8 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   // Step-up SMS verification. Only ever engaged when the server reports
-  // MFA_ENFORCED=true (see src/integrations/supabase/mfa-middleware.ts) —
-  // stays out of the way entirely otherwise.
+  // MFA_ENFORCED=true (see src/lib/auth/middleware.ts) — stays out of the
+  // way entirely otherwise.
   const [mfaStep, setMfaStep] = useState<"phone" | "otp" | null>(null);
   const [mfaPhoneInput, setMfaPhoneInput] = useState("");
   const [mfaPhone, setMfaPhone] = useState<string | null>(null);
@@ -46,6 +72,17 @@ function AuthPage() {
   const [resendAt, setResendAt] = useState(0);
 
   const fallback = next || "";
+
+  useEffect(() => {
+    let active = true;
+    getCurrentUser().then((user) => {
+      if (active && user) void proceedAfterAuth();
+    });
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fallback]);
 
   async function proceedAfterAuth() {
     try {
@@ -70,52 +107,23 @@ function AuthPage() {
     window.location.assign(dest);
   }
 
-  useEffect(() => {
-    let done = false;
-    const go = async () => {
-      if (done) return;
-      done = true;
-      await proceedAfterAuth();
-    };
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) void go();
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) void go();
-    });
-    return () => sub.subscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fallback]);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: window.location.origin + (fallback || "/") },
-        });
-        if (error) throw error;
+        await signUpFn({ data: { email, password } });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        await signInFn({ data: { email, password } });
       }
       await proceedAfterAuth();
     } catch (e: any) {
       console.error("[auth] sign-in failed", e);
-      setErr(e?.message ?? t("auth.login_failed"));
+      setErr(authErrorMessage(e, t));
     } finally {
       setBusy(false);
     }
-  }
-
-  async function handleGoogle() {
-    setErr(null);
-    const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + (fallback || "/") });
-    if (res.error) setErr((res.error as any).message ?? t("auth.google_failed"));
   }
 
   async function triggerRequestOtp() {
@@ -124,7 +132,7 @@ function AuthPage() {
       await requestOtp();
       setResendAt(Date.now() + 60_000);
     } catch (e: any) {
-      setErr(e?.message ?? t("auth.otp_send_failed"));
+      setErr(mfaErrorMessage(e, t, "auth.otp_send_failed"));
     }
   }
 
@@ -143,7 +151,7 @@ function AuthPage() {
       setMfaStep("otp");
       await triggerRequestOtp();
     } catch (e: any) {
-      setErr(e?.message ?? t("common.error"));
+      setErr(mfaErrorMessage(e, t, "common.error"));
     }
     setBusy(false);
   }
@@ -154,17 +162,16 @@ function AuthPage() {
     setBusy(true);
     try {
       await verifyOtp({ data: { code: otpCode.trim() } });
-      await supabase.auth.refreshSession();
       const dest = await resolveDestination(fallback);
       window.location.assign(dest);
     } catch (e: any) {
-      setErr(e?.message ?? t("auth.otp_invalid"));
+      setErr(mfaErrorMessage(e, t, "auth.otp_invalid"));
       setBusy(false);
     }
   }
 
   async function backToCredentials() {
-    await supabase.auth.signOut();
+    await signOutFnRpc();
     setMfaStep(null);
     setMfaPhone(null);
     setMfaPhoneInput("");
@@ -280,7 +287,7 @@ function AuthPage() {
               <input
                 type={showPassword ? "text" : "password"}
                 required
-                minLength={6}
+                minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={t("auth.password")}
@@ -319,9 +326,6 @@ function AuthPage() {
               {busy ? "…" : mode === "signin" ? t("auth.signin") : t("auth.signup")}
             </button>
           </form>
-          <button onClick={handleGoogle} className="btn btn-ghost" style={{ width: "100%", marginTop: 10 }}>
-            {t("auth.google")}
-          </button>
           <div style={{ marginTop: 14, fontSize: 13, textAlign: "center" }}>
             <button type="button" onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
               style={{ background: "transparent", color: "var(--accent-glow)", border: 0, cursor: "pointer" }}>

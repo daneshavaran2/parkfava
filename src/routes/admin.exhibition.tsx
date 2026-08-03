@@ -24,10 +24,10 @@ import {
   deleteExhibitionProduct,
   reorderExhibitionProducts,
 } from "@/lib/exhibition-api.functions";
-import { supabase } from "@/integrations/supabase/client";
+import { signOutFn } from "@/lib/auth.functions";
 import { AttachmentsManager } from "@/components/admin/AttachmentsManager";
 import { ZipImporter } from "@/components/admin/ZipImporter";
-import { fetchAttachments, uploadAttachment, deleteAttachment, type CompanyAttachment } from "@/lib/attachments-api";
+import { fetchAttachmentsAdmin, uploadAttachment, deleteAttachment, type CompanyAttachment } from "@/lib/attachments-api";
 import { fetchParks } from "@/lib/parks-api";
 import { parseLatLng } from "@/lib/geo";
 import { useTranslation } from "react-i18next";
@@ -120,7 +120,7 @@ function AdminExhibitionPage() {
             INSERT INTO public.user_roles (user_id, role) VALUES ('{user.id}', 'admin');
           </code>
         </p>
-        <button className="btn btn-ghost" style={{ marginTop: 16 }} onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("adminExhibition.signout_and_relogin")}</button>
+        <button className="btn btn-ghost" style={{ marginTop: 16 }} onClick={async () => { await signOutFn(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("adminExhibition.signout_and_relogin")}</button>
       </div></div>
     );
   }
@@ -164,7 +164,7 @@ function AdminExhibitionPage() {
             <Link to="/admin/attachments" className="btn btn-ghost">{t("adminExhibition.attachments_dashboard")}</Link>
             <Link to="/admin/parks" className="btn btn-ghost">{t("adminExhibition.parks_link")}</Link>
             <Link to="/admin/about" className="btn btn-ghost">{t("adminExhibition.about_link")}</Link>
-            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
+            <button className="btn btn-ghost" onClick={async () => { await signOutFn(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
           </div>
         </div>
 
@@ -665,7 +665,7 @@ function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionPro
 
   const { data: allAtts = [] } = useQuery({
     queryKey: ["admin-product-gallery", companyId],
-    queryFn: () => fetchAttachments("exhibition", companyId),
+    queryFn: () => fetchAttachmentsAdmin("exhibition", companyId),
   });
   const productImages = allAtts.filter(
     (a) => a.kind === "gallery_image" && (a.description || "").trim() === `product:${p.id}`,

@@ -7,9 +7,9 @@
 // No panel is wired up yet (no account/API key exists as of writing this),
 // so none of these code paths have been exercised against a real provider —
 // double-check the endpoint/payload shape against your panel's current docs
-// once you have credentials, before flipping MFA_ENFORCED=true in
-// mfa-middleware.ts. Until SMS_PROVIDER/SMS_API_KEY are set, this throws
-// instead of pretending a code was sent.
+// once you have credentials, before flipping MFA_ENFORCED=true (see
+// src/lib/auth/middleware.ts). Until SMS_PROVIDER/SMS_API_KEY are set, this
+// throws instead of pretending a code was sent.
 export async function sendOtpSms(phone: string, code: string): Promise<void> {
   const provider = process.env.SMS_PROVIDER;
   const apiKey = process.env.SMS_API_KEY;
@@ -17,7 +17,7 @@ export async function sendOtpSms(phone: string, code: string): Promise<void> {
 
   if (!provider || !apiKey) {
     console.error(`[sms] SMS_PROVIDER/SMS_API_KEY not set — OTP for ${phone} was NOT sent (code: ${code})`);
-    throw new Error("سرویس پیامک هنوز پیکربندی نشده است.");
+    throw new Error("SMS_NOT_CONFIGURED");
   }
 
   switch (provider) {

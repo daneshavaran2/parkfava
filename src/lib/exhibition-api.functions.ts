@@ -1,7 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireMfaVerified } from "@/integrations/supabase/mfa-middleware";
+import { getDb } from "../../db/connection";
+import { requireAuth, requireMfaVerified } from "./auth/middleware";
 import { parseLatLngValue } from "@/lib/geo";
+import type { ExhibitionCompany, ExhibitionImage, ExhibitionProduct } from "@/lib/exhibition-api";
 
 const nullableText = z.string().trim().max(4000).nullable().optional();
 const nullableUrlText = z.string().trim().max(1000).nullable().optional();
@@ -41,53 +43,64 @@ const companyPatchSchema = z.object({
   latitude: z.union([z.string(), z.number(), z.null()]).optional(),
   longitude: z.union([z.string(), z.number(), z.null()]).optional(),
   map_zoom: z.number().int().min(1).max(22).nullable().optional(),
-}).passthrough();
+});
+
+type AuthedContext = { user: { id: string; roles: string[] } };
+
+function isAdmin(context: AuthedContext) {
+  return context.user.roles.includes("admin");
+}
+
+function assertIsAdmin(context: AuthedContext) {
+  if (!isAdmin(context)) throw new Error("FORBIDDEN");
+}
+
+// Shared by every mutation below: admins can edit any company, owners only
+// their own.
+async function assertCanEditCompany(sql: ReturnType<typeof getDb>, context: AuthedContext, company_id: string) {
+  if (isAdmin(context)) return;
+  const [company] = await sql<{ owner_user_id: string | null }[]>`
+    SELECT owner_user_id FROM exhibition_companies WHERE company_id = ${company_id}
+  `;
+  if (company?.owner_user_id === context.user.id) return;
+  throw new Error("FORBIDDEN");
+}
+
+function normalizeLatLng(patch: Record<string, unknown>) {
+  const lat = parseLatLngValue(patch["latitude"], "lat");
+  const lng = parseLatLngValue(patch["longitude"], "lng");
+  if (!lat.ok || !lng.ok) throw new Error("INVALID_COORDINATES");
+  patch["latitude"] = lat.value;
+  patch["longitude"] = lng.value;
+}
 
 export const saveAdminCompany = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
   .inputValidator((input) => companyPatchSchema.parse(input))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin, error: roleError } = await context.supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", context.userId)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (roleError) throw new Error(roleError.message);
-    if (!isAdmin) throw new Error("Forbidden");
-
+    assertIsAdmin(context);
     const patch: Record<string, unknown> = { ...(data as Record<string, unknown>) };
-    const lat = parseLatLngValue(patch["latitude"], "lat");
-    const lng = parseLatLngValue(patch["longitude"], "lng");
-    if (!lat.ok || !lng.ok) throw new Error("Invalid latitude or longitude");
-    patch["latitude"] = lat.value;
-    patch["longitude"] = lng.value;
-    const { error } = await context.supabase
-      .from("exhibition_companies")
-      .upsert(patch as any, { onConflict: "company_id" });
-    if (error) throw new Error(error.message);
+    normalizeLatLng(patch);
+
+    const sql = getDb();
+    const cols = Object.keys(patch);
+    const updateCols = cols.filter((c) => c !== "company_id");
+    await sql`
+      INSERT INTO exhibition_companies ${sql(patch as any, ...cols)}
+      ON CONFLICT (company_id) DO UPDATE SET ${sql(patch as any, ...updateCols)}
+    `;
     return { ok: true };
   });
 
 export const listAdminCompanies = createServerFn({ method: "GET" })
   .middleware([requireMfaVerified])
   .handler(async ({ context }) => {
-    const { data: isAdmin, error: roleError } = await context.supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", context.userId)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (roleError) throw new Error(roleError.message);
-    if (!isAdmin) throw new Error("Forbidden");
-
-    const { data, error } = await context.supabase
-      .from("exhibition_companies")
-      .select("*")
-      .order("sort_order", { ascending: true, nullsFirst: false })
-      .order("name", { ascending: true });
-    if (error) throw new Error(error.message);
-    return data ?? [];
+    assertIsAdmin(context);
+    const sql = getDb();
+    return await sql<ExhibitionCompany[]>`
+      SELECT * FROM exhibition_companies
+      ORDER BY sort_order ASC NULLS LAST, name ASC
+    `;
   });
 
 export const saveOwnedCompany = createServerFn({ method: "POST" })
@@ -99,46 +112,32 @@ export const saveOwnedCompany = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { status, is_active, owner_user_id, reviewed_at, reviewed_by, company_id: _ignored, ...safe } = data.patch as any;
     const patch: Record<string, unknown> = { ...(safe as Record<string, unknown>) };
-    const lat = parseLatLngValue(patch["latitude"], "lat");
-    const lng = parseLatLngValue(patch["longitude"], "lng");
-    if (!lat.ok || !lng.ok) throw new Error("Invalid latitude or longitude");
-    patch["latitude"] = lat.value;
-    patch["longitude"] = lng.value;
-    const { error } = await context.supabase
-      .from("exhibition_companies")
-      .update(patch as any)
-      .eq("company_id", data.company_id)
-      .eq("owner_user_id", context.userId);
-    if (error) throw new Error(error.message);
+    normalizeLatLng(patch);
+
+    const cols = Object.keys(patch);
+    if (cols.length === 0) return { ok: true };
+
+    const sql = getDb();
+    // Ownership is enforced via the WHERE clause itself (matches the
+    // pre-migration RLS behavior): a non-owner's update simply matches zero
+    // rows instead of throwing.
+    await sql`
+      UPDATE exhibition_companies SET ${sql(patch as any, ...cols)}
+      WHERE company_id = ${data.company_id} AND owner_user_id = ${context.user.id}
+    `;
     return { ok: true };
   });
-
-// Shared by every mutation below: admins can edit any company, owners only
-// their own. These run through the RLS-scoped user client (context.supabase,
-// not the service-role client), so this check is defense-in-depth on top of
-// RLS, matching the pattern already used by saveAdminCompany/listAdminCompanies.
-async function assertCanEditCompany(context: { supabase: any; userId: string }, company_id: string) {
-  const [{ data: isAdmin, error: roleError }, { data: company, error: companyError }] = await Promise.all([
-    context.supabase.from("user_roles").select("role").eq("user_id", context.userId).eq("role", "admin").maybeSingle(),
-    context.supabase.from("exhibition_companies").select("owner_user_id").eq("company_id", company_id).maybeSingle(),
-  ]);
-  if (roleError) throw new Error(roleError.message);
-  if (companyError) throw new Error(companyError.message);
-  if (isAdmin) return;
-  if (company?.owner_user_id === context.userId) return;
-  throw new Error("Forbidden");
-}
 
 export const submitCompanyForReview = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
   .inputValidator((i) => z.object({ company_id: z.string().trim().min(1).max(120) }).parse(i))
   .handler(async ({ data, context }) => {
-    await assertCanEditCompany(context, data.company_id);
-    const { error } = await context.supabase
-      .from("exhibition_companies")
-      .update({ status: "pending", submitted_at: new Date().toISOString() } as any)
-      .eq("company_id", data.company_id);
-    if (error) throw new Error(error.message);
+    const sql = getDb();
+    await assertCanEditCompany(sql, context, data.company_id);
+    await sql`
+      UPDATE exhibition_companies SET status = 'pending', submitted_at = now()
+      WHERE company_id = ${data.company_id}
+    `;
     return { ok: true };
   });
 
@@ -150,11 +149,12 @@ export const addExhibitionImage = createServerFn({ method: "POST" })
     caption: nullableText,
   }).parse(i))
   .handler(async ({ data, context }) => {
-    await assertCanEditCompany(context, data.company_id);
-    const { error } = await context.supabase
-      .from("exhibition_images")
-      .insert({ company_id: data.company_id, image_url: data.image_url, caption: data.caption ?? null, sort_order: 0 } as any);
-    if (error) throw new Error(error.message);
+    const sql = getDb();
+    await assertCanEditCompany(sql, context, data.company_id);
+    await sql`
+      INSERT INTO exhibition_images (company_id, image_url, caption, sort_order)
+      VALUES (${data.company_id}, ${data.image_url}, ${data.caption ?? null}, 0)
+    `;
     return { ok: true };
   });
 
@@ -162,13 +162,11 @@ export const deleteExhibitionImage = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
   .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const { data: img, error: imgErr } = await context.supabase
-      .from("exhibition_images").select("company_id").eq("id", data.id).maybeSingle();
-    if (imgErr) throw new Error(imgErr.message);
-    if (!img) throw new Error("یافت نشد");
-    await assertCanEditCompany(context, img.company_id);
-    const { error } = await context.supabase.from("exhibition_images").delete().eq("id", data.id);
-    if (error) throw new Error(error.message);
+    const sql = getDb();
+    const [img] = await sql<{ company_id: string }[]>`SELECT company_id FROM exhibition_images WHERE id = ${data.id}`;
+    if (!img) throw new Error("NOT_FOUND");
+    await assertCanEditCompany(sql, context, img.company_id);
+    await sql`DELETE FROM exhibition_images WHERE id = ${data.id}`;
     return { ok: true };
   });
 
@@ -188,13 +186,15 @@ export const upsertExhibitionProduct = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
   .inputValidator((i) => productWriteSchema.parse(i))
   .handler(async ({ data, context }) => {
-    await assertCanEditCompany(context, data.company_id);
+    const sql = getDb();
+    await assertCanEditCompany(sql, context, data.company_id);
     const { id, ...rest } = data;
-    const table = context.supabase.from("exhibition_products" as any);
-    const { error } = id
-      ? await table.update(rest as any).eq("id", id)
-      : await table.insert(rest as any);
-    if (error) throw new Error(error.message);
+    const cols = Object.keys(rest);
+    if (id) {
+      await sql`UPDATE exhibition_products SET ${sql(rest as any, ...cols)} WHERE id = ${id}`;
+    } else {
+      await sql`INSERT INTO exhibition_products ${sql(rest as any, ...cols)}`;
+    }
     return { ok: true };
   });
 
@@ -202,30 +202,21 @@ export const deleteExhibitionProduct = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
   .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const { data: prod, error: prodErr } = await context.supabase
-      .from("exhibition_products" as any).select("company_id").eq("id", data.id).maybeSingle();
-    if (prodErr) throw new Error(prodErr.message);
-    if (!prod) throw new Error("یافت نشد");
-    await assertCanEditCompany(context, (prod as any).company_id);
-    const { error } = await context.supabase.from("exhibition_products" as any).delete().eq("id", data.id);
-    if (error) throw new Error(error.message);
+    const sql = getDb();
+    const [prod] = await sql<{ company_id: string }[]>`SELECT company_id FROM exhibition_products WHERE id = ${data.id}`;
+    if (!prod) throw new Error("NOT_FOUND");
+    await assertCanEditCompany(sql, context, prod.company_id);
+    await sql`DELETE FROM exhibition_products WHERE id = ${data.id}`;
     return { ok: true };
   });
-
-async function assertIsAdmin(context: { supabase: any; userId: string }) {
-  const { data: isAdmin, error } = await context.supabase
-    .from("user_roles").select("role").eq("user_id", context.userId).eq("role", "admin").maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!isAdmin) throw new Error("Forbidden");
-}
 
 export const deleteExhibitionCompanyAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
   .inputValidator((i) => z.object({ company_id: z.string().trim().min(1).max(120) }).parse(i))
   .handler(async ({ data, context }) => {
-    await assertIsAdmin(context);
-    const { error } = await context.supabase.from("exhibition_companies").delete().eq("company_id", data.company_id);
-    if (error) throw new Error(error.message);
+    assertIsAdmin(context);
+    const sql = getDb();
+    await sql`DELETE FROM exhibition_companies WHERE company_id = ${data.company_id}`;
     return { ok: true };
   });
 
@@ -233,12 +224,11 @@ export const reorderExhibitionCompaniesAdmin = createServerFn({ method: "POST" }
   .middleware([requireMfaVerified])
   .inputValidator((i) => z.object({ ids: z.array(z.string().trim().min(1).max(120)) }).parse(i))
   .handler(async ({ data, context }) => {
-    await assertIsAdmin(context);
-    const results = await Promise.all(
-      data.ids.map((id, i) => context.supabase.from("exhibition_companies").update({ sort_order: i }).eq("company_id", id)),
+    assertIsAdmin(context);
+    const sql = getDb();
+    await sql.begin((tx) =>
+      data.ids.map((id, i) => tx`UPDATE exhibition_companies SET sort_order = ${i} WHERE company_id = ${id}`),
     );
-    const err = results.find((r: any) => r.error);
-    if (err) throw new Error(err.error!.message);
     return { ok: true };
   });
 
@@ -246,15 +236,14 @@ export const approveCompanyAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
   .inputValidator((i) => z.object({ company_id: z.string().trim().min(1).max(120) }).parse(i))
   .handler(async ({ data, context }) => {
-    await assertIsAdmin(context);
-    const { error } = await context.supabase
-      .from("exhibition_companies")
-      .update({
-        status: "approved", is_active: true,
-        reviewed_at: new Date().toISOString(), reviewed_by: context.userId, rejection_note: null,
-      } as any)
-      .eq("company_id", data.company_id);
-    if (error) throw new Error(error.message);
+    assertIsAdmin(context);
+    const sql = getDb();
+    await sql`
+      UPDATE exhibition_companies SET
+        status = 'approved', is_active = true,
+        reviewed_at = now(), reviewed_by = ${context.user.id}, rejection_note = null
+      WHERE company_id = ${data.company_id}
+    `;
     return { ok: true };
   });
 
@@ -262,15 +251,14 @@ export const rejectCompanyAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
   .inputValidator((i) => z.object({ company_id: z.string().trim().min(1).max(120), note: z.string().trim().max(2000) }).parse(i))
   .handler(async ({ data, context }) => {
-    await assertIsAdmin(context);
-    const { error } = await context.supabase
-      .from("exhibition_companies")
-      .update({
-        status: "rejected",
-        reviewed_at: new Date().toISOString(), reviewed_by: context.userId, rejection_note: data.note,
-      } as any)
-      .eq("company_id", data.company_id);
-    if (error) throw new Error(error.message);
+    assertIsAdmin(context);
+    const sql = getDb();
+    await sql`
+      UPDATE exhibition_companies SET
+        status = 'rejected',
+        reviewed_at = now(), reviewed_by = ${context.user.id}, rejection_note = ${data.note}
+      WHERE company_id = ${data.company_id}
+    `;
     return { ok: true };
   });
 
@@ -278,13 +266,11 @@ export const updateExhibitionImage = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
   .inputValidator((i) => z.object({ id: z.string().uuid(), caption: nullableText }).parse(i))
   .handler(async ({ data, context }) => {
-    const { data: img, error: imgErr } = await context.supabase
-      .from("exhibition_images").select("company_id").eq("id", data.id).maybeSingle();
-    if (imgErr) throw new Error(imgErr.message);
-    if (!img) throw new Error("یافت نشد");
-    await assertCanEditCompany(context, img.company_id);
-    const { error } = await context.supabase.from("exhibition_images").update({ caption: data.caption ?? null }).eq("id", data.id);
-    if (error) throw new Error(error.message);
+    const sql = getDb();
+    const [img] = await sql<{ company_id: string }[]>`SELECT company_id FROM exhibition_images WHERE id = ${data.id}`;
+    if (!img) throw new Error("NOT_FOUND");
+    await assertCanEditCompany(sql, context, img.company_id);
+    await sql`UPDATE exhibition_images SET caption = ${data.caption ?? null} WHERE id = ${data.id}`;
     return { ok: true };
   });
 
@@ -292,16 +278,13 @@ export const reorderExhibitionImages = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
   .inputValidator((i) => z.object({ ids: z.array(z.string().uuid()).min(1) }).parse(i))
   .handler(async ({ data, context }) => {
-    const { data: img, error: imgErr } = await context.supabase
-      .from("exhibition_images").select("company_id").eq("id", data.ids[0]).maybeSingle();
-    if (imgErr) throw new Error(imgErr.message);
-    if (!img) throw new Error("یافت نشد");
-    await assertCanEditCompany(context, img.company_id);
-    const results = await Promise.all(
-      data.ids.map((id, i) => context.supabase.from("exhibition_images").update({ sort_order: i }).eq("id", id)),
+    const sql = getDb();
+    const [img] = await sql<{ company_id: string }[]>`SELECT company_id FROM exhibition_images WHERE id = ${data.ids[0]}`;
+    if (!img) throw new Error("NOT_FOUND");
+    await assertCanEditCompany(sql, context, img.company_id);
+    await sql.begin((tx) =>
+      data.ids.map((id, i) => tx`UPDATE exhibition_images SET sort_order = ${i} WHERE id = ${id}`),
     );
-    const err = results.find((r: any) => r.error);
-    if (err) throw new Error(err.error!.message);
     return { ok: true };
   });
 
@@ -309,15 +292,88 @@ export const reorderExhibitionProducts = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
   .inputValidator((i) => z.object({ ids: z.array(z.string().uuid()).min(1) }).parse(i))
   .handler(async ({ data, context }) => {
-    const { data: prod, error: prodErr } = await context.supabase
-      .from("exhibition_products" as any).select("company_id").eq("id", data.ids[0]).maybeSingle();
-    if (prodErr) throw new Error(prodErr.message);
-    if (!prod) throw new Error("یافت نشد");
-    await assertCanEditCompany(context, (prod as any).company_id);
-    const results = await Promise.all(
-      data.ids.map((id, i) => context.supabase.from("exhibition_products" as any).update({ sort_order: i }).eq("id", id)),
+    const sql = getDb();
+    const [prod] = await sql<{ company_id: string }[]>`SELECT company_id FROM exhibition_products WHERE id = ${data.ids[0]}`;
+    if (!prod) throw new Error("NOT_FOUND");
+    await assertCanEditCompany(sql, context, prod.company_id);
+    await sql.begin((tx) =>
+      data.ids.map((id, i) => tx`UPDATE exhibition_products SET sort_order = ${i} WHERE id = ${id}`),
     );
-    const err = results.find((r: any) => r.error);
-    if (err) throw new Error(err.error!.message);
     return { ok: true };
+  });
+
+/* ============ PUBLIC READS ============ */
+
+export const getExhibitionCompanies = createServerFn({ method: "GET" }).handler(async () => {
+  const sql = getDb();
+  return await sql<ExhibitionCompany[]>`
+    SELECT * FROM exhibition_companies
+    WHERE status = 'approved' AND is_active = true
+    ORDER BY sort_order ASC
+  `;
+});
+
+export const getPublicExhibitionProducts = createServerFn({ method: "GET" })
+  .inputValidator((i) => z.object({ companyIds: z.array(z.string()) }).parse(i))
+  .handler(async ({ data }) => {
+    if (!data.companyIds.length) return [] as ExhibitionProduct[];
+    const sql = getDb();
+    return await sql<ExhibitionProduct[]>`
+      SELECT * FROM exhibition_products
+      WHERE company_id IN ${sql(data.companyIds)}
+      ORDER BY sort_order ASC
+    `;
+  });
+
+export const getExhibitionCompanyDetail = createServerFn({ method: "GET" })
+  .inputValidator((i) => z.object({ id: z.string().trim().min(1).max(120) }).parse(i))
+  .handler(async ({ data }) => {
+    const sql = getDb();
+    const [[company], images, products] = await Promise.all([
+      sql<ExhibitionCompany[]>`SELECT * FROM exhibition_companies WHERE company_id = ${data.id}`,
+      sql<ExhibitionImage[]>`SELECT * FROM exhibition_images WHERE company_id = ${data.id} ORDER BY sort_order ASC`,
+      sql<ExhibitionProduct[]>`SELECT * FROM exhibition_products WHERE company_id = ${data.id} ORDER BY sort_order ASC`,
+    ]);
+    return { company: company ?? null, images, products };
+  });
+
+/* ============ OWNER: MY COMPANY ============ */
+
+export const getMyCompany = createServerFn({ method: "GET" })
+  .middleware([requireAuth])
+  .handler(async ({ context }) => {
+    const sql = getDb();
+    const [company] = await sql<ExhibitionCompany[]>`
+      SELECT * FROM exhibition_companies
+      WHERE owner_user_id = ${context.user.id}
+      ORDER BY submitted_at DESC NULLS LAST
+      LIMIT 1
+    `;
+    return company ?? null;
+  });
+
+/* ============ UPLOADS (still target Supabase Storage — Phase 4 replaces
+   just the storage backend behind this function, not its call sites) ============ */
+
+export const uploadExhibitionAssetFn = createServerFn({ method: "POST" })
+  .middleware([requireMfaVerified])
+  .inputValidator((raw) => {
+    if (!(raw instanceof FormData)) throw new Error("INVALID_UPLOAD");
+    const file = raw.get("file");
+    const company_id = raw.get("company_id");
+    if (!(file instanceof File) || typeof company_id !== "string" || !company_id) {
+      throw new Error("INVALID_UPLOAD");
+    }
+    return { file, company_id };
+  })
+  .handler(async ({ data, context }) => {
+    const sql = getDb();
+    await assertCanEditCompany(sql, context, data.company_id);
+
+    const ext = data.file.name.split(".").pop() || "bin";
+    const path = `exhibition/${data.company_id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.storage.from("park-assets").upload(path, data.file, { upsert: false });
+    if (error) throw new Error(error.message);
+    return { path };
   });

@@ -13,7 +13,6 @@ import { Route as RegisterCompanyRouteImport } from './routes/register-company'
 import { Route as PerfRouteImport } from './routes/perf'
 import { Route as ParksRouteImport } from './routes/parks'
 import { Route as MyCompanyRouteImport } from './routes/my-company'
-import { Route as McpRouteImport } from './routes/mcp'
 import { Route as ExhibitionRouteImport } from './routes/exhibition'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -26,13 +25,9 @@ import { Route as AdminKahkeshanRouteImport } from './routes/admin.kahkeshan'
 import { Route as AdminExhibitionRouteImport } from './routes/admin.exhibition'
 import { Route as AdminAttachmentsRouteImport } from './routes/admin.attachments'
 import { Route as AdminAboutRouteImport } from './routes/admin.about'
-import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
-import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as CompanyIdIndexRouteImport } from './routes/company.$id.index'
 import { Route as ApiPublicDebugEchoRouteImport } from './routes/api/public/debug-echo'
 import { Route as ApiPublicCspReportRouteImport } from './routes/api/public/csp-report'
-import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
-import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as CompanyIdProductPidRouteImport } from './routes/company.$id.product.$pid'
 
 const RegisterCompanyRoute = RegisterCompanyRouteImport.update({
@@ -53,11 +48,6 @@ const ParksRoute = ParksRouteImport.update({
 const MyCompanyRoute = MyCompanyRouteImport.update({
   id: '/my-company',
   path: '/my-company',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExhibitionRoute = ExhibitionRouteImport.update({
@@ -120,18 +110,6 @@ const AdminAboutRoute = AdminAboutRouteImport.update({
   path: '/admin/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Char91DotwellKnownChar93OauthProtectedResourceRoute =
-  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
-    id: '/.well-known/oauth-protected-resource',
-    path: '/.well-known/oauth-protected-resource',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const Char91DotmcpChar93ListToolsRoute =
-  Char91DotmcpChar93ListToolsRouteImport.update({
-    id: '/.mcp/list-tools',
-    path: '/.mcp/list-tools',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const CompanyIdIndexRoute = CompanyIdIndexRouteImport.update({
   id: '/company/$id/',
   path: '/company/$id/',
@@ -147,17 +125,6 @@ const ApiPublicCspReportRoute = ApiPublicCspReportRouteImport.update({
   path: '/api/public/csp-report',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Char91DotmcpChar93InvokeToolToolRoute =
-  Char91DotmcpChar93InvokeToolToolRouteImport.update({
-    id: '/.mcp/invoke-tool/$tool',
-    path: '/.mcp/invoke-tool/$tool',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
-  id: '/.lovable/oauth/consent',
-  path: '/.lovable/oauth/consent',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CompanyIdProductPidRoute = CompanyIdProductPidRouteImport.update({
   id: '/company/$id/product/$pid',
   path: '/company/$id/product/$pid',
@@ -170,13 +137,10 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/exhibition': typeof ExhibitionRoute
-  '/mcp': typeof McpRoute
   '/my-company': typeof MyCompanyRoute
   '/parks': typeof ParksRoute
   '/perf': typeof PerfRoute
   '/register-company': typeof RegisterCompanyRoute
-  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
-  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/about': typeof AdminAboutRoute
   '/admin/attachments': typeof AdminAttachmentsRoute
   '/admin/exhibition': typeof AdminExhibitionRoute
@@ -184,8 +148,6 @@ export interface FileRoutesByFullPath {
   '/admin/parks': typeof AdminParksRoute
   '/admin/users': typeof AdminUsersRoute
   '/dev/logo': typeof DevLogoRoute
-  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
-  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/csp-report': typeof ApiPublicCspReportRoute
   '/api/public/debug-echo': typeof ApiPublicDebugEchoRoute
   '/company/$id/': typeof CompanyIdIndexRoute
@@ -197,13 +159,10 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/exhibition': typeof ExhibitionRoute
-  '/mcp': typeof McpRoute
   '/my-company': typeof MyCompanyRoute
   '/parks': typeof ParksRoute
   '/perf': typeof PerfRoute
   '/register-company': typeof RegisterCompanyRoute
-  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
-  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/about': typeof AdminAboutRoute
   '/admin/attachments': typeof AdminAttachmentsRoute
   '/admin/exhibition': typeof AdminExhibitionRoute
@@ -211,8 +170,6 @@ export interface FileRoutesByTo {
   '/admin/parks': typeof AdminParksRoute
   '/admin/users': typeof AdminUsersRoute
   '/dev/logo': typeof DevLogoRoute
-  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
-  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/csp-report': typeof ApiPublicCspReportRoute
   '/api/public/debug-echo': typeof ApiPublicDebugEchoRoute
   '/company/$id': typeof CompanyIdIndexRoute
@@ -225,13 +182,10 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/exhibition': typeof ExhibitionRoute
-  '/mcp': typeof McpRoute
   '/my-company': typeof MyCompanyRoute
   '/parks': typeof ParksRoute
   '/perf': typeof PerfRoute
   '/register-company': typeof RegisterCompanyRoute
-  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
-  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/about': typeof AdminAboutRoute
   '/admin/attachments': typeof AdminAttachmentsRoute
   '/admin/exhibition': typeof AdminExhibitionRoute
@@ -239,8 +193,6 @@ export interface FileRoutesById {
   '/admin/parks': typeof AdminParksRoute
   '/admin/users': typeof AdminUsersRoute
   '/dev/logo': typeof DevLogoRoute
-  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
-  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/csp-report': typeof ApiPublicCspReportRoute
   '/api/public/debug-echo': typeof ApiPublicDebugEchoRoute
   '/company/$id/': typeof CompanyIdIndexRoute
@@ -254,13 +206,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categories'
     | '/exhibition'
-    | '/mcp'
     | '/my-company'
     | '/parks'
     | '/perf'
     | '/register-company'
-    | '/.mcp/list-tools'
-    | '/.well-known/oauth-protected-resource'
     | '/admin/about'
     | '/admin/attachments'
     | '/admin/exhibition'
@@ -268,8 +217,6 @@ export interface FileRouteTypes {
     | '/admin/parks'
     | '/admin/users'
     | '/dev/logo'
-    | '/.lovable/oauth/consent'
-    | '/.mcp/invoke-tool/$tool'
     | '/api/public/csp-report'
     | '/api/public/debug-echo'
     | '/company/$id/'
@@ -281,13 +228,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categories'
     | '/exhibition'
-    | '/mcp'
     | '/my-company'
     | '/parks'
     | '/perf'
     | '/register-company'
-    | '/.mcp/list-tools'
-    | '/.well-known/oauth-protected-resource'
     | '/admin/about'
     | '/admin/attachments'
     | '/admin/exhibition'
@@ -295,8 +239,6 @@ export interface FileRouteTypes {
     | '/admin/parks'
     | '/admin/users'
     | '/dev/logo'
-    | '/.lovable/oauth/consent'
-    | '/.mcp/invoke-tool/$tool'
     | '/api/public/csp-report'
     | '/api/public/debug-echo'
     | '/company/$id'
@@ -308,13 +250,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categories'
     | '/exhibition'
-    | '/mcp'
     | '/my-company'
     | '/parks'
     | '/perf'
     | '/register-company'
-    | '/.mcp/list-tools'
-    | '/.well-known/oauth-protected-resource'
     | '/admin/about'
     | '/admin/attachments'
     | '/admin/exhibition'
@@ -322,8 +261,6 @@ export interface FileRouteTypes {
     | '/admin/parks'
     | '/admin/users'
     | '/dev/logo'
-    | '/.lovable/oauth/consent'
-    | '/.mcp/invoke-tool/$tool'
     | '/api/public/csp-report'
     | '/api/public/debug-echo'
     | '/company/$id/'
@@ -336,13 +273,10 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CategoriesRoute: typeof CategoriesRoute
   ExhibitionRoute: typeof ExhibitionRoute
-  McpRoute: typeof McpRoute
   MyCompanyRoute: typeof MyCompanyRoute
   ParksRoute: typeof ParksRoute
   PerfRoute: typeof PerfRoute
   RegisterCompanyRoute: typeof RegisterCompanyRoute
-  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
-  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AdminAboutRoute: typeof AdminAboutRoute
   AdminAttachmentsRoute: typeof AdminAttachmentsRoute
   AdminExhibitionRoute: typeof AdminExhibitionRoute
@@ -350,8 +284,6 @@ export interface RootRouteChildren {
   AdminParksRoute: typeof AdminParksRoute
   AdminUsersRoute: typeof AdminUsersRoute
   DevLogoRoute: typeof DevLogoRoute
-  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
-  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicCspReportRoute: typeof ApiPublicCspReportRoute
   ApiPublicDebugEchoRoute: typeof ApiPublicDebugEchoRoute
   CompanyIdIndexRoute: typeof CompanyIdIndexRoute
@@ -386,13 +318,6 @@ declare module '@tanstack/react-router' {
       path: '/my-company'
       fullPath: '/my-company'
       preLoaderRoute: typeof MyCompanyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/exhibition': {
@@ -479,20 +404,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.well-known/oauth-protected-resource': {
-      id: '/.well-known/oauth-protected-resource'
-      path: '/.well-known/oauth-protected-resource'
-      fullPath: '/.well-known/oauth-protected-resource'
-      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/.mcp/list-tools': {
-      id: '/.mcp/list-tools'
-      path: '/.mcp/list-tools'
-      fullPath: '/.mcp/list-tools'
-      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/company/$id/': {
       id: '/company/$id/'
       path: '/company/$id'
@@ -514,20 +425,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCspReportRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.mcp/invoke-tool/$tool': {
-      id: '/.mcp/invoke-tool/$tool'
-      path: '/.mcp/invoke-tool/$tool'
-      fullPath: '/.mcp/invoke-tool/$tool'
-      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/.lovable/oauth/consent': {
-      id: '/.lovable/oauth/consent'
-      path: '/.lovable/oauth/consent'
-      fullPath: '/.lovable/oauth/consent'
-      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/company/$id/product/$pid': {
       id: '/company/$id/product/$pid'
       path: '/company/$id/product/$pid'
@@ -544,14 +441,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CategoriesRoute: CategoriesRoute,
   ExhibitionRoute: ExhibitionRoute,
-  McpRoute: McpRoute,
   MyCompanyRoute: MyCompanyRoute,
   ParksRoute: ParksRoute,
   PerfRoute: PerfRoute,
   RegisterCompanyRoute: RegisterCompanyRoute,
-  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
-  Char91DotwellKnownChar93OauthProtectedResourceRoute:
-    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   AdminAboutRoute: AdminAboutRoute,
   AdminAttachmentsRoute: AdminAttachmentsRoute,
   AdminExhibitionRoute: AdminExhibitionRoute,
@@ -559,8 +452,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminParksRoute: AdminParksRoute,
   AdminUsersRoute: AdminUsersRoute,
   DevLogoRoute: DevLogoRoute,
-  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
-  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicCspReportRoute: ApiPublicCspReportRoute,
   ApiPublicDebugEchoRoute: ApiPublicDebugEchoRoute,
   CompanyIdIndexRoute: CompanyIdIndexRoute,
