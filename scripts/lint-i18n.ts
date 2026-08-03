@@ -20,7 +20,7 @@ const ROOT = process.cwd();
 const PERSIAN = /[\u0600-\u06FF]/;
 
 // Paths (posix separators) that are checked. Anything outside is ignored.
-const INCLUDE_DIRS = ["src", "scripts", "supabase/migrations"];
+const INCLUDE_DIRS = ["src", "scripts", "db/migrations"];
 
 // Files under these prefixes MAY contain Persian (UI layer + docs + seeds).
 const UI_ALLOW_PREFIXES = [
@@ -37,7 +37,6 @@ const DENY_SUFFIXES = [".server.ts", ".server.tsx", ".functions.ts", ".functions
 // as schema, error messages, or log lines.
 const SKIP_SUBSTRINGS = [
   "routeTree.gen.",
-  "/integrations/supabase/types.ts",
   "/lib/fava/",
   "src/types/fava",
   "public/vendor/",
@@ -46,7 +45,6 @@ const SKIP_SUBSTRINGS = [
   "scripts/seed-dev-data.ts",
   "scripts/seed-attachments.ts",
   "scripts/reset-dev-data.ts",
-  "supabase/migrations/",
 ];
 
 const EXTENSIONS = new Set([".ts", ".tsx", ".js", ".mjs", ".sql"]);
