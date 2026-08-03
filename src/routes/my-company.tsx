@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getCurrentUser, signOutFn } from "@/lib/auth.functions";
 import { useAssetUrl } from "@/lib/use-auth";
 import {
   fetchMyCompany,
@@ -38,8 +38,8 @@ function MyCompanyPage() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) { navigate({ to: "/auth", search: { next: "/my-company" } as any }); return; }
+      const user = await getCurrentUser();
+      if (!user) { navigate({ to: "/auth", search: { next: "/my-company" } as any }); return; }
       const mine = await fetchMyCompany();
       if (!mine) { setNotAssigned(true); setChecking(false); return; }
       setCompanyId(mine.company_id);
@@ -61,14 +61,14 @@ function MyCompanyPage() {
           {/* user id shown for admin lookup */}
         </code>
         <div style={{ marginTop: 20, display: "flex", gap: 8 }}>
-          <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/" }); }}>{t("common.logout")}</button>
+          <button className="btn btn-ghost" onClick={async () => { await signOutFn(); navigate({ to: "/" }); }}>{t("common.logout")}</button>
         </div>
       </div></div>
     );
   }
   if (!companyId) return null;
 
-  return <OwnerEditor companyId={companyId} onSignOut={async () => { await supabase.auth.signOut(); navigate({ to: "/" }); }} qc={qc} />;
+  return <OwnerEditor companyId={companyId} onSignOut={async () => { await signOutFn(); navigate({ to: "/" }); }} qc={qc} />;
 }
 
 function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOut: () => void; qc: ReturnType<typeof useQueryClient> }) {

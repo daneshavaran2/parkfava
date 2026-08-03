@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { getParks, getActiveParks, upsertParkAdmin, deleteParkAdmin, reorderParksAdmin } from "./parks.functions";
 
 export type Park = {
   park_id: string;
@@ -17,40 +17,42 @@ export type Park = {
 };
 
 export async function fetchParks(): Promise<Park[]> {
-  const { data } = await supabase
-    .from("parks" as any)
-    .select("*")
-    .order("sort_order", { ascending: true });
-  return ((data ?? []) as any) as Park[];
+  const data = await getParks();
+  return (data ?? []) as Park[];
 }
 
 export async function fetchActiveParks(): Promise<Park[]> {
-  const { data } = await supabase
-    .from("parks" as any)
-    .select("*")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
-  return ((data ?? []) as any) as Park[];
+  const data = await getActiveParks();
+  return (data ?? []) as Park[];
 }
 
 export async function upsertPark(p: Partial<Park> & { park_id: string; name: string }) {
-  return supabase.from("parks" as any).upsert(p as any, { onConflict: "park_id" });
+  try {
+    await upsertParkAdmin({ data: p as any });
+    return { error: null };
+  } catch (e: any) {
+    return { error: e };
+  }
 }
 
 export async function deletePark(park_id: string) {
-  return supabase.from("parks" as any).delete().eq("park_id", park_id);
+  try {
+    await deleteParkAdmin({ data: { park_id } });
+    return { error: null };
+  } catch (e: any) {
+    return { error: e };
+  }
 }
 
 /**
  * Re-numbers sort_order according to the given id sequence.
- * Admin-only (RLS enforces).
+ * Admin-only.
  */
 export async function reorderParks(ids: string[]) {
-  const results = await Promise.all(
-    ids.map((park_id, i) =>
-      supabase.from("parks" as any).update({ sort_order: i + 1 } as any).eq("park_id", park_id),
-    ),
-  );
-  const err = results.find((r) => r.error);
-  return err ?? { error: null };
+  try {
+    await reorderParksAdmin({ data: { ids } });
+    return { error: null };
+  } catch (e: any) {
+    return { error: e };
+  }
 }

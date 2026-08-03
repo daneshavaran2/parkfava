@@ -1,4 +1,16 @@
-import { supabase } from "@/integrations/supabase/client";
+import {
+  getExhibitionCompanies,
+  getPublicExhibitionProducts,
+  getExhibitionCompanyDetail,
+  getMyCompany,
+  uploadExhibitionAssetFn,
+} from "./exhibition-api.functions";
+import {
+  getAboutSections,
+  upsertAboutSectionAdmin,
+  deleteAboutSectionAdmin,
+  uploadAboutAssetFn,
+} from "./about-sections.functions";
 
 export type ExhibitionCompany = {
   company_id: string;
@@ -61,93 +73,40 @@ export type ExhibitionProduct = {
 /* ============ OWNERSHIP / APPROVAL ============ */
 
 export async function fetchMyCompany() {
-  const { data: userRes } = await supabase.auth.getUser();
-  const uid = userRes.user?.id;
-  if (!uid) return null;
-  const { data } = await supabase
-    .from("exhibition_companies")
-    .select("*")
-    .eq("owner_user_id", uid)
-    .order("submitted_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return (data ?? null) as ExhibitionCompany | null;
+  const company = await getMyCompany();
+  return (company ?? null) as ExhibitionCompany | null;
 }
 
-export async function createOwnedCompany(payload: {
-  company_id: string;
-  name: string;
-  category?: string | null;
-  city?: string | null;
-  tagline?: string | null;
-  description?: string | null;
-  website?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  logo_url?: string | null;
-}) {
-  const { data: userRes } = await supabase.auth.getUser();
-  const uid = userRes.user?.id;
-  if (!uid) throw new Error("Sign-in is required to register a company.");
-  return supabase.from("exhibition_companies").insert({
-    ...payload,
-    owner_user_id: uid,
-    status: "draft",
-    is_active: false,
-    sort_order: 9999,
-  } as any);
-}
+/* ============ READS ============ */
 
 export async function fetchExhibitionCompanies() {
-  const { data } = await supabase
-    .from("exhibition_companies")
-    .select("*")
-    .eq("status", "approved")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
+  const data = await getExhibitionCompanies();
   return (data ?? []) as ExhibitionCompany[];
 }
 
 /** Products belonging to publicly-visible (approved + active) companies only. */
 export async function fetchPublicExhibitionProducts(companyIds: string[]) {
   if (!companyIds.length) return [] as ExhibitionProduct[];
-  const { data } = await supabase
-    .from("exhibition_products" as any)
-    .select("*")
-    .in("company_id", companyIds)
-    .order("sort_order", { ascending: true });
-  return ((data ?? []) as any) as ExhibitionProduct[];
-}
-
-export async function fetchAllCompaniesAdmin() {
-  const { data, error } = await supabase
-    .from("exhibition_companies")
-    .select("*")
-    .order("sort_order", { ascending: true });
-  if (error) throw error;
-  return (data ?? []) as ExhibitionCompany[];
+  const data = await getPublicExhibitionProducts({ data: { companyIds } });
+  return (data ?? []) as ExhibitionProduct[];
 }
 
 export async function fetchExhibitionCompany(id: string) {
-  const [c, imgs, prods] = await Promise.all([
-    supabase.from("exhibition_companies").select("*").eq("company_id", id).maybeSingle(),
-    supabase.from("exhibition_images").select("*").eq("company_id", id).order("sort_order"),
-    supabase.from("exhibition_products" as any).select("*").eq("company_id", id).order("sort_order"),
-  ]);
+  const { company, images, products } = await getExhibitionCompanyDetail({ data: { id } });
   return {
-    company: (c.data ?? null) as ExhibitionCompany | null,
-    images: (imgs.data ?? []) as ExhibitionImage[],
-    products: ((prods as any).data ?? []) as ExhibitionProduct[],
+    company: (company ?? null) as ExhibitionCompany | null,
+    images: (images ?? []) as ExhibitionImage[],
+    products: (products ?? []) as ExhibitionProduct[],
   };
 }
 
 /* ============ PRODUCTS ============ */
 
 export async function uploadExhibitionAsset(company_id: string, file: File) {
-  const ext = file.name.split(".").pop() || "bin";
-  const path = `exhibition/${company_id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const { error } = await supabase.storage.from("park-assets").upload(path, file, { upsert: false });
-  if (error) throw error;
+  const form = new FormData();
+  form.set("file", file);
+  form.set("company_id", company_id);
+  const { path } = await uploadExhibitionAssetFn({ data: form });
   return path;
 }
 
@@ -166,29 +125,21 @@ export type AboutSection = {
 };
 
 export async function fetchAboutSections() {
-  const { data } = await supabase
-    .from("about_sections")
-    .select("*")
-    .order("sort_order", { ascending: true });
+  const data = await getAboutSections();
   return (data ?? []) as AboutSection[];
 }
 
 export async function upsertAboutSection(s: Partial<AboutSection> & { section_key: string }) {
-  if (s.id) {
-    const { id, ...rest } = s;
-    return supabase.from("about_sections").update(rest).eq("id", id);
-  }
-  return supabase.from("about_sections").insert(s);
+  return upsertAboutSectionAdmin({ data: s as any });
 }
 
 export async function deleteAboutSection(id: string) {
-  return supabase.from("about_sections").delete().eq("id", id);
+  return deleteAboutSectionAdmin({ data: { id } });
 }
 
 export async function uploadAboutAsset(file: File) {
-  const ext = file.name.split(".").pop() || "bin";
-  const path = `about/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const { error } = await supabase.storage.from("park-assets").upload(path, file, { upsert: false });
-  if (error) throw error;
+  const form = new FormData();
+  form.set("file", file);
+  const { path } = await uploadAboutAssetFn({ data: form });
   return path;
 }

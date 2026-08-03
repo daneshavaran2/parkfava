@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/use-auth";
 import { fetchParks, upsertPark, deletePark, type Park } from "@/lib/parks-api";
-import { supabase } from "@/integrations/supabase/client";
+import { signOutFn } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/admin/kahkeshan")({
   head: () => ({ meta: [{ title: "مدیریت کهکشان فاوا" }] }),
@@ -93,7 +93,7 @@ function AdminKahkeshanPage() {
             <Link to="/admin/parks" className="btn btn-ghost">{t("adminKahkeshan.park_content_link")}</Link>
             <Link to="/admin/exhibition" className="btn btn-ghost">{t("adminKahkeshan.exhibition_link")}</Link>
             <button className="btn btn-primary" onClick={addNew}>{t("adminKahkeshan.add_park")}</button>
-            <button className="btn btn-ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
+            <button className="btn btn-ghost" onClick={async () => { await signOutFn(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
           </div>
         </div>
 

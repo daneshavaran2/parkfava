@@ -16,6 +16,7 @@ import { ClientOnly, useFavaReady } from "./ClientOnly";
 import { fetchParkContent } from "@/lib/park-content-api";
 import { fetchExhibitionCompanies } from "@/lib/exhibition-api";
 import { useAuth, useAssetUrl } from "@/lib/use-auth";
+import { signOutFn } from "@/lib/auth.functions";
 import { buildCompanyLocationUrl, buildGoogleMapsDirectionsUrl, buildNeshanUrl, coordinatesMatch, parseLatLng } from "@/lib/geo";
 
 const F = () => (typeof window !== "undefined" ? window.FAVA : null);
@@ -147,7 +148,7 @@ export function Nav({ view, query, setQuery, theme, toggleTheme }) {
         </button>
         {session ? (
           <button className="btn btn-ghost" style={{ padding: "6px 10px" }}
-            onClick={async () => { const { supabase } = await import("@/integrations/supabase/client"); await supabase.auth.signOut(); navigate({ to: "/" }); }}
+            onClick={async () => { await signOutFn(); navigate({ to: "/" }); }}
             title={user?.email ?? ""}>
             {t("common.logout")}
           </button>

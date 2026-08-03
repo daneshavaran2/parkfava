@@ -1,4 +1,12 @@
-import { supabase } from "@/integrations/supabase/client";
+import {
+  getAttachments,
+  getAttachmentsAdmin,
+  getAllAttachmentsAdmin,
+  updateAttachmentAdmin,
+  deleteAttachmentAdmin,
+  reorderAttachmentsAdmin,
+  uploadAttachmentFn,
+} from "./attachments.functions";
 
 export type AttachmentKind =
   | "logo"
@@ -25,21 +33,16 @@ export type CompanyAttachment = {
   updated_at: string;
 };
 
-const TABLE = "company_attachments" as const;
+/** Public-facing (only active rows) — safe to call from unauthenticated pages. */
+export async function fetchAttachments(ownerType: "exhibition" | "park", ownerId: string) {
+  const data = await getAttachments({ data: { ownerType, ownerId } });
+  return (data ?? []) as CompanyAttachment[];
+}
 
-export async function fetchAttachments(
-  ownerType: "exhibition" | "park",
-  ownerId: string,
-) {
-  const { data, error } = await supabase
-    .from(TABLE as any)
-    .select("*")
-    .eq("owner_type", ownerType)
-    .eq("owner_id", ownerId)
-    .order("kind")
-    .order("sort_order");
-  if (error) throw error;
-  return (data ?? []) as unknown as CompanyAttachment[];
+/** Admin-facing (every row, active or not). */
+export async function fetchAttachmentsAdmin(ownerType: "exhibition" | "park", ownerId: string) {
+  const data = await getAttachmentsAdmin({ data: { ownerType, ownerId } });
+  return (data ?? []) as CompanyAttachment[];
 }
 
 export async function uploadAttachment(opts: {
@@ -51,55 +54,29 @@ export async function uploadAttachment(opts: {
   description?: string | null;
 }) {
   const { file, ownerType, ownerId, kind, title, description } = opts;
-  const ext = file.name.split(".").pop() || "bin";
-  const safeName = file.name.replace(/[^\w.\-]+/g, "_");
-  const path = `attachments/${ownerType}/${ownerId}/${kind}/${Date.now()}-${Math.random()
-    .toString(36)
-    .slice(2, 8)}-${safeName}`;
-  const { error: upErr } = await supabase.storage
-    .from("park-assets")
-    .upload(path, file, { upsert: false, contentType: file.type || undefined });
-  if (upErr) throw upErr;
-
-  const { data, error } = await supabase
-    .from(TABLE as any)
-    .insert({
-      owner_type: ownerType,
-      owner_id: ownerId,
-      kind,
-      file_url: path,
-      title: title ?? file.name,
-      description: description ?? null,
-      mime_type: file.type || null,
-      size_bytes: file.size,
-      sort_order: 0,
-      is_active: true,
-    })
-    .select()
-    .single();
-  if (error) throw error;
-  return data as unknown as CompanyAttachment;
+  const form = new FormData();
+  form.set("file", file);
+  form.set("ownerType", ownerType);
+  form.set("ownerId", ownerId);
+  form.set("kind", kind);
+  if (title != null) form.set("title", title);
+  if (description != null) form.set("description", description);
+  return (await uploadAttachmentFn({ data: form })) as unknown as CompanyAttachment;
 }
 
 export async function updateAttachment(
   id: string,
   patch: Partial<Pick<CompanyAttachment, "title" | "description" | "kind" | "sort_order" | "is_active">>,
 ) {
-  return supabase.from(TABLE as any).update(patch).eq("id", id);
+  return updateAttachmentAdmin({ data: { id, ...patch } });
 }
 
 export async function deleteAttachment(att: CompanyAttachment) {
-  // remove file from storage (best effort)
-  if (att.file_url && !att.file_url.startsWith("http")) {
-    await supabase.storage.from("park-assets").remove([att.file_url]).catch(() => {});
-  }
-  return supabase.from(TABLE as any).delete().eq("id", att.id);
+  return deleteAttachmentAdmin({ data: { id: att.id } });
 }
 
 export async function reorderAttachments(ids: string[]) {
-  await Promise.all(
-    ids.map((id, i) => supabase.from(TABLE as any).update({ sort_order: i }).eq("id", id)),
-  );
+  return reorderAttachmentsAdmin({ data: { ids } });
 }
 
 export type AttachmentWithOwner = CompanyAttachment & { owner_name?: string | null };
@@ -110,14 +87,8 @@ export async function fetchAllAttachments(filters: {
   isActive?: boolean;
   search?: string;
 } = {}): Promise<CompanyAttachment[]> {
-  let q = supabase.from(TABLE as any).select("*").order("created_at", { ascending: false });
-  if (filters.ownerType) q = q.eq("owner_type", filters.ownerType);
-  if (filters.kind) q = q.eq("kind", filters.kind);
-  if (typeof filters.isActive === "boolean") q = q.eq("is_active", filters.isActive);
-  if (filters.search) q = q.ilike("title", `%${filters.search}%`);
-  const { data, error } = await q;
-  if (error) throw error;
-  return (data ?? []) as unknown as CompanyAttachment[];
+  const data = await getAllAttachmentsAdmin({ data: filters });
+  return (data ?? []) as CompanyAttachment[];
 }
 
 export async function uploadAttachmentFromBlob(opts: {

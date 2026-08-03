@@ -1,47 +1,33 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Session, User } from "@supabase/supabase-js";
+import { getCurrentUser } from "./auth.functions";
+
+type SessionUser = Awaited<ReturnType<typeof getCurrentUser>>;
 
 export function useAuth() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState<SessionUser>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      if (!mounted) return;
-      setSession(s);
-      setUser(s?.user ?? null);
-    });
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setLoading(false);
-    });
+    getCurrentUser()
+      .then((u) => {
+        if (mounted) setUser(u);
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
     return () => {
       mounted = false;
-      sub.subscription.unsubscribe();
     };
   }, []);
 
-  useEffect(() => {
-    if (!user) {
-      setIsAdmin(false);
-      return;
-    }
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle()
-      .then(({ data }) => setIsAdmin(!!data));
-  }, [user]);
-
-  return { session, user, isAdmin, loading };
+  const isAdmin = !!user?.roles.includes("admin");
+  // `session` is kept as an alias of `user` purely so existing call sites
+  // that only check truthiness ("is someone logged in?") keep working
+  // without a rename — the new session model has no separate JWT/session
+  // object distinct from the user record.
+  return { session: user, user, isAdmin, loading };
 }
 
 // The "park-assets" storage policy grants `anon`/`authenticated` SELECT on

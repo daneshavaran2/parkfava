@@ -1,7 +1,6 @@
 import { createStart, createMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
-import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 import { i18nGuardMiddleware } from "@/lib/i18n-guard";
 import { logError } from "@/lib/log-envelope";
 import { getOrCreateRequestId, REQUEST_ID_HEADER } from "@/lib/request-id";
@@ -48,6 +47,6 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 });
 
 export const startInstance = createStart(() => ({
-  functionMiddleware: [attachRequestId, attachSupabaseAuth, i18nGuardMiddleware],
+  functionMiddleware: [attachRequestId, i18nGuardMiddleware],
   requestMiddleware: [requestContextMiddleware, errorMiddleware],
 }));

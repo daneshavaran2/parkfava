@@ -5,7 +5,6 @@
 //     error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
-import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 
 // The current deploy target (Liara) runs the app as a plain Node process, and
 // its buildpack does not forward app environment variables into the build
@@ -23,7 +22,4 @@ export default defineConfig({
     server: { entry: "server" },
   },
   nitro: { preset: nitroPreset },
-  vite: {
-    plugins: [mcpPlugin()],
-  },
 });

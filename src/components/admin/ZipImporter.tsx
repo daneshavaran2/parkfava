@@ -5,6 +5,7 @@ import JSZip from "jszip";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   uploadAttachmentFromBlob,
+  updateAttachment,
   type AttachmentKind,
 } from "@/lib/attachments-api";
 import {
@@ -12,7 +13,6 @@ import {
   type ExhibitionCompany,
 } from "@/lib/exhibition-api";
 import { saveAdminCompany, upsertExhibitionProduct } from "@/lib/exhibition-api.functions";
-import { supabase } from "@/integrations/supabase/client";
 
 const IMG_RE = /\.(png|jpe?g|webp|gif|svg)$/i;
 const VID_RE = /\.(mp4|webm|mov|m4v)$/i;
@@ -216,7 +216,7 @@ export function ZipImporter({
             });
             // best-effort sort_order
             try {
-              await supabase.from("company_attachments" as any).update({ sort_order: gallerySort++ }).eq("id", (att as any).id);
+              await updateAttachment((att as any).id, { sort_order: gallerySort++ });
             } catch {}
             counts.attachments++;
             push("ok", t("zipImporter.gallery_item", { filename }));
