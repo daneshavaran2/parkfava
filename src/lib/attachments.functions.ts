@@ -86,8 +86,8 @@ export const deleteAttachmentAdmin = createServerFn({ method: "POST" })
     const sql = getDb();
     const [att] = await sql<{ file_url: string }[]>`SELECT file_url FROM company_attachments WHERE id = ${data.id}`;
     if (att?.file_url && !att.file_url.startsWith("http")) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      await supabaseAdmin.storage.from("park-assets").remove([att.file_url]).catch(() => {});
+      const { deleteLocalFile } = await import("./storage/local-storage.server");
+      await deleteLocalFile(att.file_url);
     }
     await sql`DELETE FROM company_attachments WHERE id = ${data.id}`;
     return { ok: true };
@@ -132,11 +132,8 @@ export const uploadAttachmentFn = createServerFn({ method: "POST" })
     const { file, ownerType, ownerId, kind, title, description } = data;
     const safeName = file.name.replace(/[^\w.\-]+/g, "_");
     const path = `attachments/${ownerType}/${ownerId}/${kind}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error: upErr } = await supabaseAdmin.storage
-      .from("park-assets")
-      .upload(path, file, { upsert: false, contentType: file.type || undefined });
-    if (upErr) throw new Error(upErr.message);
+    const { saveLocalFile } = await import("./storage/local-storage.server");
+    await saveLocalFile(path, Buffer.from(await file.arrayBuffer()));
 
     const sql = getDb();
     const [row] = await sql<CompanyAttachment[]>`

@@ -1,8 +1,6 @@
 /**
- * Self-hosted replacement for src/integrations/supabase/{auth-middleware,
- * mfa-middleware}.ts. Same layered-middleware shape (requireAuth ->
- * requireAdmin / requireMfaVerified), but reads the session cookie +
- * `sessions`/`users`/`user_roles` tables instead of a Supabase JWT — no
+ * Layered auth middleware (requireAuth -> requireAdmin / requireMfaVerified)
+ * reading the session cookie + `sessions`/`users`/`user_roles` tables — no
  * client-attached Authorization header is needed since cookies travel
  * automatically with same-origin requests.
  */

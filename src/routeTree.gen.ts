@@ -19,6 +19,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DevLogoRouteImport } from './routes/dev.logo'
+import { Route as AssetsSplatRouteImport } from './routes/assets.$'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminParksRouteImport } from './routes/admin.parks'
 import { Route as AdminKahkeshanRouteImport } from './routes/admin.kahkeshan'
@@ -78,6 +79,11 @@ const IndexRoute = IndexRouteImport.update({
 const DevLogoRoute = DevLogoRouteImport.update({
   id: '/dev/logo',
   path: '/dev/logo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssetsSplatRoute = AssetsSplatRouteImport.update({
+  id: '/assets/$',
+  path: '/assets/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/admin/kahkeshan': typeof AdminKahkeshanRoute
   '/admin/parks': typeof AdminParksRoute
   '/admin/users': typeof AdminUsersRoute
+  '/assets/$': typeof AssetsSplatRoute
   '/dev/logo': typeof DevLogoRoute
   '/api/public/csp-report': typeof ApiPublicCspReportRoute
   '/api/public/debug-echo': typeof ApiPublicDebugEchoRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/admin/kahkeshan': typeof AdminKahkeshanRoute
   '/admin/parks': typeof AdminParksRoute
   '/admin/users': typeof AdminUsersRoute
+  '/assets/$': typeof AssetsSplatRoute
   '/dev/logo': typeof DevLogoRoute
   '/api/public/csp-report': typeof ApiPublicCspReportRoute
   '/api/public/debug-echo': typeof ApiPublicDebugEchoRoute
@@ -192,6 +200,7 @@ export interface FileRoutesById {
   '/admin/kahkeshan': typeof AdminKahkeshanRoute
   '/admin/parks': typeof AdminParksRoute
   '/admin/users': typeof AdminUsersRoute
+  '/assets/$': typeof AssetsSplatRoute
   '/dev/logo': typeof DevLogoRoute
   '/api/public/csp-report': typeof ApiPublicCspReportRoute
   '/api/public/debug-echo': typeof ApiPublicDebugEchoRoute
@@ -216,6 +225,7 @@ export interface FileRouteTypes {
     | '/admin/kahkeshan'
     | '/admin/parks'
     | '/admin/users'
+    | '/assets/$'
     | '/dev/logo'
     | '/api/public/csp-report'
     | '/api/public/debug-echo'
@@ -238,6 +248,7 @@ export interface FileRouteTypes {
     | '/admin/kahkeshan'
     | '/admin/parks'
     | '/admin/users'
+    | '/assets/$'
     | '/dev/logo'
     | '/api/public/csp-report'
     | '/api/public/debug-echo'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/admin/kahkeshan'
     | '/admin/parks'
     | '/admin/users'
+    | '/assets/$'
     | '/dev/logo'
     | '/api/public/csp-report'
     | '/api/public/debug-echo'
@@ -283,6 +295,7 @@ export interface RootRouteChildren {
   AdminKahkeshanRoute: typeof AdminKahkeshanRoute
   AdminParksRoute: typeof AdminParksRoute
   AdminUsersRoute: typeof AdminUsersRoute
+  AssetsSplatRoute: typeof AssetsSplatRoute
   DevLogoRoute: typeof DevLogoRoute
   ApiPublicCspReportRoute: typeof ApiPublicCspReportRoute
   ApiPublicDebugEchoRoute: typeof ApiPublicDebugEchoRoute
@@ -360,6 +373,13 @@ declare module '@tanstack/react-router' {
       path: '/dev/logo'
       fullPath: '/dev/logo'
       preLoaderRoute: typeof DevLogoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assets/$': {
+      id: '/assets/$'
+      path: '/assets/$'
+      fullPath: '/assets/$'
+      preLoaderRoute: typeof AssetsSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/users': {
@@ -451,6 +471,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminKahkeshanRoute: AdminKahkeshanRoute,
   AdminParksRoute: AdminParksRoute,
   AdminUsersRoute: AdminUsersRoute,
+  AssetsSplatRoute: AssetsSplatRoute,
   DevLogoRoute: DevLogoRoute,
   ApiPublicCspReportRoute: ApiPublicCspReportRoute,
   ApiPublicDebugEchoRoute: ApiPublicDebugEchoRoute,

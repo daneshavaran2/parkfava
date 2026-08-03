@@ -111,8 +111,7 @@ export const uploadParkAssetFn = createServerFn({ method: "POST" })
     assertIsAdmin(context);
     const ext = data.file.name.split(".").pop() || "bin";
     const path = `${data.park_id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.storage.from("park-assets").upload(path, data.file, { upsert: false });
-    if (error) throw new Error(error.message);
+    const { saveLocalFile } = await import("./storage/local-storage.server");
+    await saveLocalFile(path, Buffer.from(await data.file.arrayBuffer()));
     return { path };
   });

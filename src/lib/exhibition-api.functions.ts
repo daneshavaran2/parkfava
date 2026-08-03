@@ -374,8 +374,7 @@ export const getMyCompany = createServerFn({ method: "GET" })
     return company ?? null;
   });
 
-/* ============ UPLOADS (still target Supabase Storage — Phase 4 replaces
-   just the storage backend behind this function, not its call sites) ============ */
+/* ============ UPLOADS (local disk storage — see src/lib/storage) ============ */
 
 export const uploadExhibitionAssetFn = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
@@ -394,8 +393,7 @@ export const uploadExhibitionAssetFn = createServerFn({ method: "POST" })
 
     const ext = data.file.name.split(".").pop() || "bin";
     const path = `exhibition/${data.company_id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.storage.from("park-assets").upload(path, data.file, { upsert: false });
-    if (error) throw new Error(error.message);
+    const { saveLocalFile } = await import("./storage/local-storage.server");
+    await saveLocalFile(path, Buffer.from(await data.file.arrayBuffer()));
     return { path };
   });
