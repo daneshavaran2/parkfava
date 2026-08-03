@@ -18,7 +18,7 @@
 - [Environment Variables](#environment-variables)
 - [Architecture](#architecture)
 - [Data Model](#data-model)
-- [Security Model & RLS](#security-model--rls)
+- [Security Model](#security-model)
 - [Authentication & Company Onboarding](#authentication--company-onboarding)
 - [API Reference](#api-reference)
 - [Testing Strategy](#testing-strategy)
@@ -35,22 +35,39 @@
 
 Frontend runs on **TanStack Start** (React 19, Vite 7, file‑based routing).
 Styling is **Tailwind CSS v4** via `@tailwindcss/vite`, with all tokens declared
-in `src/styles.css`. Data lives in **PostgreSQL** managed by Supabase; auth,
-storage, and the auto‑generated Data API (PostgREST) come from the same
-platform. Deployment target is **Liara, as a plain Node.js container**
-(Nitro's `node-server` preset — see [Deployment](#deployment) for why this
-differs from the Cloudflare-flavoured defaults in
+in `src/styles.css`. Data lives in a **self-hosted PostgreSQL** instance
+(schema + migration runner under `db/`, raw SQL via the `postgres` npm
+package — no ORM). Auth is a self-hosted email/password + session-cookie
+system (`src/lib/auth.functions.ts`, `src/lib/auth/*`) with optional SMS
+2FA; there is no external auth provider. Uploaded files (logos, gallery
+images, attachments) live on local disk under `UPLOAD_DIR`, served through
+`src/routes/assets.$.ts`. Deployment target is **Liara, as a plain Node.js
+container** (Nitro's `node-server` preset — see [Deployment](#deployment)
+for why this differs from the Cloudflare-flavoured defaults in
 `@lovable.dev/vite-tanstack-config`); edge functions are avoided for
 internal logic in favour of `createServerFn`.
+
+> **Migration note:** this project originally ran on Supabase (managed
+> Postgres + PostgREST + Auth + Storage). It was migrated off Supabase
+> entirely onto the self-hosted stack described above — see the git history
+> for "Phase 1/5" through "Phase 4/5" commits if you need the old
+> Supabase-era shape for reference. `supabase/migrations/*.sql` is kept only
+> as a historical record of the old RLS policies; it is no longer applied
+> anywhere and has no bearing on the current schema (`db/migrations/*.sql`
+> is the live schema now).
 
 We deliberately avoid several patterns:
 
 - No `src/pages/`. Routes live under `src/routes/` — the Vite plugin regenerates
   `routeTree.gen.ts`.
-- No Supabase Edge Functions for app‑internal reads and writes. They are
-  reserved for external webhooks under `/api/public/*`.
-- No admin service‑role client in the browser bundle. `client.server.ts` is
-  loaded lazily inside handler bodies to keep it out of client chunks.
+- No authorization logic in the browser. Every write goes through a
+  `createServerFn` in a `*.functions.ts` file, gated by `requireAuth` /
+  `requireAdmin` / `requireMfaVerified` middleware (`src/lib/auth/middleware.ts`)
+  that checks the session cookie against the `users`/`user_roles` tables —
+  there is no RLS layer to fall back on, so every new write path must add
+  its own explicit check.
+- No database credentials or service-role keys in the browser bundle.
+  `db/connection.ts` is only ever imported from server-only code paths.
 
 ---
 
@@ -60,13 +77,18 @@ We deliberately avoid several patterns:
 # 1. install
 bun install
 
-# 2. copy env and fill in Supabase credentials (see next section)
+# 2. copy env and fill in DATABASE_URL (see next section) — you need a
+#    local Postgres instance; `createdb parkfava_dev` after installing
+#    Postgres locally is enough for development
 cp .env.example .env
 
-# 3. seed sample parks, companies, and products
+# 3. apply the schema
+bun run db:migrate
+
+# 4. seed sample parks, companies, and products
 bun run seed
 
-# 4. start the dev server (http://localhost:8080)
+# 5. start the dev server (http://localhost:8080)
 bun dev
 ```
 
@@ -95,25 +117,26 @@ re‑run it or clear it with `bun run reset:dev`.
 
 | Variable                        | Scope   | Purpose                                                             |
 | ------------------------------- | ------- | ------------------------------------------------------------------- |
-| `VITE_SUPABASE_URL`             | client  | Data API base URL used by the browser Supabase client               |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | client  | Anon key; safe in the bundle, bounded by RLS                        |
-| `VITE_SUPABASE_PROJECT_ID`      | client  | Used for storage bucket URL construction                            |
-| `SUPABASE_URL`                  | server  | Same host, read from server functions and seed scripts              |
-| `SUPABASE_PUBLISHABLE_KEY`      | server  | Server‑side publishable client for public reads                     |
-| `SUPABASE_SERVICE_ROLE_KEY`     | server  | Privileged operations only (seed, migrations, verified webhooks)    |
+| `DATABASE_URL`                  | server  | Postgres connection string (`db/connection.ts`). Required. Append `?sslmode=require` for a managed/remote instance. |
+| `UPLOAD_DIR`                    | server  | Local disk directory for uploaded files (`src/lib/storage/local-storage.server.ts`). Defaults to `./data/uploads`. On Liara this must be a mounted persistent disk. |
 | `LOVABLE_API_KEY`               | server  | AI gateway; leave unset if you don't need generation features       |
 | `VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY` | client | Managed Maps JS key; valid only on `*.lovable.app` / `*.lovableproject.com` |
 | `VITE_GOOGLE_MAPS_DEV_KEY`      | client  | Optional developer key so Google Maps also renders on `localhost`   |
-| `MFA_ENFORCED`                  | server  | Set to `true` to require SMS-OTP on every login (all users). Unset/anything else = off. See `src/integrations/supabase/mfa-middleware.ts` |
+| `MFA_ENFORCED`                  | server  | Set to `true` to require SMS-OTP on every login (all users). Unset/anything else = off. See `src/lib/auth/middleware.ts` |
 | `SMS_PROVIDER`                  | server  | `kavenegar` \| `melipayamak` \| `ghasedak` — required for `MFA_ENFORCED=true` to actually deliver codes; see `src/lib/sms/send-sms.server.ts` |
 | `SMS_API_KEY`                   | server  | API key for the chosen `SMS_PROVIDER`                                |
 | `SMS_SENDER_LINE`               | server  | Optional sender line number some panels require                     |
 
 Rules:
 
-- Never rename `SUPABASE_SERVICE_ROLE_KEY` to a `VITE_*` variable.
-- Server-only variables are read inside handler bodies, never at module scope
-  of shared files (they resolve to `undefined` on Cloudflare Workers otherwise).
+- Never expose `DATABASE_URL` to the client — it's only ever read inside
+  `db/connection.ts`, imported exclusively from server-only code paths.
+- Server-only variables are read inside handler bodies, not at the top level
+  of files that are also part of the client bundle.
+
+No Supabase env vars (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
+`VITE_SUPABASE_*`, etc.) are read by the app anymore — see the migration
+note above.
 
 ### Maps in local development
 
@@ -138,8 +161,11 @@ this in two layers:
 
 The platform is split into three logical planes: a **public read plane** that
 serves anonymous visitors, an **owner write plane** for company profiles, and
-a **privileged control plane** for admin workflows. Each plane uses a
-different Supabase principal and a different network path.
+a **privileged control plane** for admin workflows. Unlike the old
+Supabase/RLS setup, there is no database-level policy layer — every plane's
+access rules are enforced explicitly in `createServerFn` middleware
+(`src/lib/auth/middleware.ts`), since the browser never talks to Postgres
+directly.
 
 ### System context
 
@@ -147,62 +173,62 @@ different Supabase principal and a different network path.
 graph LR
   subgraph Client["Browser (React 19, TanStack Start)"]
     UI[Route components]
-    SB[Supabase JS client<br/>publishable key]
-    UI --> SB
   end
 
-  subgraph Edge["Cloudflare Worker (nodejs_compat)"]
+  subgraph Server["Node.js process (Liara)"]
     SSR[SSR renderer]
-    FN[createServerFn handlers<br/>requireSupabaseAuth]
-    API["/api/public/* routes<br/>webhooks + cron"]
+    FN["createServerFn handlers<br/>requireAuth / requireAdmin / requireMfaVerified"]
+    AS["/assets/$ route<br/>serves local disk uploads"]
+    API["/api/public/* routes<br/>webhooks"]
   end
 
-  subgraph Data["Supabase (managed Postgres)"]
-    PG[(PostgreSQL<br/>RLS on every table)]
-    PR[PostgREST<br/>Data API]
-    ST[Storage buckets]
-    AU[Auth / JWT issuer]
+  subgraph Data["Self-hosted Postgres"]
+    PG[(PostgreSQL<br/>db/migrations/*.sql)]
+  end
+
+  subgraph Disk["Local disk (UPLOAD_DIR)"]
+    UP[Uploaded files]
   end
 
   UI -->|SSR request| SSR
   SSR -->|hydrate| UI
-  SB -->|REST + JWT| PR
-  FN -->|RPC| PR
-  API -->|verified payload| PR
-  PR --> PG
-  SB --> ST
-  SB --> AU
+  UI -->|RPC over fetch| FN
+  UI -->|GET| AS
+  FN -->|raw SQL, postgres npm pkg| PG
+  AS --> UP
+  FN -->|writes| UP
 ```
 
 ### Request flow
 
-Three canonical flows share the same edge; RLS is what keeps them isolated.
+Authorization is a single chain per request: session cookie → `users`/`user_roles` lookup → role check in middleware — no separate policy layer to reason about.
 
 ```mermaid
 sequenceDiagram
   autonumber
   participant V as Visitor (anon)
-  participant O as Owner (authenticated)
-  participant A as Admin (authenticated + role)
-  participant PR as PostgREST
+  participant O as Owner (session cookie)
+  participant A as Admin (session cookie)
   participant FN as createServerFn
-  participant DB as Postgres + RLS
+  participant DB as Postgres
 
-  V->>PR: GET /exhibition_companies?status=eq.approved
-  PR->>DB: SELECT with role=anon
-  DB-->>PR: rows filtered by SELECT policy
-  PR-->>V: 200 approved rows only
+  V->>FN: getExhibitionCompanies() (GET, no auth)
+  FN->>DB: SELECT WHERE status='approved' AND is_active=true
+  DB-->>FN: approved rows only
+  FN-->>V: 200
 
-  O->>PR: PATCH /exhibition_companies?id=eq.X  (JWT)
-  PR->>DB: UPDATE with role=authenticated, sub=uid
-  DB-->>PR: WITH CHECK owner_user_id=auth.uid()
-  PR-->>O: 200 own row, 0 rows on cross-user write
+  O->>FN: saveOwnedCompany({company_id, patch}) (session cookie)
+  FN->>DB: SELECT session -> users/user_roles
+  FN->>DB: UPDATE ... WHERE company_id=X AND owner_user_id=<session user id>
+  DB-->>FN: 1 row updated (0 if not the owner)
+  FN-->>O: 200
 
-  A->>FN: approveCompany({id})  (JWT)
-  FN->>DB: has_role(auth.uid(),'admin')
-  DB-->>FN: true
-  FN->>PR: PATCH status=approved
-  PR-->>A: 200
+  A->>FN: approveCompanyAdmin({company_id}) (session cookie)
+  FN->>DB: SELECT session -> users/user_roles
+  FN->>FN: assertIsAdmin(context) — throws FORBIDDEN if not admin
+  FN->>DB: UPDATE status='approved', is_active=true
+  DB-->>FN: ok
+  FN-->>A: 200
 ```
 
 ### Deployment topology
@@ -211,32 +237,32 @@ sequenceDiagram
 graph TB
   subgraph Dev["Local development"]
     D1[bun dev :8080]
-    D2[bun run seed]
+    D2[bun run db:migrate]
+    D3[bun run seed]
   end
 
   subgraph CI["GitHub Actions"]
     C1[bun run lint]
     C2[bun run build]
-    C3[bun run test:api]
+    C3[bun run test:unit]
     C4[bun run test:visual]
   end
 
   subgraph Prod["Liara (plain Node.js container)"]
     W[Nitro node-server bundle<br/>SSR + serverFn]
+    V[Persistent volume<br/>UPLOAD_DIR]
   end
 
-  subgraph Managed["Supabase project"]
-    M1[Postgres + PostgREST]
-    M2[Storage]
-    M3[Auth]
+  subgraph PG["Self-hosted Postgres (Liara or elsewhere)"]
+    M1[(PostgreSQL)]
   end
 
   D1 -->|push| C1 --> C2 --> C3 --> C4
   C4 -->|manual: git pull + liara deploy| W
   W --> M1
-  W --> M2
-  W --> M3
+  W --> V
   D2 --> M1
+  D3 --> M1
 ```
 
 Despite the Cloudflare-flavoured naming in `@lovable.dev/vite-tanstack-config`
@@ -281,22 +307,29 @@ graph LR
     C1[routes/*]
     C2[components/*]
     C3[lib/*-api.ts]
-    C4[lib/*.functions.ts]
-    C5[integrations/supabase/client.ts]
+    C4["lib/*.functions.ts<br/>(compiled to RPC stubs client-side)"]
   end
   subgraph Server-only
-    S1[integrations/supabase/client.server.ts]
-    S2[integrations/supabase/auth-middleware.ts]
-    S3[lib/*.server.ts]
+    S1[db/connection.ts]
+    S2[lib/auth/middleware.ts]
+    S3[lib/storage/local-storage.server.ts]
+    S4[lib/*.server.ts]
   end
-  C1 --> C2 --> C3 --> C5
-  C1 -.uses.-> C4
-  C4 -.dynamic import.-> S1
+  C1 --> C2 --> C3 --> C4
+  C4 --> S1
   C4 --> S2
+  C4 -.dynamic import.-> S3
 ```
 
-`client.server.ts` (service-role) is only loaded via `await import()` inside
-handler bodies. Static imports into the client graph fail the build.
+`createServerFn`'s build-time compiler strips each handler body out of the
+client bundle, leaving only a thin RPC stub — so `*.functions.ts` files can
+safely import `db/connection.ts` (which imports the `postgres` npm package,
+a Node-only dependency) at the top level. A plain `.ts`/`.tsx` file that
+isn't wrapped in `createServerFn` (e.g. `lib/*-api.ts`) must never import
+server-only code directly — that's why upload helpers use
+`await import("./storage/local-storage.server")` inside the handler instead
+of a static top-level import; a static import into the client graph fails
+the build with an "import denied in client environment" error.
 
 
 ---
@@ -382,8 +415,12 @@ erDiagram
     uuid user_id FK
     text role "admin|company_owner"
   }
-  auth_users {
+  users {
     uuid id PK
+    text email
+    text password_hash
+    text phone
+    text mfa_token
   }
 
   parks ||--o{ park_content : has
@@ -393,8 +430,8 @@ erDiagram
   exhibition_companies ||--o{ exhibition_products : sells
   exhibition_companies ||--o{ exhibition_images   : has
   exhibition_companies ||--o{ company_attachments : has
-  auth_users ||--o{ user_roles          : granted
-  auth_users ||--o{ exhibition_companies : owns
+  users ||--o{ user_roles          : granted
+  users ||--o{ exhibition_companies : owns
 ```
 
 ### Company workflow state machine
@@ -433,12 +470,12 @@ stateDiagram-v2
 | `park_content`         | CMS blocks (about, contacts) per park                         | N..1 `parks`                                     |
 | `park_images`          | Gallery slots per park                                        | N..1 `parks`                                     |
 | `park_news`            | Announcements shown on the park detail                        | N..1 `parks`                                     |
-| `exhibition_companies` | Company profile with `status` + `is_active` workflow          | N..1 `parks`, N..1 `auth.users` (owner)          |
+| `exhibition_companies` | Company profile with `status` + `is_active` workflow          | N..1 `parks`, N..1 `users` (owner)          |
 | `exhibition_products`  | Products under a company; canonical share URL                 | N..1 `exhibition_companies`                      |
 | `exhibition_images`    | Media slots per company                                       | N..1 `exhibition_companies`                      |
 | `company_attachments`  | Signed-URL files (brochures, certificates)                    | N..1 `exhibition_companies`                      |
 | `about_sections`       | CMS blocks for `/about`                                       | standalone                                       |
-| `user_roles`           | Role assignments; separated to prevent privilege escalation   | N..1 `auth.users`                                |
+| `user_roles`           | Role assignments; separated to prevent privilege escalation   | N..1 `users`                                |
 
 ### Data lifecycle algorithm
 
@@ -459,168 +496,110 @@ the client cannot re-introduce hidden rows by guessing IDs.
 
 ---
 
-## Security Model & RLS
+## Security Model
 
-Every table in `public` has RLS enabled. Grants are issued per role in the same
-migration that creates the table. Three principals are relevant:
+There is no database-level policy layer (no RLS, no PostgREST roles) —
+Postgres itself trusts every query that reaches it, connected via a single
+app-level credential (`DATABASE_URL`). All authorization instead happens in
+`createServerFn` middleware before a query is ever issued. This means: **any
+new read or write path must add its own explicit check** — there is no
+fallback safety net at the database layer if a server function forgets to
+call one.
 
-| Role            | Comes from                          | Typical use                          |
-| --------------- | ----------------------------------- | ------------------------------------ |
-| `anon`          | Requests with the publishable key   | Public reads of approved content     |
-| `authenticated` | Signed‑in user (JWT)                | Owner reads/writes to own rows       |
-| `service_role`  | Server‑only, never in browser       | Seed, migrations, verified webhooks  |
+### The middleware chain (`src/lib/auth/middleware.ts`)
 
-The `admin` capability is a role stored in `user_roles`, checked via the
-`SECURITY DEFINER` helper `public.has_role(auth.uid(), 'admin')`. The helper
-runs with the definer's privileges to bypass RLS on `user_roles` itself —
-without that, a policy on `exhibition_companies` that references `user_roles`
-would recurse.
+| Middleware            | Checks                                                              |
+| ---------------------- | -------------------------------------------------------------------- |
+| `requireAuth`          | Session cookie → `sessions` table → not expired → attaches `context.user` (id, email, phone, `roles: string[]`, `mfaVerified`) |
+| `requireAdmin`         | `requireAuth`, then `context.user.roles.includes("admin")`           |
+| `requireMfaVerified`   | `requireAuth`, then (only if `MFA_ENFORCED=true`) `context.user.mfaVerified` |
+
+Individual `*.functions.ts` files layer their own checks on top of these —
+e.g. `assertIsAdmin(context)` / `assertCanEditCompany(sql, context, company_id)`
+helpers in `exhibition-api.functions.ts` that also allow the row's owner,
+not just admins.
 
 ### Access matrix
 
 Read this row-by-row: "principal P on table T may perform operations O,
-provided predicate applies."
+enforced by which server function."
 
-| Table                  | anon        | authenticated (owner)                | admin (via `has_role`) |
-| ---------------------- | ----------- | ------------------------------------ | ---------------------- |
-| `parks`                | SELECT (is_active) | SELECT                        | SELECT/INSERT/UPDATE/DELETE |
-| `park_content`         | SELECT      | SELECT                               | full                   |
-| `park_images`          | SELECT      | SELECT                               | full                   |
-| `park_news`            | SELECT      | SELECT                               | full                   |
-| `exhibition_companies` | SELECT (approved+active, parent park active) | SELECT+UPDATE where `owner_user_id=auth.uid()` (cannot set `status`/`is_active`/`owner_user_id`) | full including `status` transitions, and assigning `owner_user_id` (`/admin/users`) |
-| `exhibition_products`  | SELECT (parent approved) | full where parent company owned by user | full |
-| `exhibition_images`    | SELECT (parent approved) | full on own company            | full                   |
-| `company_attachments`  | none        | full on own company                   | full                   |
-| `about_sections`       | SELECT      | SELECT                               | full                   |
-| `user_roles`           | none        | SELECT own via `has_role`             | INSERT/DELETE          |
+| Table                  | Anonymous                       | Owner (session cookie)                        | Admin |
+| ---------------------- | -------------------------------- | ----------------------------------------------- | ----- |
+| `parks`                | read (all — public per design)   | read                                             | full via `parks.functions.ts` |
+| `park_content`/`park_images`/`park_news` | read (all)      | read                                             | full via `park-content.functions.ts` |
+| `exhibition_companies` | read only `status='approved' AND is_active=true` (`getExhibitionCompanies`/`getExhibitionCompanyDetail`) | read+update own row via `saveOwnedCompany`/`getMyCompany` (cannot set `status`/`is_active`/`owner_user_id` — stripped server-side) | full including `status` transitions and assigning `owner_user_id` (`admin-users.functions.ts`) |
+| `exhibition_products`/`exhibition_images` | read only for approved+active parent company | full on own company (`assertCanEditCompany`) | full |
+| `company_attachments`  | read only `is_active=true` (`getAttachments`) | none directly — admin-managed          | full (`attachments.functions.ts`) |
+| `about_sections`       | read (all)                       | read                                             | full via `about-sections.functions.ts` |
+| `user_roles`           | none                              | own roles only (`getMyRoles`, returns `context.user.roles`) | grant/revoke via `admin-users.functions.ts` (self-revoke blocked) |
 
-Owner writes cannot set `status='approved'`; the WITH CHECK clause on the
-UPDATE policy forbids that transition — only admins can move a row into or
-out of `approved`.
+Owner writes cannot set `status='approved'` — those fields are destructured
+out of the patch object server-side in `saveOwnedCompany`, not merely hidden
+in the UI. Only `approveCompanyAdmin`/`rejectCompanyAdmin` (admin-gated) can
+move a row into or out of `approved`.
 
-### RLS decision flow
+> **A real bug this shape catches**: the initial Postgres migration missed
+> the `status='approved' AND is_active=true` filter on `getExhibitionCompanyDetail`
+> and `getPublicExhibitionProducts` — since there's no RLS to fall back on,
+> that meant anyone could read a draft/rejected company's full record by
+> `company_id`. Fixed, but it's the canonical example of why every read
+> path needs its own explicit check now, not just writes.
 
-Every request that touches a public-schema table walks this path:
+### Verifying authorization locally
 
-```mermaid
-flowchart TD
-  A[Request arrives at PostgREST] --> B{Has JWT?}
-  B -- no --> C[Role = anon]
-  B -- yes --> D[Role = authenticated<br/>sub = user id]
-  C --> E{GRANT on table<br/>for this role?}
-  D --> E
-  E -- no --> X[401 / 403]
-  E -- yes --> F{Table has RLS?}
-  F -- no --> Y[Query runs unrestricted]
-  F -- yes --> G[Apply USING policy<br/>filters SELECT rows]
-  G --> H{Write op?}
-  H -- no --> Z[Return filtered rows]
-  H -- yes --> I{WITH CHECK<br/>passes?}
-  I -- no --> J[42501 rls violation]
-  I -- yes --> K[Row written, return 201/200]
-```
-
-If a request fails, this diagram is the debugging checklist: GRANT missing
-(hint text mentions the role), USING filter hides the row, or WITH CHECK
-rejects the payload.
-
-### Recursion-safe `has_role`
+There's no PostgREST/RLS simulation anymore — verify server functions the
+same way you'd verify any authenticated API: drive them over real HTTP with
+real session cookies. The pattern used throughout this migration (see git
+history) was a temporary `src/routes/dev.*.tsx` test route exercising the
+target server functions via `useServerFn`, driven by a small Playwright
+script, then deleted before shipping. For direct SQL inspection during
+development:
 
 ```sql
-create or replace function public.has_role(_user_id uuid, _role app_role)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1 from public.user_roles
-    where user_id = _user_id and role = _role
-  );
-$$;
-
-revoke execute on function public.has_role(uuid, app_role) from public;
-grant execute on function public.has_role(uuid, app_role) to authenticated;
+-- Confirm a company is correctly hidden from public view.
+SELECT company_id, status, is_active FROM exhibition_companies
+WHERE company_id = 'some-draft-company';
+-- then separately confirm getExhibitionCompanyDetail({data:{id:'some-draft-company'}})
+-- returns {company: null, ...} when called with no session.
 ```
 
-Without `SECURITY DEFINER` a policy on `exhibition_companies` that calls
-`has_role` would itself query `user_roles`, which would trigger its own RLS
-policy, which would call `has_role` again → infinite recursion. The definer
-runs as the function owner, bypasses `user_roles` RLS exactly once, and
-returns a boolean. `search_path` is pinned to avoid shadowing attacks.
+### Security checklist for PRs touching schema or server functions
 
-
-
-### Verifying policies with psql
-
-Real policies are easier to audit against real SQL than against prose. The
-following snippets impersonate each principal on a local psql session
-connected as `postgres`:
-
-```sql
--- Public: only approved & active companies should be visible.
-SET LOCAL role TO anon;
-SELECT company_id, status FROM public.exhibition_companies;
--- expect: no rows where status <> 'approved'
-RESET role;
-```
-
-```sql
--- Owner: can update own row, cannot flip status to 'approved'.
-SET LOCAL role TO authenticated;
-SET LOCAL "request.jwt.claim.sub" TO '00000000-0000-0000-0000-000000000001';
-UPDATE public.exhibition_companies SET tagline = 'new'
-  WHERE owner_user_id = '00000000-0000-0000-0000-000000000001';
--- expect: 1 row updated
-
-UPDATE public.exhibition_companies SET status = 'approved'
-  WHERE owner_user_id = '00000000-0000-0000-0000-000000000001';
--- expect: 0 rows (RLS strips the write)
-RESET role;
-```
-
-```sql
--- Cross-user attack: authenticated user tries to touch someone else's row.
-SET LOCAL role TO authenticated;
-SET LOCAL "request.jwt.claim.sub" TO '00000000-0000-0000-0000-000000000002';
-DELETE FROM public.exhibition_companies WHERE company_id = 'seed-alpha';
--- expect: 0 rows
-RESET role;
-```
-
-The Python contract test in `scripts/test-api-contracts.py` performs the same
-checks over HTTP against PostgREST, so they run in CI without a database
-session.
-
-### Security checklist for PRs touching schema
-
-1. Every new public table has explicit `GRANT`s in the same migration.
-2. RLS is enabled and the policy set covers `SELECT`, `INSERT`, `UPDATE`,
-   `DELETE` — with `WITH CHECK` clauses where writes are permitted.
-3. Any new `SECURITY DEFINER` function pins `search_path` and revokes
-   `EXECUTE` from `public` if it should not be callable by end users.
-4. Leaked Password Protection (HIBP) stays enabled in Auth settings.
-5. Sensitive columns are omitted from anonymous SELECT policies rather than
-   filtered client‑side.
+1. Every new `createServerFn` that reads or writes anything non-public has
+   an explicit middleware (`requireAuth`/`requireAdmin`/`requireMfaVerified`)
+   or an inline ownership check — there is no RLS to catch a missed one.
+2. Every new **read** path that returns rows with a draft/private state
+   (anything with a `status`, `is_active`, or ownership column) filters that
+   state explicitly, even if it feels redundant with a caller that "should"
+   already be passing filtered input — the server function is the trust
+   boundary, not the caller.
+3. Dynamic column lists built from parsed input (the `sql(patch, ...cols)`
+   pattern used throughout `*.functions.ts`) must come from a zod schema
+   *without* `.passthrough()`/`.strict()` bypass, so unknown keys are
+   silently dropped rather than reaching the query as arbitrary column
+   names.
+4. Sensitive columns are omitted from public-facing query results rather
+   than filtered client‑side.
 
 ### Granting the admin role
 
-Admin-only routes (`/admin/*`) require a row in `public.user_roles` with
+Admin-only routes (`/admin/*`) require a row in `user_roles` with
 `role = 'admin'` for the signed-in user. If the admin panel shows an empty
 list or a "no admin role" screen, the current account has not been granted
 the role. Sign up via `/auth`, copy the `User ID` shown on the
 "no access" screen, then run:
 
 ```sql
-INSERT INTO public.user_roles (user_id, role)
+INSERT INTO user_roles (user_id, role)
 VALUES ('<user-uuid>', 'admin')
 ON CONFLICT (user_id, role) DO NOTHING;
 ```
 
-The first user who signs up is auto-promoted to admin by the
-`handle_first_user_admin` trigger; every subsequent admin must be granted
-explicitly.
+The first user who ever signs up is auto-promoted to admin by the
+`assign_first_user_admin` trigger (`db/migrations/0001_init.sql`); every
+subsequent admin must be granted explicitly (SQL above, or the "تبدیل به
+ادمین" button on `/admin/users` once you have one admin account).
 
 ---
 
@@ -629,32 +608,31 @@ explicitly.
 ### How users sign in
 
 `/auth` (`src/routes/auth.tsx`) is the only sign-in surface, shared by every
-role — there's no separate admin login page.
-
-- **Email + password**, via `supabase.auth.signUp` / `signInWithPassword`
-  directly against the Supabase project.
-- **Google**, via `lovable.auth.signInWithOAuth("google", …)`
-  (`src/integrations/lovable/index.ts`) — this goes through Lovable's managed
-  Cloud Auth broker (`@lovable.dev/cloud-auth-js`), not Supabase's own OAuth
-  config, and the resulting tokens are then handed to
-  `supabase.auth.setSession()`. If Google sign-in breaks, check Lovable Cloud
-  Auth status/config first, not Supabase's Auth → Providers screen.
+role — there's no separate admin login page, and no third-party auth
+provider. **Email + password only** — `signUp`/`signIn` in
+`src/lib/auth.functions.ts` hash the password with `scrypt`
+(`src/lib/auth/password.server.ts`) and set an opaque, random, HttpOnly
+session cookie (`src/lib/auth/session.server.ts`) backed by a `sessions`
+table row; there is no JWT to decode or refresh, and revoking a session is a
+single `DELETE`. Google/OAuth sign-in existed in the Supabase-era version of
+this app and was intentionally dropped during the migration rather than
+rebuilt — there is no OAuth path today.
 
 There is no separate "admin login" — a signed-in user's **capabilities**
-come entirely from rows in `public.user_roles`:
+come entirely from rows in `user_roles`:
 
 | Role            | Grants                                                          | How it's granted |
 | --------------- | ---------------------------------------------------------------- | ----------------- |
-| `admin`         | Every `/admin/*` route; approve/reject companies; grant roles    | First signup is auto-admin (`handle_first_user_admin`); every other admin via SQL (see above) or the "تبدیل به ادمین" button on `/admin/users` (an existing admin promotes another user) |
+| `admin`         | Every `/admin/*` route; approve/reject companies; grant roles    | First signup is auto-admin (`assign_first_user_admin` trigger); every other admin via SQL (see above) or the "تبدیل به ادمین" button on `/admin/users` (an existing admin promotes another user) |
 | `company_owner` | `/my-company`; edit only the one company they're assigned to     | An admin picks their company from a dropdown on `/admin/users` (`assignCompanyOwner`) — this also upserts the `company_owner` role automatically |
 | *(none)*        | Public pages only                                                 | Default for any signed-up user until an admin does one of the above |
 
 ### Optional: SMS two-step verification
 
 A second factor (phone number + SMS code) can be required on every login,
-for every user, regardless of role — implemented in `src/lib/mfa.functions.ts`
-/ `src/integrations/supabase/mfa-middleware.ts`. It ships **off by default**
-so it doesn't affect anyone until deliberately turned on:
+for every user, regardless of role — implemented in `src/lib/mfa.functions.ts`,
+gated by `requireMfaVerified` in `src/lib/auth/middleware.ts`. It ships
+**off by default** so it doesn't affect anyone until deliberately turned on:
 
 1. Get an account + API key with a supported SMS panel (`kavenegar`,
    `melipayamak`, or `ghasedak` — see `src/lib/sms/send-sms.server.ts`;
@@ -664,21 +642,23 @@ so it doesn't affect anyone until deliberately turned on:
    needs one) as app env vars (see [Environment Variables](#environment-variables)).
 3. Set `MFA_ENFORCED=true`.
 
-Once enforced, every login (password or Google) is followed by a phone
-step (first time) or a 6-digit SMS code (returning sessions) before the
-user can reach anything behind `requireMfaVerified` — currently every
-admin and company-owner server function. Phone/OTP state lives in the
-existing Supabase Auth `user_metadata` field (no schema migration needed).
+Once enforced, every login is followed by a phone step (first time) or a
+6-digit SMS code (returning sessions) before the user can reach anything
+behind `requireMfaVerified` — currently every admin and company-owner
+server function. Phone/OTP state lives in dedicated columns on the `users`
+table (`db/migrations/0001_init.sql` + `0003_mfa_columns.sql`) — this used
+to live in Supabase Auth's `user_metadata` JSON blob before the migration.
 The MFA status check fails open (falls back to normal login) if it errors,
-by design — there's no direct Supabase dashboard/SQL access documented for
-this project, so a bug in this path must not be able to lock out the admin.
+by design — a bug in this path must not be able to lock out every admin.
 
 ### How a company gets onto the exhibition — step by step
 
 **There is no public "sign up your company" form.** `/register-company` is a
 static page that tells visitors to email the admin team — self-service
-company creation (`createOwnedCompany` in `src/lib/exhibition-api.ts`) exists
-in code but is intentionally not wired into any route.
+company creation existed in the Supabase-era codebase (`createOwnedCompany`)
+but was already dead code (no route ever called it, since the RLS policy
+that would have allowed it had been dropped) and was removed during the
+migration.
 
 1. **Admin creates the company shell.** `/admin/exhibition` → "+ افزودن شرکت
    جدید" → pick a `company_id` slug. This starts life as `status: 'draft'`,
@@ -695,15 +675,16 @@ in code but is intentionally not wired into any route.
 4. **Owner submits for review.** The "ارسال برای بررسی" button
    (`submitCompanyForReview`) sets `status: 'pending'`. The owner cannot set
    `status`, `is_active`, or `owner_user_id` themselves — those fields are
-   stripped from their update payload client-side (`updateOwnedCompany`) and
-   should also be rejected server-side by RLS if that stripping is ever
-   bypassed.
+   destructured out of the patch object *server-side*, in
+   `saveOwnedCompany` (`src/lib/exhibition-api.functions.ts`), not merely
+   hidden in the UI — a malicious client sending those fields directly still
+   can't set them.
 5. **Admin reviews.** `/admin/exhibition`, filterable by status
    (در انتظار / تاییدشده / پیش‌نویس / رد شده):
-   - **"تایید و انتشار"** (`approveCompany`) → `status: 'approved'`,
+   - **"تایید و انتشار"** (`approveCompanyAdmin`) → `status: 'approved'`,
      `is_active: true`. The company is now publicly visible (also requires
      its parent park to have `is_active: true`).
-   - **"رد کردن…"** (`rejectCompany`) → `status: 'rejected'` with a required
+   - **"رد کردن…"** (`rejectCompanyAdmin`) → `status: 'rejected'` with a required
      reason (`rejection_note`), shown to the owner on `/my-company`. The
      owner can edit and resubmit, which goes straight back to `pending`.
    - An admin can later flip `is_active` off on an already-approved company
@@ -714,33 +695,76 @@ in code but is intentionally not wired into any route.
 
 ## API Reference
 
-The Data API is PostgREST. The functions in `src/lib/exhibition-api.ts` and
-`src/lib/parks-api.ts` are thin wrappers that document the contract.
+There is no PostgREST — the only API surface is `createServerFn` RPCs,
+grouped by domain into `src/lib/*.functions.ts` files. Client-facing
+`src/lib/*-api.ts` files are thin wrappers around them: they exist so the
+many call sites across `src/routes/` and `src/components/` didn't need to
+change function names/signatures when the migration moved the underlying
+implementation off Supabase, and so upload helpers can build the `FormData`
+payload before calling the server function.
 
-### Companies
+### Companies (`src/lib/exhibition-api.functions.ts`)
 
-| Method | Path (PostgREST)                        | Auth      | Purpose                                | Common errors               |
-| ------ | --------------------------------------- | --------- | -------------------------------------- | --------------------------- |
-| GET    | `/exhibition_companies`                 | anon      | List approved & active companies       | none                        |
-| GET    | `/exhibition_companies?company_id=eq.X` | anon      | Single company                         | 406 if not found            |
-| POST   | `/exhibition_companies`                 | user      | Create own draft (`owner_user_id` set) | 401, 42501 RLS violation     |
-| PATCH  | `/exhibition_companies?company_id=eq.X` | user/admin| Update fields (owner cannot approve)   | 42501, 400 on bad enum      |
-| DELETE | `/exhibition_companies?company_id=eq.X` | admin     | Hard delete                            | 42501                        |
+| Function                          | Method | Auth                          | Purpose                                          |
+| ---------------------------------- | ------ | ------------------------------ | ------------------------------------------------- |
+| `getExhibitionCompanies`           | GET    | none                            | List `status='approved' AND is_active=true`       |
+| `getExhibitionCompanyDetail`       | GET    | none (checks session if not public) | Single company + images + products; public if approved+active, otherwise owner/admin only |
+| `getPublicExhibitionProducts`      | GET    | none                            | Products for a list of company ids, joined against publish state |
+| `getMyCompany`                     | GET    | `requireAuth`                   | The signed-in user's own company (any status)     |
+| `saveAdminCompany`                 | POST   | `requireMfaVerified` + admin    | Upsert any company by `company_id`                |
+| `listAdminCompanies`               | GET    | `requireMfaVerified` + admin    | All companies, any status                         |
+| `saveOwnedCompany`                 | POST   | `requireMfaVerified` + owner    | Partial update on own company (status/is_active/owner_user_id stripped) |
+| `submitCompanyForReview`           | POST   | `requireMfaVerified` + owner/admin | `status → 'pending'`                           |
+| `approveCompanyAdmin`/`rejectCompanyAdmin` | POST | `requireMfaVerified` + admin | `status → 'approved'`/`'rejected'`             |
+| `deleteExhibitionCompanyAdmin`/`reorderExhibitionCompaniesAdmin` | POST | `requireMfaVerified` + admin | delete / bulk `sort_order` update |
+| `addExhibitionImage`/`deleteExhibitionImage`/`updateExhibitionImage`/`reorderExhibitionImages` | POST | `requireMfaVerified` + owner/admin | image CRUD, ownership checked via parent company |
+| `upsertExhibitionProduct`/`deleteExhibitionProduct`/`reorderExhibitionProducts` | POST | `requireMfaVerified` + owner/admin | product CRUD |
+| `uploadExhibitionAssetFn`          | POST (FormData) | `requireMfaVerified` + owner/admin | Upload a logo/gallery image to local disk |
 
-### Products
+### Parks / park content (`src/lib/parks.functions.ts`, `src/lib/park-content.functions.ts`)
 
-| Method | Path                              | Auth  | Purpose                     | Common errors        |
-| ------ | --------------------------------- | ----- | --------------------------- | -------------------- |
-| GET    | `/exhibition_products`            | anon  | List for approved companies | none                 |
-| POST   | `/exhibition_products`            | user  | Add product to own company  | 401, 23502 NOT NULL  |
-| PATCH  | `/exhibition_products?id=eq.X`    | user  | Update own product          | 42501                |
-| DELETE | `/exhibition_products?id=eq.X`    | user  | Remove own product          | 42501                |
+`getParks`/`getActiveParks`/`getParkContent` are all public reads (no auth —
+parks have no draft/private state). Every write (`upsertParkAdmin`,
+`deleteParkAdmin`, `reorderParksAdmin`, `upsertParkContentAdmin`,
+`addParkImageAdmin`/`deleteParkImageAdmin`, `upsertParkNewsAdmin`/
+`deleteParkNewsAdmin`, `uploadParkAssetFn`) is `requireMfaVerified` + admin.
 
-### Server functions
+### Attachments (`src/lib/attachments.functions.ts`)
 
-For write flows that need cross‑table integrity we use `createServerFn` with
-`requireSupabaseAuth`. Add new ones in `src/lib/*.functions.ts` and register
-them next to their sibling client wrapper.
+| Function                | Method | Auth                        | Purpose |
+| ------------------------ | ------ | ----------------------------- | ------- |
+| `getAttachments`         | GET    | none                           | Only `is_active=true` rows for one owner |
+| `getAttachmentsAdmin`/`getAllAttachmentsAdmin` | GET | `requireMfaVerified` + admin | Every row (incl. inactive), the latter with dynamic filters |
+| `uploadAttachmentFn`     | POST (FormData) | `requireMfaVerified` + admin | Upload + insert row |
+| `updateAttachmentAdmin`/`deleteAttachmentAdmin`/`reorderAttachmentsAdmin` | POST | `requireMfaVerified` + admin | edit/delete/reorder |
+
+### About sections (`src/lib/about-sections.functions.ts`)
+
+`getAboutSections` is a public read (no draft state). `upsertAboutSectionAdmin`/
+`deleteAboutSectionAdmin`/`uploadAboutAssetFn` are `requireMfaVerified` + admin.
+
+### Auth & admin users (`src/lib/auth.functions.ts`, `src/lib/admin-users.functions.ts`, `src/lib/mfa.functions.ts`)
+
+`signUp`/`signIn`/`signOutFn`/`getCurrentUser` are the whole auth surface
+(see [Authentication & Company Onboarding](#authentication--company-onboarding)).
+`listUsers`/`grantAdmin`/`revokeAdmin`/`assignCompanyOwner` are admin-only;
+`getMyRoles` returns the caller's own roles. `getMfaStatus`/`setPhone`/
+`requestOtp`/`verifyOtp` implement the optional SMS 2FA flow.
+
+### Conventions for adding a new server function
+
+- File goes under `src/lib/*.functions.ts`, one domain per file.
+- Every export uses `createServerFn({ method: "GET" | "POST" })`.
+- Every non-public read or any write gets `.middleware([requireAuth])` /
+  `.middleware([requireMfaVerified])` at minimum, plus an inline
+  `assertIsAdmin(context)` / ownership check inside the handler where the
+  row belongs to a specific user.
+- Validate input with a zod schema via `.inputValidator(...)` — never
+  `.passthrough()`/`.strict()` bypass a schema that feeds a dynamic
+  `sql(patch, ...cols)` call (see [Security Model](#security-model)).
+- File uploads use `.inputValidator((raw) => { if (!(raw instanceof FormData)) throw ...; ... })`
+  and are called client-side with `{ data: someFormData }` — the framework
+  auto-detects `FormData` and sends `multipart/form-data`.
 
 ---
 
@@ -812,17 +836,42 @@ liara deploy
 
 run manually, from a clone that's up to date with `main`.
 
-Migrations live under `supabase/migrations/*.sql`, applied in filename
-order. Never edit an applied migration — write a new one that alters the
-previous state. **These are not applied automatically either** — there is
-no CI step or script in this repo that runs them against the live project,
-and no Supabase dashboard/CLI access is set up for this project as of this
-writing. If a change here ever needs a new table or column, that gap needs
-to be closed first (e.g. get a Supabase personal access token + link the
-project via the `supabase` CLI, or dashboard access) — until then, prefer
-designs that reuse existing tables/columns (e.g. the SMS-2FA feature stores
-its state in the existing `auth.users.user_metadata` instead of a new
-table, specifically to avoid needing a migration at all).
+### Postgres and file storage on Liara
+
+Unlike the old Supabase setup, this app now needs two pieces of
+infrastructure you provision yourself:
+
+1. **A Postgres instance.** Liara offers managed Postgres databases — create
+   one, set `DATABASE_URL` (with `?sslmode=require` if Liara requires TLS)
+   as an app env var, then run `bun run db:migrate` once against it (from a
+   machine that can reach it — e.g. `DATABASE_URL=... bun run db:migrate`
+   locally, or as a one-off Liara shell command) to apply everything under
+   `db/migrations/*.sql`. Migrations are idempotent and tracked in a
+   `_migrations` table, so re-running is always safe — only unapplied files
+   run.
+2. **A persistent disk for `UPLOAD_DIR`.** Liara's container filesystem is
+   ephemeral across redeploys — without a mounted disk, every uploaded
+   logo/image/attachment disappears on the next `liara deploy`. Provision a
+   disk in the Liara dashboard, mount it at the path you set `UPLOAD_DIR`
+   to, before the first real upload happens in production.
+
+Migrations live under `db/migrations/*.sql`, applied in filename order by
+`bun run db:migrate` (`db/migrate.ts`). Never edit an applied migration —
+write a new one that alters the previous state.
+
+> **One-time cutover step, not yet done**: this repo's schema and code are
+> ready, but the *data* — companies, parks, products, images, and every
+> file in the old Supabase `park-assets` bucket — still lives in the old
+> Supabase project as of this writing. Whoever has Supabase dashboard
+> access needs to export the relevant tables (`pg_dump` against the
+> Supabase connection string, or the Table Editor's CSV export) and import
+> them into the new Postgres instance with matching column names, and
+> separately download every object out of the `park-assets` bucket and
+> place it under the new `UPLOAD_DIR` at the same relative path stored in
+> each row's `logo_url`/`image_url`/`file_url` column. This can't be done
+> from a sandboxed dev environment with no network path to Supabase —
+> it needs to happen once, manually, from wherever the Supabase project is
+> reachable.
 
 ### Release flow (as it actually works today)
 
@@ -833,16 +882,18 @@ sequenceDiagram
   participant CI as Actions
   participant Op as Operator (local machine)
   participant Liara
-  participant SB as Supabase
+  participant PG as Postgres (Liara)
   Dev->>GH: push feat/*, open PR
   GH->>CI: trigger workflow (lint/build/tests)
   CI-->>GH: status (best-effort; CI runner assignment has been flaky here)
   Dev->>GH: merge to main
   Note over GH,Op: nothing deploys automatically here
   Op->>GH: git pull origin main
+  Op->>PG: bun run db:migrate (only if new migrations exist)
   Op->>Op: liara deploy (uploads local working directory)
   Op->>Liara: new Docker/Node build + restart
-  Liara-->>SB: connects at runtime via SUPABASE_* env vars
+  Liara-->>PG: connects at runtime via DATABASE_URL
+  Liara-->>Liara: reads/writes UPLOAD_DIR on the mounted disk
 ```
 
 ---
@@ -1035,14 +1086,14 @@ for (const [k, v] of Object.entries(SECURITY_HEADERS)) response.headers.set(k, v
 
 **Enforcement — `bun run lint:i18n`:**
 
-اسکریپت `scripts/lint-i18n.ts` روی `src/`, `scripts/`, `supabase/migrations/` می‌گردد. مسیرهای مجاز فارسی: `src/components/**`, `src/routes/**`, `src/hooks/**`. هر فایل `.server.ts` / `.functions.ts` حتی داخل مسیرهای مجاز، deny است. یافتن نویسه‌های `\u0600–\u06FF` در فایل ممنوع → exit 1.
+اسکریپت `scripts/lint-i18n.ts` روی `src/`, `scripts/`, `db/migrations/` می‌گردد. مسیرهای مجاز فارسی: `src/components/**`, `src/routes/**`, `src/hooks/**`. هر فایل `.server.ts` / `.functions.ts` حتی داخل مسیرهای مجاز، deny است. یافتن نویسه‌های `\u0600–\u06FF` در فایل ممنوع → exit 1.
 
 ```bash
 $ bun run lint:i18n
 i18n lint: 2 violation(s)
 Persian text is only permitted in src/components/**, src/routes/**, src/hooks/** (non-.server/.functions).
-  src/lib/exhibition-api.ts:42  throw new Error("شرکت یافت نشد")
-  supabase/migrations/20260710_add_status.sql:8  COMMENT ON COLUMN ... IS 'وضعیت'
+  src/lib/exhibition-api.functions.ts:42  throw new Error("شرکت یافت نشد")
+  db/migrations/0004_add_status.sql:8  COMMENT ON COLUMN ... IS 'وضعیت'
 ```
 
 این اسکریپت باید در CI (`playwright.yml`) پیش از build اجرا شود. نقض این قانون stack trace را برای ابزارهای مانیتورینگ بین‌المللی غیرقابل جستجو می‌کند.
