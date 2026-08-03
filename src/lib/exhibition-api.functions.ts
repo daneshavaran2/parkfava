@@ -318,10 +318,15 @@ export const getPublicExhibitionProducts = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     if (!data.companyIds.length) return [] as ExhibitionProduct[];
     const sql = getDb();
+    // Join against the parent company's publish state rather than trusting
+    // the caller's companyIds — mirrors the old "exh_products public read"
+    // RLS policy, which gated every product read on its company being
+    // approved+active, regardless of how the caller arrived at the id list.
     return await sql<ExhibitionProduct[]>`
-      SELECT * FROM exhibition_products
-      WHERE company_id IN ${sql(data.companyIds)}
-      ORDER BY sort_order ASC
+      SELECT p.* FROM exhibition_products p
+      JOIN exhibition_companies c ON c.company_id = p.company_id
+      WHERE p.company_id IN ${sql(data.companyIds)} AND c.status = 'approved' AND c.is_active = true
+      ORDER BY p.sort_order ASC
     `;
   });
 
@@ -329,12 +334,29 @@ export const getExhibitionCompanyDetail = createServerFn({ method: "GET" })
   .inputValidator((i) => z.object({ id: z.string().trim().min(1).max(120) }).parse(i))
   .handler(async ({ data }) => {
     const sql = getDb();
-    const [[company], images, products] = await Promise.all([
-      sql<ExhibitionCompany[]>`SELECT * FROM exhibition_companies WHERE company_id = ${data.id}`,
+    const [company] = await sql<ExhibitionCompany[]>`SELECT * FROM exhibition_companies WHERE company_id = ${data.id}`;
+    if (!company) return { company: null, images: [], products: [] };
+
+    // Mirrors the old RLS visibility union: public can see approved+active
+    // companies, owners can see their own regardless of status, admins can
+    // see any. Anything else (draft/pending/rejected, not yours) must be
+    // indistinguishable from "doesn't exist" to an unauthorized caller —
+    // draft company data (rejection notes, founders, contact info) is not
+    // meant to be publicly readable by id.
+    const isPublic = company.status === "approved" && company.is_active === true;
+    let allowed = isPublic;
+    if (!allowed) {
+      const { getSessionUser } = await import("./auth/session.server");
+      const user = await getSessionUser();
+      allowed = !!user && (user.roles.includes("admin") || company.owner_user_id === user.id);
+    }
+    if (!allowed) return { company: null, images: [], products: [] };
+
+    const [images, products] = await Promise.all([
       sql<ExhibitionImage[]>`SELECT * FROM exhibition_images WHERE company_id = ${data.id} ORDER BY sort_order ASC`,
       sql<ExhibitionProduct[]>`SELECT * FROM exhibition_products WHERE company_id = ${data.id} ORDER BY sort_order ASC`,
     ]);
-    return { company: company ?? null, images, products };
+    return { company, images, products };
   });
 
 /* ============ OWNER: MY COMPANY ============ */
