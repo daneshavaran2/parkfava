@@ -1,8 +1,14 @@
 {
   "platform": "docker",
-  "app": "kahkeshan-fava",
+  "app": "favapark",
   "port": 3000,
   "build": {
     "location": "iran"
-  }
+  },
+  "disks": [
+    {
+      "name": "uploads",
+      "mountTo": "/app/data/uploads"
+    }
+  ]
 }
