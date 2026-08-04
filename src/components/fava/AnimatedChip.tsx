@@ -1,15 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
-type Phase = "typing" | "holding" | "deleting" | "gap";
+const CHAR_MS = 90;
+const CLEAR_MS = 55;
+const HOLD_MS = 2200;
+const HANDOFF_MS = 350;
 
-const CHAR_MS = 40;
-const HOLD_MS = 1500;
-const GAP_MS = 300;
-
-// Intl.Segmenter splits by grapheme cluster so combining marks / ZWNJ
-// (half-spaces) in Persian text stay attached to their base character
-// instead of being typed as separate, meaningless fragments.
+// Intl.Segmenter splits by grapheme cluster (so combining marks / ZWNJ half-
+// spaces stay attached to their base letter when slicing the string down to
+// a prefix) — but the sliced prefix is always re-joined into a single plain
+// string before it's rendered, never split across separate DOM elements.
+// Persian letters only take their correct joined (initial/medial/final)
+// shape when the text shaping engine sees them as one continuous run; one
+// <span> per letter — the previous approach — breaks every letter into its
+// isolated form and the word falls apart visually.
 function segmentGraphemes(text: string): string[] {
   const Segmenter = (
     Intl as unknown as {
@@ -26,200 +30,69 @@ function segmentGraphemes(text: string): string[] {
   return Array.from(text);
 }
 
-function useTypewriterLoop(chars: string[], reduced: boolean, startDelay: number) {
-  const [visibleCount, setVisibleCount] = useState(reduced ? chars.length : 0);
-  const [phase, setPhase] = useState<Phase>("typing");
-  const [tick, setTick] = useState(0);
+type ChipDef = { text: string; color: string; onClick: () => void };
+type Phase = "holding" | "clearing" | "typing";
+
+// Coordinates all chips as one carousel: only the active chip types/clears,
+// the rest sit at their full, normally-shaped text. This replaces four
+// independent per-chip loops (which used to run all at once) with a single
+// shared turn-taking state machine.
+function useChipCarousel(charsList: string[][], reduced: boolean) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [phase, setPhase] = useState<Phase>("holding");
+  const [visibleCount, setVisibleCount] = useState(charsList[0]?.length ?? 0);
 
   useEffect(() => {
-    if (reduced) {
-      setVisibleCount(chars.length);
-      return;
-    }
-    let alive = true;
+    if (reduced || charsList.length === 0) return;
+    const total = charsList[activeIndex]?.length ?? 0;
     let timer: ReturnType<typeof setTimeout>;
-    const schedule = (fn: () => void, ms: number) => {
-      timer = setTimeout(() => {
-        if (alive) fn();
-      }, ms);
-    };
 
-    function typeStep(count: number) {
-      if (count >= chars.length) {
-        setPhase("holding");
-        schedule(() => deleteStep(chars.length), HOLD_MS);
-        return;
+    if (phase === "holding") {
+      timer = setTimeout(() => setPhase("clearing"), HOLD_MS);
+    } else if (phase === "clearing") {
+      if (visibleCount > 0) {
+        timer = setTimeout(() => setVisibleCount((c) => Math.max(0, c - 1)), CLEAR_MS);
+      } else {
+        timer = setTimeout(() => {
+          setActiveIndex((i) => (i + 1) % charsList.length);
+          setPhase("typing");
+        }, HANDOFF_MS);
       }
-      setPhase("typing");
-      setVisibleCount(count + 1);
-      setTick((t) => t + 1);
-      schedule(() => typeStep(count + 1), CHAR_MS);
+    } else {
+      if (visibleCount < total) {
+        timer = setTimeout(() => setVisibleCount((c) => c + 1), CHAR_MS);
+      } else {
+        timer = setTimeout(() => setPhase("holding"), 0);
+      }
     }
 
-    function deleteStep(count: number) {
-      if (count <= 0) {
-        setPhase("gap");
-        setVisibleCount(0);
-        schedule(() => typeStep(0), GAP_MS);
-        return;
-      }
-      setPhase("deleting");
-      setVisibleCount(count - 1);
-      schedule(() => deleteStep(count - 1), CHAR_MS);
-    }
-
-    schedule(() => typeStep(0), startDelay);
-
-    return () => {
-      alive = false;
-      clearTimeout(timer);
-    };
-  }, [chars, reduced, startDelay]);
-
-  return { visibleCount, phase, tick };
-}
-
-function useParticles(tick: number, phase: Phase, newestIndex: number) {
-  const [particles, setParticles] = useState<{ id: number; charIndex: number }[]>([]);
-  const idRef = useRef(0);
-
-  useEffect(() => {
-    if (tick === 0 || phase !== "typing") return;
-    const id = idRef.current++;
-    const charIndex = newestIndex;
-    setParticles((p) => [...p, { id, charIndex }]);
-    const timer = setTimeout(() => {
-      setParticles((p) => p.filter((x) => x.id !== id));
-    }, 320);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tick]);
+  }, [phase, visibleCount, activeIndex, reduced, charsList]);
 
-  return particles;
+  return { activeIndex, phase, visibleCount };
 }
 
-const charVariants: Variants = {
-  hidden: { opacity: 0, y: 8, scale: 0.78, filter: "blur(6px)" },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    filter: "blur(0px)",
-    transition: { type: "spring", duration: 0.4, bounce: 0.22 },
-  },
-  exit: {
-    opacity: 0,
-    y: 8,
-    scale: 0.78,
-    filter: "blur(6px)",
-    transition: { duration: 0.18 },
-  },
-};
-
-export function AnimatedCharacter({ ch }: { ch: string }) {
-  return (
-    <motion.span
-      className="chip-char"
-      variants={charVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      aria-hidden="true"
-    >
-      {ch}
-    </motion.span>
-  );
-}
-
-const dotVariants: Variants = {
-  hidden: { opacity: 0, scale: 0 },
-  visible: {
-    opacity: 1,
-    scale: [0, 1.25, 1],
-    transition: { duration: 0.35, times: [0, 0.6, 1] },
-  },
-  exit: { opacity: 0, scale: 0, transition: { duration: 0.15 } },
-};
-
-export function AnimatedDot({ color }: { color: string }) {
-  return (
-    <motion.span
-      className="chip-dot"
-      style={{ background: color, boxShadow: `0 0 6px 0 ${color}` }}
-      variants={dotVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      aria-hidden="true"
-    />
-  );
-}
-
-export function Particle({ color }: { color: string }) {
-  return (
-    <motion.span
-      className="chip-particle"
-      style={{ background: color }}
-      initial={{ opacity: 0.6, y: 0 }}
-      animate={{ opacity: 0, y: -6 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      aria-hidden="true"
-    />
-  );
-}
-
-export function Cursor({ color, hidden }: { color: string; hidden: boolean }) {
-  if (hidden) return null;
-  return <span className="chip-cursor" style={{ background: color }} aria-hidden="true" />;
-}
-
-export function Shimmer({ shimmerKey }: { shimmerKey: number }) {
-  return (
-    <AnimatePresence>
-      {shimmerKey > 0 && (
-        <motion.span
-          key={shimmerKey}
-          className="chip-shimmer"
-          initial={{ x: "120%", opacity: 0 }}
-          animate={{ x: "-120%", opacity: [0, 0.5, 0] }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.7, ease: "easeInOut" }}
-          aria-hidden="true"
-        />
-      )}
-    </AnimatePresence>
-  );
-}
-
-export function AnimatedChip({
-  text,
+function ChipButton({
+  fullText,
+  shownText,
   color,
   index,
+  reduced,
+  active,
+  showCursor,
+  shimmerKey,
   onClick,
 }: {
-  text: string;
+  fullText: string;
+  shownText: string;
   color: string;
   index: number;
+  reduced: boolean;
+  active: boolean;
+  showCursor: boolean;
+  shimmerKey: number;
   onClick: () => void;
 }) {
-  const reducedMotion = useReducedMotion();
-  const reduced = !!reducedMotion;
-  const chars = useMemo(() => segmentGraphemes(text), [text]);
-  const startDelay = index * 260;
-  const { visibleCount, phase, tick } = useTypewriterLoop(chars, reduced, startDelay);
-  const particles = useParticles(tick, phase, visibleCount - 1);
-  const [shimmerKey, setShimmerKey] = useState(0);
-  const prevPhase = useRef<Phase>(phase);
-
-  useEffect(() => {
-    if (prevPhase.current !== "holding" && phase === "holding") {
-      setShimmerKey((k) => k + 1);
-    }
-    prevPhase.current = phase;
-  }, [phase]);
-
-  const visibleChars = reduced ? chars : chars.slice(0, visibleCount);
-
   return (
     <motion.button
       type="button"
@@ -227,7 +100,7 @@ export function AnimatedChip({
       onClick={onClick}
       dir="rtl"
       lang="fa"
-      aria-label={text}
+      aria-label={fullText}
       animate={reduced ? undefined : { y: [0, -2, 0], scale: [1, 1.02, 1] }}
       transition={
         reduced
@@ -238,31 +111,68 @@ export function AnimatedChip({
       whileTap={{ scale: 0.98 }}
     >
       {/* Reserves the chip's box at the full phrase's size so typing and
-          deleting never shift layout or move neighbouring chips (CLS=0). */}
+          clearing never shift layout or move neighbouring chips (CLS=0). */}
       <span className="chip-sizer" aria-hidden="true">
-        {text}
+        {fullText}
       </span>
       <span className="chip-text-layer">
-        <AnimatePresence initial={false}>
-          {visibleChars.map((ch, i) => (
-            <span className="chip-char-wrap" key={i}>
-              <AnimatePresence initial={false}>
-                {!reduced && <AnimatedDot key={`dot-${i}`} color={color} />}
-              </AnimatePresence>
-              <AnimatedCharacter key={`ch-${i}`} ch={ch} />
-              <AnimatePresence>
-                {particles
-                  .filter((p) => p.charIndex === i)
-                  .map((p) => (
-                    <Particle key={p.id} color={color} />
-                  ))}
-              </AnimatePresence>
-            </span>
-          ))}
-        </AnimatePresence>
-        {!reduced && <Cursor color={color} hidden={phase === "deleting" || phase === "gap"} />}
+        <span aria-hidden="true">
+          {reduced ? fullText : shownText}
+          {!reduced && active && showCursor && (
+            <span className="chip-cursor" style={{ background: color }} />
+          )}
+        </span>
       </span>
-      {!reduced && <Shimmer shimmerKey={shimmerKey} />}
+      {!reduced && (
+        <AnimatePresence>
+          {active && shimmerKey > 0 && (
+            <motion.span
+              key={shimmerKey}
+              className="chip-shimmer"
+              initial={{ x: "120%", opacity: 0 }}
+              animate={{ x: "-120%", opacity: [0, 0.5, 0] }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.7, ease: "easeInOut" }}
+              aria-hidden="true"
+            />
+          )}
+        </AnimatePresence>
+      )}
     </motion.button>
+  );
+}
+
+export function AnimatedChipRow({ chips }: { chips: ChipDef[] }) {
+  const reducedMotion = useReducedMotion();
+  const reduced = !!reducedMotion;
+  const charsList = useMemo(() => chips.map((c) => segmentGraphemes(c.text)), [chips]);
+  const { activeIndex, phase, visibleCount } = useChipCarousel(charsList, reduced);
+  const [shimmerKey, setShimmerKey] = useState(0);
+
+  useEffect(() => {
+    if (phase === "holding") setShimmerKey((k) => k + 1);
+  }, [phase, activeIndex]);
+
+  return (
+    <>
+      {chips.map((chip, i) => {
+        const active = i === activeIndex && !reduced;
+        const shown = active ? charsList[i].slice(0, visibleCount).join("") : chip.text;
+        return (
+          <ChipButton
+            key={i}
+            fullText={chip.text}
+            shownText={shown}
+            color={chip.color}
+            index={i}
+            reduced={reduced}
+            active={active}
+            showCursor={phase === "typing" || phase === "clearing"}
+            shimmerKey={active ? shimmerKey : 0}
+            onClick={chip.onClick}
+          />
+        );
+      })}
+    </>
   );
 }
