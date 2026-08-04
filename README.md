@@ -859,19 +859,27 @@ Migrations live under `db/migrations/*.sql`, applied in filename order by
 `bun run db:migrate` (`db/migrate.ts`). Never edit an applied migration —
 write a new one that alters the previous state.
 
-> **One-time cutover step, not yet done**: this repo's schema and code are
-> ready, but the *data* — companies, parks, products, images, and every
-> file in the old Supabase `park-assets` bucket — still lives in the old
-> Supabase project as of this writing. Whoever has Supabase dashboard
-> access needs to export the relevant tables (`pg_dump` against the
-> Supabase connection string, or the Table Editor's CSV export) and import
-> them into the new Postgres instance with matching column names, and
-> separately download every object out of the `park-assets` bucket and
-> place it under the new `UPLOAD_DIR` at the same relative path stored in
-> each row's `logo_url`/`image_url`/`file_url` column. This can't be done
-> from a sandboxed dev environment with no network path to Supabase —
-> it needs to happen once, manually, from wherever the Supabase project is
-> reachable.
+> **Cutover status: done, with one gap.** The app is live on Liara at
+> `https://favapark.liara.run`. `db:migrate` has been run against the
+> production `parkfava-db`, and all content data — parks, exhibition
+> companies, products, images, attachments, about-sections — was pulled
+> from the old Supabase project via its REST API (using the
+> `SUPABASE_URL`/`SUPABASE_PUBLISHABLE_KEY` anon key, since a direct
+> Postgres connection string was never obtainable through Lovable Cloud's
+> UI) and inserted into the new Postgres instance. Every file referenced by
+> those rows was downloaded from the old `park-assets` bucket and written
+> to the production `UPLOAD_DIR` disk from inside a `liara shell` session
+> (plain Node `fetch`/`fs`, no dependencies — the deploy container only
+> ships the built `.output`, not the full source tree or `bun`).
+>
+> **Still outstanding:** real user accounts (company owners) were not
+> migrated — the old Supabase Auth password hashes are bcrypt-based and
+> incompatible with this app's own `scrypt` hashing (see
+> `src/lib/auth/password.server.ts`), so there is no safe way to carry a
+> login over. Only a fresh admin account exists today. Company owners will
+> need to sign up again (and be manually linked to their existing
+> `exhibition_companies` row via `owner_user_id`, or through a self-serve
+> claim flow if one gets built) before they can self-manage their listing.
 
 ### Release flow (as it actually works today)
 
