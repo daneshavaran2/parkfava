@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Logo3D } from "@/components/hero/Logo3D";
+import { AnimatedChip } from "@/components/fava/AnimatedChip";
 
 /* ---------- utilities ---------- */
 const FA_DIGITS = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
@@ -168,10 +169,10 @@ export function AICommandBar({ onAsk }) {
   const { t } = useTranslation();
   const [v, setV] = useState("");
   const sugg = [
-    { q: "هوش مصنوعی", l: t("home.ai_sugg_ai") },
-    { q: "مشهد", l: t("home.ai_sugg_mashhad") },
-    { q: "IoT", l: t("home.ai_sugg_iot") },
-    { q: "فین‌تک", l: t("home.ai_sugg_fintech") },
+    { q: "هوش مصنوعی", l: t("home.ai_sugg_ai"), color: "#3B82F6" },
+    { q: "مشهد", l: t("home.ai_sugg_mashhad"), color: "#22C55E" },
+    { q: "IoT", l: t("home.ai_sugg_iot"), color: "#F59E0B" },
+    { q: "فین‌تک", l: t("home.ai_sugg_fintech"), color: "#EC4899" },
   ];
   const fire = (q) => { if (q && q.trim()) onAsk(q.trim()); };
   return (
@@ -185,7 +186,9 @@ export function AICommandBar({ onAsk }) {
       </div>
       <div className="ai-sugg">
         <span className="ai-sugg-lbl mono">AI</span>
-        {sugg.map((s, i) => <button key={i} className="ai-chip" onClick={() => fire(s.q)}>{s.l}</button>)}
+        {sugg.map((s, i) => (
+          <AnimatedChip key={i} text={s.l} color={s.color} index={i} onClick={() => fire(s.q)} />
+        ))}
       </div>
     </div>
   );
