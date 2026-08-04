@@ -973,6 +973,25 @@ body[data-theme='light'] .btn-primary {
 .ai-chip { font-family: var(--font); font-size: 13px; font-weight: 600; color: var(--ink-soft); cursor: pointer; background: rgba(124,152,200,0.08); border: 1px solid var(--stroke); border-radius: 999px; padding: 7px 13px; transition: color .16s, border-color .16s; }
 .ai-chip:hover { color: var(--ink); border-color: var(--accent); }
 
+/* ---- Animated AI suggestion chips: typing/particle/shimmer micro-interaction.
+   Purely additive layer on top of .ai-chip — box model (padding, radius,
+   border, colors) is untouched; only transform/opacity/filter/box-shadow
+   move, so this never changes the chip's footprint or the layout around it. */
+.chip-animated { position: relative; }
+.chip-animated:hover { box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent) 35%, transparent), 0 4px 14px -6px color-mix(in oklab, var(--accent) 45%, transparent); }
+.chip-sizer { visibility: hidden; white-space: nowrap; }
+.chip-text-layer { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
+.chip-char-wrap { position: relative; display: inline-flex; }
+.chip-char { display: inline-block; will-change: transform, filter, opacity; }
+.chip-dot { position: absolute; top: -6px; left: 50%; width: 4px; height: 4px; border-radius: 999px; transform: translateX(-50%); will-change: transform, opacity; }
+.chip-particle { position: absolute; top: -6px; left: 50%; width: 2px; height: 2px; border-radius: 999px; transform: translateX(-50%); pointer-events: none; will-change: transform, opacity; }
+.chip-cursor { display: inline-block; width: 2px; height: 1em; border-radius: 999px; margin-inline-start: 2px; vertical-align: -0.15em; animation: chip-cursor-blink 700ms steps(1) infinite; }
+@keyframes chip-cursor-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+.chip-shimmer { position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent); pointer-events: none; border-radius: inherit; }
+@media (prefers-reduced-motion: reduce) {
+  .chip-cursor { animation: none; display: none; }
+}
+
 /* ---- 3D depth (mouse-tilt cards) ---- */
 .portals, .grid-cards, .cat-grid { perspective: 1300px; }
 body[data-threed='off'] .portals,
