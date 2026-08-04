@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Logo3D } from "@/components/hero/Logo3D";
-import { AnimatedChip } from "@/components/fava/AnimatedChip";
+import { AnimatedChipRow } from "@/components/fava/AnimatedChip";
 
 /* ---------- utilities ---------- */
 const FA_DIGITS = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
@@ -186,9 +186,7 @@ export function AICommandBar({ onAsk }) {
       </div>
       <div className="ai-sugg">
         <span className="ai-sugg-lbl mono">AI</span>
-        {sugg.map((s, i) => (
-          <AnimatedChip key={i} text={s.l} color={s.color} index={i} onClick={() => fire(s.q)} />
-        ))}
+        <AnimatedChipRow chips={sugg.map((s) => ({ text: s.l, color: s.color, onClick: () => fire(s.q) }))} />
       </div>
     </div>
   );
