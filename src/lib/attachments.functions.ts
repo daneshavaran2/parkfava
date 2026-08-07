@@ -9,11 +9,21 @@ function assertIsAdmin(context: { user: { roles: string[] } }) {
 }
 
 const ownerTypeSchema = z.enum(["exhibition", "park"]);
-const kindSchema = z.enum(["logo", "gallery_image", "catalog", "form_fa", "form_en", "document", "other"]);
+const kindSchema = z.enum([
+  "logo",
+  "gallery_image",
+  "catalog",
+  "form_fa",
+  "form_en",
+  "document",
+  "other",
+]);
 
 /** Public-facing: only rows marked active — mirrors the old "attachments public read" RLS policy. */
 export const getAttachments = createServerFn({ method: "GET" })
-  .inputValidator((i) => z.object({ ownerType: ownerTypeSchema, ownerId: z.string().min(1) }).parse(i))
+  .inputValidator((i) =>
+    z.object({ ownerType: ownerTypeSchema, ownerId: z.string().min(1) }).parse(i),
+  )
   .handler(async ({ data }) => {
     const sql = getDb();
     return await sql<CompanyAttachment[]>`
@@ -26,7 +36,9 @@ export const getAttachments = createServerFn({ method: "GET" })
 /** Admin-facing: every row for one owner, active or not. */
 export const getAttachmentsAdmin = createServerFn({ method: "GET" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ ownerType: ownerTypeSchema, ownerId: z.string().min(1) }).parse(i))
+  .inputValidator((i) =>
+    z.object({ ownerType: ownerTypeSchema, ownerId: z.string().min(1) }).parse(i),
+  )
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -39,12 +51,16 @@ export const getAttachmentsAdmin = createServerFn({ method: "GET" })
 
 export const getAllAttachmentsAdmin = createServerFn({ method: "GET" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({
-    ownerType: ownerTypeSchema.optional(),
-    kind: kindSchema.optional(),
-    isActive: z.boolean().optional(),
-    search: z.string().optional(),
-  }).parse(i))
+  .inputValidator((i) =>
+    z
+      .object({
+        ownerType: ownerTypeSchema.optional(),
+        kind: kindSchema.optional(),
+        isActive: z.boolean().optional(),
+        search: z.string().optional(),
+      })
+      .parse(i),
+  )
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -60,14 +76,18 @@ export const getAllAttachmentsAdmin = createServerFn({ method: "GET" })
 
 export const updateAttachmentAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({
-    id: z.string().uuid(),
-    title: z.string().trim().max(255).nullable().optional(),
-    description: z.string().trim().max(4000).nullable().optional(),
-    kind: kindSchema.optional(),
-    sort_order: z.number().int().optional(),
-    is_active: z.boolean().optional(),
-  }).parse(i))
+  .inputValidator((i) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        title: z.string().trim().max(255).nullable().optional(),
+        description: z.string().trim().max(4000).nullable().optional(),
+        kind: kindSchema.optional(),
+        sort_order: z.number().int().optional(),
+        is_active: z.boolean().optional(),
+      })
+      .parse(i),
+  )
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const { id, ...patch } = data;
@@ -84,7 +104,9 @@ export const deleteAttachmentAdmin = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
-    const [att] = await sql<{ file_url: string }[]>`SELECT file_url FROM company_attachments WHERE id = ${data.id}`;
+    const [att] = await sql<
+      { file_url: string }[]
+    >`SELECT file_url FROM company_attachments WHERE id = ${data.id}`;
     if (att?.file_url && !att.file_url.startsWith("http")) {
       const { deleteLocalFile } = await import("./storage/local-storage.server");
       await deleteLocalFile(att.file_url);
@@ -100,7 +122,9 @@ export const reorderAttachmentsAdmin = createServerFn({ method: "POST" })
     assertIsAdmin(context);
     const sql = getDb();
     await sql.begin((tx) =>
-      data.ids.map((id, i) => tx`UPDATE company_attachments SET sort_order = ${i} WHERE id = ${id}`),
+      data.ids.map(
+        (id, i) => tx`UPDATE company_attachments SET sort_order = ${i} WHERE id = ${id}`,
+      ),
     );
     return { ok: true };
   });
@@ -115,7 +139,12 @@ export const uploadAttachmentFn = createServerFn({ method: "POST" })
     const kind = raw.get("kind");
     const title = raw.get("title");
     const description = raw.get("description");
-    if (!(file instanceof File) || typeof ownerType !== "string" || typeof ownerId !== "string" || typeof kind !== "string") {
+    if (
+      !(file instanceof File) ||
+      typeof ownerType !== "string" ||
+      typeof ownerId !== "string" ||
+      typeof kind !== "string"
+    ) {
       throw new Error("INVALID_UPLOAD");
     }
     return {
@@ -130,6 +159,8 @@ export const uploadAttachmentFn = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const { file, ownerType, ownerId, kind, title, description } = data;
+    const { assertSafeUploadExtension } = await import("./storage/mime");
+    assertSafeUploadExtension(file.name);
     const safeName = file.name.replace(/[^\w.\-]+/g, "_");
     const path = `attachments/${ownerType}/${ownerId}/${kind}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
     const { saveLocalFile } = await import("./storage/local-storage.server");

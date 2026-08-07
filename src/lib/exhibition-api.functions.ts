@@ -57,7 +57,11 @@ function assertIsAdmin(context: AuthedContext) {
 
 // Shared by every mutation below: admins can edit any company, owners only
 // their own.
-async function assertCanEditCompany(sql: ReturnType<typeof getDb>, context: AuthedContext, company_id: string) {
+async function assertCanEditCompany(
+  sql: ReturnType<typeof getDb>,
+  context: AuthedContext,
+  company_id: string,
+) {
   if (isAdmin(context)) return;
   const [company] = await sql<{ owner_user_id: string | null }[]>`
     SELECT owner_user_id FROM exhibition_companies WHERE company_id = ${company_id}
@@ -105,12 +109,24 @@ export const listAdminCompanies = createServerFn({ method: "GET" })
 
 export const saveOwnedCompany = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((input) => z.object({
-    company_id: z.string().trim().min(1).max(120),
-    patch: companyPatchSchema.partial(),
-  }).parse(input))
+  .inputValidator((input) =>
+    z
+      .object({
+        company_id: z.string().trim().min(1).max(120),
+        patch: companyPatchSchema.partial(),
+      })
+      .parse(input),
+  )
   .handler(async ({ data, context }) => {
-    const { status, is_active, owner_user_id, reviewed_at, reviewed_by, company_id: _ignored, ...safe } = data.patch as any;
+    const {
+      status,
+      is_active,
+      owner_user_id,
+      reviewed_at,
+      reviewed_by,
+      company_id: _ignored,
+      ...safe
+    } = data.patch as any;
     const patch: Record<string, unknown> = { ...(safe as Record<string, unknown>) };
     normalizeLatLng(patch);
 
@@ -143,11 +159,15 @@ export const submitCompanyForReview = createServerFn({ method: "POST" })
 
 export const addExhibitionImage = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({
-    company_id: z.string().trim().min(1).max(120),
-    image_url: z.string().trim().min(1).max(1000),
-    caption: nullableText,
-  }).parse(i))
+  .inputValidator((i) =>
+    z
+      .object({
+        company_id: z.string().trim().min(1).max(120),
+        image_url: z.string().trim().min(1).max(1000),
+        caption: nullableText,
+      })
+      .parse(i),
+  )
   .handler(async ({ data, context }) => {
     const sql = getDb();
     await assertCanEditCompany(sql, context, data.company_id);
@@ -163,7 +183,9 @@ export const deleteExhibitionImage = createServerFn({ method: "POST" })
   .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
-    const [img] = await sql<{ company_id: string }[]>`SELECT company_id FROM exhibition_images WHERE id = ${data.id}`;
+    const [img] = await sql<
+      { company_id: string }[]
+    >`SELECT company_id FROM exhibition_images WHERE id = ${data.id}`;
     if (!img) throw new Error("NOT_FOUND");
     await assertCanEditCompany(sql, context, img.company_id);
     await sql`DELETE FROM exhibition_images WHERE id = ${data.id}`;
@@ -203,7 +225,9 @@ export const deleteExhibitionProduct = createServerFn({ method: "POST" })
   .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
-    const [prod] = await sql<{ company_id: string }[]>`SELECT company_id FROM exhibition_products WHERE id = ${data.id}`;
+    const [prod] = await sql<
+      { company_id: string }[]
+    >`SELECT company_id FROM exhibition_products WHERE id = ${data.id}`;
     if (!prod) throw new Error("NOT_FOUND");
     await assertCanEditCompany(sql, context, prod.company_id);
     await sql`DELETE FROM exhibition_products WHERE id = ${data.id}`;
@@ -227,7 +251,9 @@ export const reorderExhibitionCompaniesAdmin = createServerFn({ method: "POST" }
     assertIsAdmin(context);
     const sql = getDb();
     await sql.begin((tx) =>
-      data.ids.map((id, i) => tx`UPDATE exhibition_companies SET sort_order = ${i} WHERE company_id = ${id}`),
+      data.ids.map(
+        (id, i) => tx`UPDATE exhibition_companies SET sort_order = ${i} WHERE company_id = ${id}`,
+      ),
     );
     return { ok: true };
   });
@@ -249,7 +275,11 @@ export const approveCompanyAdmin = createServerFn({ method: "POST" })
 
 export const rejectCompanyAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ company_id: z.string().trim().min(1).max(120), note: z.string().trim().max(2000) }).parse(i))
+  .inputValidator((i) =>
+    z
+      .object({ company_id: z.string().trim().min(1).max(120), note: z.string().trim().max(2000) })
+      .parse(i),
+  )
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -267,7 +297,9 @@ export const updateExhibitionImage = createServerFn({ method: "POST" })
   .inputValidator((i) => z.object({ id: z.string().uuid(), caption: nullableText }).parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
-    const [img] = await sql<{ company_id: string }[]>`SELECT company_id FROM exhibition_images WHERE id = ${data.id}`;
+    const [img] = await sql<
+      { company_id: string }[]
+    >`SELECT company_id FROM exhibition_images WHERE id = ${data.id}`;
     if (!img) throw new Error("NOT_FOUND");
     await assertCanEditCompany(sql, context, img.company_id);
     await sql`UPDATE exhibition_images SET caption = ${data.caption ?? null} WHERE id = ${data.id}`;
@@ -279,9 +311,13 @@ export const reorderExhibitionImages = createServerFn({ method: "POST" })
   .inputValidator((i) => z.object({ ids: z.array(z.string().uuid()).min(1) }).parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
-    const [img] = await sql<{ company_id: string }[]>`SELECT company_id FROM exhibition_images WHERE id = ${data.ids[0]}`;
-    if (!img) throw new Error("NOT_FOUND");
-    await assertCanEditCompany(sql, context, img.company_id);
+    const rows = await sql<{ id: string; company_id: string }[]>`
+      SELECT id, company_id FROM exhibition_images WHERE id = ANY(${data.ids})
+    `;
+    if (rows.length !== data.ids.length) throw new Error("NOT_FOUND");
+    const companyIds = new Set(rows.map((r) => r.company_id));
+    if (companyIds.size !== 1) throw new Error("FORBIDDEN");
+    await assertCanEditCompany(sql, context, rows[0].company_id);
     await sql.begin((tx) =>
       data.ids.map((id, i) => tx`UPDATE exhibition_images SET sort_order = ${i} WHERE id = ${id}`),
     );
@@ -293,11 +329,17 @@ export const reorderExhibitionProducts = createServerFn({ method: "POST" })
   .inputValidator((i) => z.object({ ids: z.array(z.string().uuid()).min(1) }).parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
-    const [prod] = await sql<{ company_id: string }[]>`SELECT company_id FROM exhibition_products WHERE id = ${data.ids[0]}`;
-    if (!prod) throw new Error("NOT_FOUND");
-    await assertCanEditCompany(sql, context, prod.company_id);
+    const rows = await sql<{ id: string; company_id: string }[]>`
+      SELECT id, company_id FROM exhibition_products WHERE id = ANY(${data.ids})
+    `;
+    if (rows.length !== data.ids.length) throw new Error("NOT_FOUND");
+    const companyIds = new Set(rows.map((r) => r.company_id));
+    if (companyIds.size !== 1) throw new Error("FORBIDDEN");
+    await assertCanEditCompany(sql, context, rows[0].company_id);
     await sql.begin((tx) =>
-      data.ids.map((id, i) => tx`UPDATE exhibition_products SET sort_order = ${i} WHERE id = ${id}`),
+      data.ids.map(
+        (id, i) => tx`UPDATE exhibition_products SET sort_order = ${i} WHERE id = ${id}`,
+      ),
     );
     return { ok: true };
   });
@@ -334,7 +376,9 @@ export const getExhibitionCompanyDetail = createServerFn({ method: "GET" })
   .inputValidator((i) => z.object({ id: z.string().trim().min(1).max(120) }).parse(i))
   .handler(async ({ data }) => {
     const sql = getDb();
-    const [company] = await sql<ExhibitionCompany[]>`SELECT * FROM exhibition_companies WHERE company_id = ${data.id}`;
+    const [company] = await sql<
+      ExhibitionCompany[]
+    >`SELECT * FROM exhibition_companies WHERE company_id = ${data.id}`;
     if (!company) return { company: null, images: [], products: [] };
 
     // Mirrors the old RLS visibility union: public can see approved+active
@@ -353,8 +397,12 @@ export const getExhibitionCompanyDetail = createServerFn({ method: "GET" })
     if (!allowed) return { company: null, images: [], products: [] };
 
     const [images, products] = await Promise.all([
-      sql<ExhibitionImage[]>`SELECT * FROM exhibition_images WHERE company_id = ${data.id} ORDER BY sort_order ASC`,
-      sql<ExhibitionProduct[]>`SELECT * FROM exhibition_products WHERE company_id = ${data.id} ORDER BY sort_order ASC`,
+      sql<
+        ExhibitionImage[]
+      >`SELECT * FROM exhibition_images WHERE company_id = ${data.id} ORDER BY sort_order ASC`,
+      sql<
+        ExhibitionProduct[]
+      >`SELECT * FROM exhibition_products WHERE company_id = ${data.id} ORDER BY sort_order ASC`,
     ]);
     return { company, images, products };
   });
@@ -391,7 +439,8 @@ export const uploadExhibitionAssetFn = createServerFn({ method: "POST" })
     const sql = getDb();
     await assertCanEditCompany(sql, context, data.company_id);
 
-    const ext = data.file.name.split(".").pop() || "bin";
+    const { assertSafeUploadExtension } = await import("./storage/mime");
+    const ext = assertSafeUploadExtension(data.file.name);
     const path = `exhibition/${data.company_id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const { saveLocalFile } = await import("./storage/local-storage.server");
     await saveLocalFile(path, Buffer.from(await data.file.arrayBuffer()));

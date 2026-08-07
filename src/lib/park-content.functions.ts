@@ -14,20 +14,28 @@ export const getParkContent = createServerFn({ method: "GET" })
     const sql = getDb();
     const [[content], images, news] = await Promise.all([
       sql<ParkContent[]>`SELECT * FROM park_content WHERE park_id = ${data.parkId}`,
-      sql<ParkImage[]>`SELECT * FROM park_images WHERE park_id = ${data.parkId} ORDER BY sort_order ASC`,
-      sql<ParkNews[]>`SELECT * FROM park_news WHERE park_id = ${data.parkId} ORDER BY published_at DESC`,
+      sql<
+        ParkImage[]
+      >`SELECT * FROM park_images WHERE park_id = ${data.parkId} ORDER BY sort_order ASC`,
+      sql<
+        ParkNews[]
+      >`SELECT * FROM park_news WHERE park_id = ${data.parkId} ORDER BY published_at DESC`,
     ]);
     return { content: content ?? null, images, news };
   });
 
 export const upsertParkContentAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({
-    park_id: z.string().trim().min(1).max(120),
-    display_name: z.string().trim().max(255).nullable().optional(),
-    description: z.string().trim().max(20000).nullable().optional(),
-    logo_url: z.string().trim().max(1000).nullable().optional(),
-  }).parse(i))
+  .inputValidator((i) =>
+    z
+      .object({
+        park_id: z.string().trim().min(1).max(120),
+        display_name: z.string().trim().max(255).nullable().optional(),
+        description: z.string().trim().max(20000).nullable().optional(),
+        logo_url: z.string().trim().max(1000).nullable().optional(),
+      })
+      .parse(i),
+  )
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -42,11 +50,15 @@ export const upsertParkContentAdmin = createServerFn({ method: "POST" })
 
 export const addParkImageAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({
-    park_id: z.string().trim().min(1).max(120),
-    image_url: z.string().trim().min(1).max(1000),
-    caption: z.string().trim().max(1000).nullable().optional(),
-  }).parse(i))
+  .inputValidator((i) =>
+    z
+      .object({
+        park_id: z.string().trim().min(1).max(120),
+        image_url: z.string().trim().min(1).max(1000),
+        caption: z.string().trim().max(1000).nullable().optional(),
+      })
+      .parse(i),
+  )
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -69,12 +81,16 @@ export const deleteParkImageAdmin = createServerFn({ method: "POST" })
 
 export const upsertParkNewsAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({
-    id: z.string().uuid().optional(),
-    park_id: z.string().trim().min(1).max(120),
-    title: z.string().trim().min(1).max(255),
-    body: z.string().trim().max(20000).nullable().optional(),
-  }).parse(i))
+  .inputValidator((i) =>
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        park_id: z.string().trim().min(1).max(120),
+        title: z.string().trim().min(1).max(255),
+        body: z.string().trim().max(20000).nullable().optional(),
+      })
+      .parse(i),
+  )
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -109,7 +125,8 @@ export const uploadParkAssetFn = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
-    const ext = data.file.name.split(".").pop() || "bin";
+    const { assertSafeUploadExtension } = await import("./storage/mime");
+    const ext = assertSafeUploadExtension(data.file.name);
     const path = `${data.park_id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const { saveLocalFile } = await import("./storage/local-storage.server");
     await saveLocalFile(path, Buffer.from(await data.file.arrayBuffer()));

@@ -64,7 +64,8 @@ export const uploadAboutAssetFn = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
-    const ext = data.file.name.split(".").pop() || "bin";
+    const { assertSafeUploadExtension } = await import("./storage/mime");
+    const ext = assertSafeUploadExtension(data.file.name);
     const path = `about/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const { saveLocalFile } = await import("./storage/local-storage.server");
     await saveLocalFile(path, Buffer.from(await data.file.arrayBuffer()));
