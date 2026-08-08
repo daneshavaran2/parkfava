@@ -706,8 +706,11 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 1000px) {
   /* Logo stays beside the text in its own column at every width, matching
-     desktop placement — never stacks below or centers. */
-  .hero-grid { grid-template-columns: 1fr 300px; gap: 30px; }
+     desktop placement — never stacks below or centers. Top-aligned (not the
+     desktop rule's `center`): once the text column is much taller than the
+     logo's own box, vertical centering strands the logo in the middle of
+     the whole stack instead of level with the heading it belongs next to. */
+  .hero-grid { grid-template-columns: 1fr 300px; gap: 30px; align-items: start; }
   /* `.hero-orb` establishes a 3D perspective context (as do its `preserve-3d`
      descendants), and that combined with an `aspect-ratio` box in an
      implicit `auto`-sized grid row collapses to 0×0 in some engines — the
@@ -752,11 +755,11 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
      smallest devices (the hero text + orb + footer genuinely exceed a
      ~650px viewport), but this closes most of the gap. */
   .home-view .hero { padding: 18px 0 20px; }
-  .hero-grid { grid-template-columns: 1fr 140px; gap: 14px; }
+  .hero-grid { grid-template-columns: 1fr 168px; gap: 14px; }
   .hero h1 { margin: 8px 0 8px; }
   .hero .lead { margin-top: 4px; }
   .hero-cta { margin-top: 12px; gap: 8px; }
-  .hero-orb { max-width: 140px; }
+  .hero-orb { max-width: 168px; }
   .footer { padding: 16px 0; }
   .nav-inner { padding: 8px 24px; }
 
@@ -772,8 +775,8 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
   .grid-cards, .cat-grid { grid-template-columns: 1fr; }
   .profile-grid { grid-template-columns: 1fr; }
   .kpi-row { grid-template-columns: 1fr; }
-  .hero-grid { grid-template-columns: 1fr 84px; gap: 10px; }
-  .hero-orb { max-width: 84px; }
+  .hero-grid { grid-template-columns: 1fr 108px; gap: 10px; }
+  .hero-orb { max-width: 108px; }
 }
 
 /* mono direction: collapse all per-element colors to the single accent */
