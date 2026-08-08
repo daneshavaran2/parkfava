@@ -27,9 +27,11 @@ function detectTier(): Tier {
       const ext = (gl as WebGLRenderingContext | null)?.getExtension("WEBGL_debug_renderer_info");
       const r =
         ext && gl
-          ? String((gl as WebGLRenderingContext).getParameter(
-              (ext as { UNMASKED_RENDERER_WEBGL: number }).UNMASKED_RENDERER_WEBGL,
-            ))
+          ? String(
+              (gl as WebGLRenderingContext).getParameter(
+                (ext as { UNMASKED_RENDERER_WEBGL: number }).UNMASKED_RENDERER_WEBGL,
+              ),
+            )
           : "";
       if (/swiftshader|software|adreno 3|mali-4|llvmpipe/i.test(r)) weakGpu = true;
     } catch {
@@ -134,8 +136,7 @@ export function Logo3D({
   const osReduced = usePrefersReducedMotion();
   const [pivot] = useLogoPivot();
 
-  const effectiveReduced: ReducedMode =
-    rmProp === "auto" ? (osReduced ? "gentle" : "off") : rmProp;
+  const effectiveReduced: ReducedMode = rmProp === "auto" ? (osReduced ? "gentle" : "off") : rmProp;
 
   const shouldDefer = deferHeavyLayers ?? isMobile;
   const { ref: rootRef, ready: heavyReady } = useDeferredMount<HTMLDivElement>(shouldDefer, 240);
@@ -170,7 +171,6 @@ export function Logo3D({
 
   const animPaused = paused || effectiveReduced === "pause";
 
-
   const showBadge = showFpsBadge ?? showHUD;
   const needsMeter = !!onStats || showBadge;
 
@@ -181,7 +181,12 @@ export function Logo3D({
 
   // FPS meter + adaptive controller (only runs when something consumes it)
   const statsRef = useRef({ frames: 0, longFrames: 0, samples: [] as number[], lastTs: 0 });
-  const tierChangeRef = useRef({ lastChange: 0, changesThisMinute: 0, minuteStart: 0, sustainedGood: 0 });
+  const tierChangeRef = useRef({
+    lastChange: 0,
+    changesThisMinute: 0,
+    minuteStart: 0,
+    sustainedGood: 0,
+  });
   useEffect(() => {
     if (!needsMeter) return;
     let raf = 0;
@@ -200,7 +205,9 @@ export function Logo3D({
         const live = liveRef.current;
         const windowMs = now - (reportAt - 500);
         const fps = Math.round((s.frames * 1000) / windowMs);
-        const frameMs = +(s.samples.reduce((a, b) => a + b, 0) / Math.max(1, s.samples.length)).toFixed(2);
+        const frameMs = +(
+          s.samples.reduce((a, b) => a + b, 0) / Math.max(1, s.samples.length)
+        ).toFixed(2);
         const sorted = [...s.samples].sort((a, b) => b - a);
         const p1Idx = Math.max(0, Math.floor(sorted.length * 0.01));
         const p1FrameMs = sorted[p1Idx] ?? frameMs;
@@ -212,7 +219,9 @@ export function Logo3D({
         const sortedFps = [...s.samples].map((ms) => 1000 / Math.max(1, ms)).sort((a, b) => a - b);
         const minFps = Math.round(sortedFps[0] ?? fps);
         const maxFps = Math.round(sortedFps[sortedFps.length - 1] ?? fps);
-        const avgFps = Math.round(sortedFps.reduce((a, b) => a + b, 0) / Math.max(1, sortedFps.length));
+        const avgFps = Math.round(
+          sortedFps.reduce((a, b) => a + b, 0) / Math.max(1, sortedFps.length),
+        );
 
         live.onStats?.({
           fps,
@@ -275,15 +284,18 @@ export function Logo3D({
   }, [needsMeter]);
 
   const maskUrl = `url(${logoSpin})`;
-  const startDeg = ((startAt ?? pivot.startAt ?? 0) % 360 + 360) % 360;
+  const startDeg = (((startAt ?? pivot.startAt ?? 0) % 360) + 360) % 360;
   const sliceFadeKf = `logo3d-slice-${uid}`;
   const sliceCss = `@keyframes ${sliceFadeKf}{from{opacity:0}to{opacity:1}}`;
 
-
-  // Web Animations API: one persistent animation. Speed changes go through
-  // updatePlaybackRate() so the current angle is preserved — no restart, no jump.
+  // Web Animations API: one persistent animation, created exactly once.
+  // Speed changes go through updatePlaybackRate() and startAt changes are
+  // read once via a ref (below) — neither ever restarts it, so the current
+  // angle is always preserved: no restart, no jump.
   const spinRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<Animation | null>(null);
+  const startDegRef = useRef(startDeg);
+  startDegRef.current = startDeg;
   const BASE_MS = BASE_DURATION * 1000;
 
   useEffect(() => {
@@ -291,8 +303,8 @@ export function Logo3D({
     if (!el || typeof el.animate !== "function") return;
     const anim = el.animate(
       [
-        { transform: `translateZ(0) rotateY(${startDeg}deg)` },
-        { transform: `translateZ(0) rotateY(${startDeg + 360}deg)` },
+        { transform: `translateZ(0) rotateY(${startDegRef.current}deg)` },
+        { transform: `translateZ(0) rotateY(${startDegRef.current + 360}deg)` },
       ],
       { duration: BASE_MS, iterations: Infinity, easing },
     );
@@ -301,8 +313,11 @@ export function Logo3D({
       anim.cancel();
       animRef.current = null;
     };
-    // Only geometry-of-motion changes rebuild the animation; speed does not.
-  }, [startDeg, easing, BASE_MS]);
+    // startDeg is intentionally excluded: it's read once via startDegRef at
+    // creation time so a later startAt change (e.g. a live cross-tab edit
+    // from /dev/logo) never cancels and restarts the already-playing
+    // animation. Only real geometry-of-motion changes rebuild it.
+  }, [easing, BASE_MS]);
 
   useEffect(() => {
     const anim = animRef.current;
@@ -319,15 +334,13 @@ export function Logo3D({
     else anim.play();
   }, [animPaused]);
 
-
-
   const sliceEls = Array.from({ length: SLICES }, (_, idx) => {
     const i = SLICES - idx;
     const t = i / SLICES;
     const tz = -(i * depth) / SLICES;
     const hidden = i > SLICES * 0.75;
     const brightness = 0.22 + (1 - t) * 0.34;
-    const saturate = 0.72 + (1 - t) * 0.20;
+    const saturate = 0.72 + (1 - t) * 0.2;
     // Key by depth fraction, not index: tiers 16/32/48 share fractions, so a
     // tier change only mounts the *added* slices instead of remounting all.
     return (
@@ -378,7 +391,7 @@ export function Logo3D({
     const tz = -(i * depth) / SLICES;
     const hidden = i < SLICES * 0.25;
     const brightness = 0.22 + t * 0.34;
-    const saturate = 0.72 + t * 0.20;
+    const saturate = 0.72 + t * 0.2;
     return (
       <img
         key={t.toFixed(4)}
@@ -404,7 +417,6 @@ export function Logo3D({
       />
     );
   });
-
 
   const tiltDeg = Math.round((pivot.tiltDeg ?? DEFAULT_PIVOT.tiltDeg) * 10) / 10;
   const pv: LogoPivot = pivot;
@@ -467,7 +479,6 @@ export function Logo3D({
             willChange: "transform",
           }}
         >
-
           <div
             style={{
               position: "absolute",
@@ -481,7 +492,6 @@ export function Logo3D({
             {showHeavy ? sliceEls : null}
             {showHeavy ? backSliceEls : null}
           </div>
-
 
           {/* Front face — always renders so first paint is stable, no pop. */}
           <div
@@ -504,7 +514,9 @@ export function Logo3D({
                 height: "100%",
                 display: "block",
                 pointerEvents: "none",
-                filter: showHeavy ? `drop-shadow(0 ${6 * scale}px ${14 * scale}px rgba(15,15,20,0.18))` : undefined,
+                filter: showHeavy
+                  ? `drop-shadow(0 ${6 * scale}px ${14 * scale}px rgba(15,15,20,0.18))`
+                  : undefined,
                 transition: "filter 220ms ease-out",
               }}
             />
@@ -552,10 +564,8 @@ export function Logo3D({
               "radial-gradient(ellipse at center, rgba(25,25,25,0.4), rgba(25,25,25,0) 72%)",
             filter: isMobile ? undefined : `blur(${4 * scale}px)`,
             opacity: isMobile ? 0.28 : 0.42,
-            WebkitMaskImage:
-              "radial-gradient(ellipse at center, black 55%, transparent 100%)",
-            maskImage:
-              "radial-gradient(ellipse at center, black 55%, transparent 100%)",
+            WebkitMaskImage: "radial-gradient(ellipse at center, black 55%, transparent 100%)",
+            maskImage: "radial-gradient(ellipse at center, black 55%, transparent 100%)",
             contain: "paint",
             zIndex: 0,
             pointerEvents: "none",
@@ -623,10 +633,44 @@ export function Logo3D({
             zIndex: 3,
           }}
         >
-          <div style={{ position: "absolute", inset: 0, border: "1px dashed rgba(0,255,255,0.9)" }} />
-          <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 1, background: "rgba(0,255,255,0.9)", transform: "translateX(-0.5px)" }} />
-          <div style={{ position: "absolute", top: "50%", left: 0, right: 0, height: 1, background: "rgba(0,255,255,0.9)", transform: "translateY(-0.5px)" }} />
-          <div style={{ position: "absolute", left: "50%", top: "50%", width: 10, height: 10, transform: "translate(-50%,-50%)", borderRadius: "50%", border: "1px solid rgba(0,255,255,1)", background: "rgba(0,255,255,0.25)" }} />
+          <div
+            style={{ position: "absolute", inset: 0, border: "1px dashed rgba(0,255,255,0.9)" }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: 0,
+              bottom: 0,
+              width: 1,
+              background: "rgba(0,255,255,0.9)",
+              transform: "translateX(-0.5px)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: 0,
+              right: 0,
+              height: 1,
+              background: "rgba(0,255,255,0.9)",
+              transform: "translateY(-0.5px)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              width: 10,
+              height: 10,
+              transform: "translate(-50%,-50%)",
+              borderRadius: "50%",
+              border: "1px solid rgba(0,255,255,1)",
+              background: "rgba(0,255,255,0.25)",
+            }}
+          />
         </div>
       )}
     </div>

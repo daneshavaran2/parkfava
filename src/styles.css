@@ -705,13 +705,15 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
 
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 1000px) {
-  .hero-grid { grid-template-columns: 1fr; gap: 30px; }
+  /* Logo stays beside the text in its own column at every width, matching
+     desktop placement — never stacks below or centers. */
+  .hero-grid { grid-template-columns: 1fr 300px; gap: 30px; }
   /* `.hero-orb` establishes a 3D perspective context (as do its `preserve-3d`
      descendants), and that combined with an `aspect-ratio` box in an
      implicit `auto`-sized grid row collapses to 0×0 in some engines — the
      row-track sizing pass never gets a definite size to derive from. An
      explicit `width` sidesteps it entirely. */
-  .hero-orb { width: 100%; max-width: 360px; margin: 0 auto; }
+  .hero-orb { width: 100%; max-width: 300px; }
   .map-layout { grid-template-columns: 1fr; }
   .profile-grid { grid-template-columns: 1fr; }
 }
@@ -750,11 +752,11 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
      smallest devices (the hero text + orb + footer genuinely exceed a
      ~650px viewport), but this closes most of the gap. */
   .home-view .hero { padding: 18px 0 20px; }
-  .hero-grid { gap: 14px; }
+  .hero-grid { grid-template-columns: 1fr 140px; gap: 14px; }
   .hero h1 { margin: 8px 0 8px; }
   .hero .lead { margin-top: 4px; }
   .hero-cta { margin-top: 12px; gap: 8px; }
-  .hero-orb { max-width: 200px; }
+  .hero-orb { max-width: 140px; }
   .footer { padding: 16px 0; }
   .nav-inner { padding: 8px 24px; }
 
@@ -770,7 +772,8 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
   .grid-cards, .cat-grid { grid-template-columns: 1fr; }
   .profile-grid { grid-template-columns: 1fr; }
   .kpi-row { grid-template-columns: 1fr; }
-  .hero-orb { max-width: 168px; }
+  .hero-grid { grid-template-columns: 1fr 84px; gap: 10px; }
+  .hero-orb { max-width: 84px; }
 }
 
 /* mono direction: collapse all per-element colors to the single accent */
@@ -991,7 +994,7 @@ body[data-theme='light'] .asst-panel { box-shadow: var(--shadow-lg); }
    to fit the navbar; every measurement below is em-relative to
    --toggle-size, so this one variable controls the whole thing) ---- */
 .theme-switch {
-  --toggle-size: 16px;
+  --toggle-size: 8px;
   --container-width: 5.625em;
   --container-height: 2.5em;
   --container-radius: 6.25em;

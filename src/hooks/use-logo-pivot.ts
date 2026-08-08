@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+
+// SSR-safe: useLayoutEffect does nothing (and warns) on the server, so fall
+// back to useEffect there. On the client this settles the persisted pivot
+// (see the effect below) before Logo3D's own animation-creation effect ever
+// runs, so the WAAPI animation is always created with the correct startAt —
+// no race, no restart-jump.
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export interface LogoPivot {
   offsetX: number;
@@ -34,8 +41,7 @@ function clamp(n: unknown, min: number, max: number, fallback: number): number {
 
 function normalize(raw: Partial<LogoPivot> | null | undefined): LogoPivot {
   if (!raw) return DEFAULT_PIVOT;
-  const cadence: LogoPivot["cadence"] =
-    raw.cadence === "throttled" ? "throttled" : "continuous";
+  const cadence: LogoPivot["cadence"] = raw.cadence === "throttled" ? "throttled" : "continuous";
   return {
     offsetX: clamp(raw.offsetX, -400, 400, DEFAULT_PIVOT.offsetX),
     offsetY: clamp(raw.offsetY, -400, 400, DEFAULT_PIVOT.offsetY),
@@ -76,7 +82,7 @@ function readStored(): LogoPivot | null {
 export function useLogoPivot(): [LogoPivot, (next: LogoPivot) => void, () => void] {
   const [pivot, setPivot] = useState<LogoPivot>(DEFAULT_PIVOT);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const stored = readStored();
     if (stored) setPivot(stored);
     const onStorage = (e: StorageEvent) => {
