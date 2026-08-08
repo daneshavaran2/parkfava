@@ -249,6 +249,32 @@ h1, h2, h3, h4, h5, .h1, .h2 { font-family: var(--font-display); letter-spacing:
   background: rgba(124,152,200,0.08); border: 1px solid var(--stroke); cursor: pointer; color: var(--ink);
 }
 
+/* ---- floating bottom tab bar (mobile only — shown via the max-width:720px
+   query below). Rounded dock with individual pill-ish cells, adapted from
+   an icon-menu-with-hover-reveal concept into an always-labeled touch tab
+   bar, since hover doesn't exist on phones. ---- */
+.mobile-tabbar {
+  display: none; align-items: stretch; justify-content: space-between; gap: 4px;
+  position: fixed; z-index: 56;
+  inset-inline: 12px; inset-block-end: 12px;
+  background: var(--panel-solid); border: 1px solid var(--stroke);
+  border-radius: 20px; padding: 6px;
+  box-shadow: 0 14px 34px -14px rgba(0,0,0,0.45);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.mobile-tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; padding: 8px 4px; border-radius: 15px; text-align: center;
+  color: var(--ink-mute); transition: background .2s ease, color .2s ease;
+}
+.mobile-tab-icon { display: grid; place-items: center; }
+.mobile-tab-label { font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+.mobile-tab.active {
+  color: var(--ink);
+  background: color-mix(in oklab, var(--accent) 18%, transparent);
+}
+.mobile-tab.active .mobile-tab-icon { color: var(--accent); }
+
 /* ===================== BUTTONS ===================== */
 .btn {
   display: inline-flex; align-items: center; gap: 9px;
@@ -731,6 +757,11 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
   .hero-orb { max-width: 200px; }
   .footer { padding: 16px 0; }
   .nav-inner { padding: 8px 24px; }
+
+  /* floating bottom tab bar — mobile only */
+  .mobile-tabbar { display: flex; }
+  .page-shell { padding-bottom: 84px; }
+  .footer { margin-bottom: 76px; }
 }
 @media (max-width: 560px) {
   .brand .word b { font-size: 11px; }
@@ -2208,4 +2239,13 @@ body[data-theme='light'] .map-label { box-shadow: var(--shadow-sm); }
   .co-card::before { animation: beamRotate 4.5s linear infinite; }
 }
 @keyframes beamRotate { to { --beam-angle: 360deg; } }
+
+/* lift the floating assistant FAB / chat panel / scroll-to-top pill above
+   the mobile bottom tab bar so they don't overlap it — placed at the end
+   of the file so it wins over each control's own base positioning rule. */
+@media (max-width: 720px) {
+  .asst-fab { inset-block-end: calc(24px + 68px); }
+  .asst-panel { inset-block-end: calc(24px + 68px); }
+  .k-scrolltop { inset-block-end: calc(64px + 68px); }
+}
 

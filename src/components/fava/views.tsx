@@ -195,139 +195,158 @@ export function Nav({ view, query, setQuery, theme, toggleTheme }) {
   // (5-6 links) still uses the width-based breakpoints in styles.css.
   const manyLinks = links.length > 6;
   return (
-    <nav className="nav">
-      <div className={"nav-inner" + (manyLinks ? " nav-inner--many-links" : "")}>
-        <Link to="/" className="brand" style={{ textDecoration: "none", color: "inherit" }}>
-          <img
-            src={logoSpin}
-            alt={t("nav.brand")}
-            style={{
-              display: "block",
-              width: "clamp(32px, 8vw, 40px)",
-              height: "clamp(32px, 8vw, 40px)",
-              aspectRatio: "1 / 1",
-              objectFit: "contain",
-            }}
-          />
-          <div className="word">
-            <b>{t("nav.brand")}</b>
-          </div>
-        </Link>
-        <div className={"nav-links" + (open ? " open" : "")}>
-          {links.map((l) => (
-            <Link
-              key={l.id}
-              to={l.to}
-              className={"nav-link" + (active === l.id ? " active" : "")}
-              onClick={() => setOpen(false)}
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              <span className="nav-link-inner">
-                {active === l.id ? <span className="dot" /> : <Icon name={l.icon} size={17} />}
-                {l.label}
-              </span>
-            </Link>
-          ))}
-        </div>
-        <div className="nav-spacer" />
-        <div className="nav-search">
-          <Icon name="search" size={17} />
-          <input
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              if (view !== "exhibition")
-                navigate({ to: "/exhibition", search: { q: e.target.value } as any });
-            }}
-            placeholder={t("common.search_placeholder")}
-            aria-label={t("common.search")}
-          />
-        </div>
-        <LanguageSwitcher />
-        <label
-          className="theme-switch"
-          title={theme === "dark" ? t("common.theme_day") : t("common.theme_night")}
-        >
-          <input
-            type="checkbox"
-            className="theme-switch__checkbox"
-            checked={theme === "dark"}
-            onChange={toggleTheme}
-            aria-label={t("common.toggle_theme")}
-          />
-          <div className="theme-switch__container">
-            <div className="theme-switch__clouds" />
-            <div className="theme-switch__stars-container">
-              <svg
-                viewBox="0 0 55 55"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <path
-                  d="M6 4l0.9 2.1L9 7l-2.1 0.9L6 10l-0.9-2.1L3 7l2.1-0.9L6 4z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M18 0l1.1 2.6L21.7 3.7l-2.6 1.1L18 7.4l-1.1-2.6L14.3 3.7l2.6-1.1L18 0z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M40 3l0.8 1.9L42.7 5.7l-1.9 0.8L40 8.4l-0.8-1.9L37.3 5.7l1.9-0.8L40 3z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M50 12l1 2.3L53.3 15.3l-2.3 1L50 18.6l-1-2.3L46.7 15.3l2.3-1L50 12z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M28 14l0.7 1.6L30.3 16.3l-1.6 0.7L28 18.6l-0.7-1.6L25.7 16.3l1.6-0.7L28 14z"
-                  fill="currentColor"
-                />
-              </svg>
+    <>
+      <nav className="nav">
+        <div className={"nav-inner" + (manyLinks ? " nav-inner--many-links" : "")}>
+          <Link to="/" className="brand" style={{ textDecoration: "none", color: "inherit" }}>
+            <img
+              src={logoSpin}
+              alt={t("nav.brand")}
+              style={{
+                display: "block",
+                width: "clamp(32px, 8vw, 40px)",
+                height: "clamp(32px, 8vw, 40px)",
+                aspectRatio: "1 / 1",
+                objectFit: "contain",
+              }}
+            />
+            <div className="word">
+              <b>{t("nav.brand")}</b>
             </div>
-            <div className="theme-switch__circle-container">
-              <div className="theme-switch__sun-moon-container">
-                <div className="theme-switch__moon">
-                  <div className="theme-switch__spot" />
-                  <div className="theme-switch__spot" />
-                  <div className="theme-switch__spot" />
+          </Link>
+          <div className={"nav-links" + (open ? " open" : "")}>
+            {links.map((l) => (
+              <Link
+                key={l.id}
+                to={l.to}
+                className={"nav-link" + (active === l.id ? " active" : "")}
+                onClick={() => setOpen(false)}
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                <span className="nav-link-inner">
+                  {active === l.id ? <span className="dot" /> : <Icon name={l.icon} size={17} />}
+                  {l.label}
+                </span>
+              </Link>
+            ))}
+          </div>
+          <div className="nav-spacer" />
+          <div className="nav-search">
+            <Icon name="search" size={17} />
+            <input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                if (view !== "exhibition")
+                  navigate({ to: "/exhibition", search: { q: e.target.value } as any });
+              }}
+              placeholder={t("common.search_placeholder")}
+              aria-label={t("common.search")}
+            />
+          </div>
+          <LanguageSwitcher />
+          <label
+            className="theme-switch"
+            title={theme === "dark" ? t("common.theme_day") : t("common.theme_night")}
+          >
+            <input
+              type="checkbox"
+              className="theme-switch__checkbox"
+              checked={theme === "dark"}
+              onChange={toggleTheme}
+              aria-label={t("common.toggle_theme")}
+            />
+            <div className="theme-switch__container">
+              <div className="theme-switch__clouds" />
+              <div className="theme-switch__stars-container">
+                <svg
+                  viewBox="0 0 55 55"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M6 4l0.9 2.1L9 7l-2.1 0.9L6 10l-0.9-2.1L3 7l2.1-0.9L6 4z"
+                    fill="currentColor"
+                  />
+                  <path
+                    d="M18 0l1.1 2.6L21.7 3.7l-2.6 1.1L18 7.4l-1.1-2.6L14.3 3.7l2.6-1.1L18 0z"
+                    fill="currentColor"
+                  />
+                  <path
+                    d="M40 3l0.8 1.9L42.7 5.7l-1.9 0.8L40 8.4l-0.8-1.9L37.3 5.7l1.9-0.8L40 3z"
+                    fill="currentColor"
+                  />
+                  <path
+                    d="M50 12l1 2.3L53.3 15.3l-2.3 1L50 18.6l-1-2.3L46.7 15.3l2.3-1L50 12z"
+                    fill="currentColor"
+                  />
+                  <path
+                    d="M28 14l0.7 1.6L30.3 16.3l-1.6 0.7L28 18.6l-0.7-1.6L25.7 16.3l1.6-0.7L28 14z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </div>
+              <div className="theme-switch__circle-container">
+                <div className="theme-switch__sun-moon-container">
+                  <div className="theme-switch__moon">
+                    <div className="theme-switch__spot" />
+                    <div className="theme-switch__spot" />
+                    <div className="theme-switch__spot" />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </label>
-        {session ? (
+          </label>
+          {session ? (
+            <button
+              className="logout-btn"
+              onClick={async () => {
+                await signOutFn();
+                navigate({ to: "/" });
+              }}
+              title={user?.email ?? ""}
+              aria-label={t("common.logout")}
+            >
+              <span className="logout-sign">
+                <svg viewBox="0 0 512 512" aria-hidden="true">
+                  <path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z" />
+                </svg>
+              </span>
+              <span className="logout-text">{t("common.logout")}</span>
+            </button>
+          ) : (
+            <Link to="/auth" className="btn btn-primary" style={{ padding: "6px 10px" }}>
+              {t("common.login")}
+            </Link>
+          )}
           <button
-            className="logout-btn"
-            onClick={async () => {
-              await signOutFn();
-              navigate({ to: "/" });
-            }}
-            title={user?.email ?? ""}
-            aria-label={t("common.logout")}
+            className="nav-toggle"
+            onClick={() => setOpen((o) => !o)}
+            aria-label={t("common.menu")}
           >
-            <span className="logout-sign">
-              <svg viewBox="0 0 512 512" aria-hidden="true">
-                <path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z" />
-              </svg>
-            </span>
-            <span className="logout-text">{t("common.logout")}</span>
+            <Icon name={open ? "close" : "menu"} />
           </button>
-        ) : (
-          <Link to="/auth" className="btn btn-primary" style={{ padding: "6px 10px" }}>
-            {t("common.login")}
-          </Link>
-        )}
-        <button
-          className="nav-toggle"
-          onClick={() => setOpen((o) => !o)}
-          aria-label={t("common.menu")}
-        >
-          <Icon name={open ? "close" : "menu"} />
-        </button>
+        </div>
+      </nav>
+      <div className="mobile-tabbar">
+        {links
+          .filter((l) => ["home", "exhibition", "parks", "categories"].includes(l.id))
+          .map((l) => (
+            <Link
+              key={l.id}
+              to={l.to}
+              className={"mobile-tab" + (active === l.id ? " active" : "")}
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <span className="mobile-tab-icon">
+                <Icon name={l.icon} size={19} />
+              </span>
+              <span className="mobile-tab-label">{l.label}</span>
+            </Link>
+          ))}
       </div>
-    </nav>
+    </>
   );
 }
 
