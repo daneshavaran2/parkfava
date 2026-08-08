@@ -523,7 +523,7 @@
     "fab_label": "Smart assistant",
     "panel_title": "FAVA smart assistant",
     "online": "Online",
-    "welcome": "Hi! I'm the FAVA smart assistant. I only answer from real data registered in the system (companies, products, and parks).",
+    "welcome": "Hi! I'm the FAVA smart assistant. I answer from real system data about companies, products, and parks — and I can help with other questions too.",
     "input_placeholder": "Type your question…",
     "send": "Send",
     "quick_ai": "AI companies",
@@ -541,6 +541,7 @@
     "found_many_companies": "I found {{count}} matching results in the system:",
     "found_one_park": "I found this park in the system:",
     "found_many_parks": "Parks registered in the system:",
-    "not_found": "Nothing under this name is registered in the system — I'm not sure of the details, so I'd rather say I couldn't find it than give you wrong information. Try the name of a technology field, city, or product."
+    "not_found": "Nothing under this name is registered in the system — I'm not sure of the details, so I'd rather say I couldn't find it than give you wrong information. Try the name of a technology field, city, or product.",
+    "ai_error": "Sorry, I can't answer right now — please try again shortly."
   }
 }
