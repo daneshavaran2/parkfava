@@ -244,14 +244,59 @@ export function Nav({ view, query, setQuery, theme, toggleTheme }) {
           />
         </div>
         <LanguageSwitcher />
-        <button
-          className="theme-btn"
-          onClick={toggleTheme}
+        <label
+          className="theme-switch"
           title={theme === "dark" ? t("common.theme_day") : t("common.theme_night")}
-          aria-label={t("common.toggle_theme")}
         >
-          <Icon name={theme === "dark" ? "sun" : "moon"} size={19} />
-        </button>
+          <input
+            type="checkbox"
+            className="theme-switch__checkbox"
+            checked={theme === "dark"}
+            onChange={toggleTheme}
+            aria-label={t("common.toggle_theme")}
+          />
+          <div className="theme-switch__container">
+            <div className="theme-switch__clouds" />
+            <div className="theme-switch__stars-container">
+              <svg
+                viewBox="0 0 55 55"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M6 4l0.9 2.1L9 7l-2.1 0.9L6 10l-0.9-2.1L3 7l2.1-0.9L6 4z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M18 0l1.1 2.6L21.7 3.7l-2.6 1.1L18 7.4l-1.1-2.6L14.3 3.7l2.6-1.1L18 0z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M40 3l0.8 1.9L42.7 5.7l-1.9 0.8L40 8.4l-0.8-1.9L37.3 5.7l1.9-0.8L40 3z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M50 12l1 2.3L53.3 15.3l-2.3 1L50 18.6l-1-2.3L46.7 15.3l2.3-1L50 12z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M28 14l0.7 1.6L30.3 16.3l-1.6 0.7L28 18.6l-0.7-1.6L25.7 16.3l1.6-0.7L28 14z"
+                  fill="currentColor"
+                />
+              </svg>
+            </div>
+            <div className="theme-switch__circle-container">
+              <div className="theme-switch__sun-moon-container">
+                <div className="theme-switch__moon">
+                  <div className="theme-switch__spot" />
+                  <div className="theme-switch__spot" />
+                  <div className="theme-switch__spot" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </label>
         {session ? (
           <button
             className="logout-btn"
