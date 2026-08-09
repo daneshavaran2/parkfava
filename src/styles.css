@@ -83,6 +83,11 @@
   --radius: 18px;
   --radius-sm: 12px;
 
+  /* PCB substrate (see .bg-wash) */
+  --grid-line: rgba(124, 152, 200, 0.085);
+  --grid-line-strong: rgba(124, 152, 200, 0.15);
+  --grid-via: rgba(61, 160, 255, 0.38);
+
   --maxw: 1280px;
   --font: 'Shabnam', 'Shabnam Fallback', Tahoma, 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Shabnam', 'Shabnam Fallback', Tahoma, 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
@@ -132,6 +137,36 @@ h1, h2, h3, h4, h5, .h1, .h2 { font-family: var(--font-display); letter-spacing:
     radial-gradient(70% 55% at 78% 8%, rgba(31,127,214,0.16), transparent 60%),
     radial-gradient(60% 50% at 10% 90%, rgba(0,168,88,0.12), transparent 60%),
     radial-gradient(45% 40% at 95% 95%, rgba(247,202,23,0.08), transparent 60%);
+}
+
+/* The page plane reads as PCB substrate rather than a flat fill: a fine trace
+   pitch, a coarser board division, and copper vias at the coarse
+   intersections. The mark this whole platform is built around is a circuit
+   board, so the surface everything sits on is drawn from the same vocabulary
+   instead of a generic gradient. Kept at hairline opacity — it should register
+   as texture, not as pattern.
+   Deliberately its own layer rather than part of .bg-wash: that element is the
+   coloured ambient bloom and is switched off entirely in the light theme, and
+   the substrate belongs in both themes. */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    /* vias: the plated points where coarse traces cross */
+    radial-gradient(circle at 1px 1px, var(--grid-via) 1px, transparent 1.6px),
+    /* coarse board divisions */
+    linear-gradient(to right, var(--grid-line-strong) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line-strong) 1px, transparent 1px),
+    /* fine trace pitch */
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 168px 168px, 168px 168px, 168px 168px, 28px 28px, 28px 28px;
+  /* Offset so each via sits centred on its trace crossing, not tangent to it. */
+  background-position: -1px -1px, 0 0, 0 0, 0 0, 0 0;
+  /* Fades out toward the lower edge so long pages don't sit on a visibly
+     repeating field all the way down. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 82%);
+          mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 82%);
 }
 
 #root { position: relative; z-index: 1; }
@@ -843,6 +878,12 @@ body[data-theme='light'] {
   --panel-solid: #ffffff;
   --stroke: rgba(33, 56, 102, 0.10);
   --stroke-strong: rgba(33, 56, 102, 0.16);
+
+  /* The substrate needs more contrast on a pale ground than on a dark one to
+     read at the same strength. */
+  --grid-line: rgba(33, 56, 102, 0.070);
+  --grid-line-strong: rgba(33, 56, 102, 0.115);
+  --grid-via: rgba(47, 127, 224, 0.32);
   --ink: #0d1426;
   --ink-soft: #384a6b;
   --ink-mute: #6477a0;
