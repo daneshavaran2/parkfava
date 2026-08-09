@@ -127,7 +127,9 @@ export function Assistant() {
         <div className="asst-head">
           <div className="asst-id">
             <span className="asst-avatar">
-              <RobotFace size={42} talking={busy} />
+              <Suspense fallback={<RobotFace size={42} />}>
+                <LazyRobotFabLottie size={42} />
+              </Suspense>
             </span>
             <div>
               <b>{t("assistant.panel_title")}</b>
@@ -144,7 +146,9 @@ export function Assistant() {
             <div key={i} className={"asst-msg " + m.role}>
               {m.role === "bot" && (
                 <span className="asst-mini">
-                  <RobotFace size={26} />
+                  <Suspense fallback={<RobotFace size={26} />}>
+                    <LazyRobotFabLottie size={26} />
+                  </Suspense>
                 </span>
               )}
               <div className="asst-bubble">
@@ -172,7 +176,9 @@ export function Assistant() {
           {busy && (
             <div className="asst-msg bot">
               <span className="asst-mini">
-                <RobotFace size={26} talking />
+                <Suspense fallback={<RobotFace size={26} talking />}>
+                  <LazyRobotFabLottie size={26} />
+                </Suspense>
               </span>
               <div className="asst-bubble">
                 <span className="asst-typing">

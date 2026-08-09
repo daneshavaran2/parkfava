@@ -1,9 +1,13 @@
 // @ts-nocheck
 /* FAVA primitives ported from the original components.jsx (Babel-in-browser). */
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Logo3D } from "@/components/hero/Logo3D";
 import { AnimatedChipRow } from "@/components/fava/AnimatedChip";
+
+const LazyRobotFabLottie = lazy(() =>
+  import("./RobotFabLottie").then((m) => ({ default: m.RobotFabLottie })),
+);
 
 /* ---------- utilities ---------- */
 const FA_DIGITS = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
@@ -179,7 +183,11 @@ export function AICommandBar({ onAsk }) {
     <div className="ai-block">
       <div className="ai-bar">
         <form className="ai-bar-inner" onSubmit={(e) => { e.preventDefault(); fire(v); }}>
-          <span className="ai-spark"><RobotFace size={34} /></span>
+          <span className="ai-spark">
+            <Suspense fallback={<RobotFace size={34} />}>
+              <LazyRobotFabLottie size={34} />
+            </Suspense>
+          </span>
           <input value={v} onChange={(e) => setV(e.target.value)} placeholder={t("home.ai_placeholder")} />
           <button type="submit" className="ai-go"><Icon name="send" size={16} /> {t("home.ai_ask")}</button>
         </form>
