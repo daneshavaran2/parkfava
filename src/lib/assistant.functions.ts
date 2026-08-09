@@ -37,8 +37,30 @@ export const askAssistant = createServerFn({ method: "POST" })
 
     const contextLines: string[] = [];
     companyMatches.forEach(({ c, matchedProducts }) => {
+      const headcount = [c.headcount_full_time, c.headcount_part_time]
+        .filter((n) => n != null)
+        .length
+        ? `${c.headcount_full_time ?? 0} تمام‌وقت / ${c.headcount_part_time ?? 0} پاره‌وقت`
+        : "-";
+      const products = matchedProducts.length
+        ? matchedProducts.map((p) => `${p.name}${p.description ? " (" + p.description + ")" : ""}`).join("، ")
+        : "-";
       contextLines.push(
-        `شرکت: ${c.name}${c.name_en ? " / " + c.name_en : ""} | شعار: ${c.tagline ?? "-"} | شهر: ${c.city ?? "-"} | حوزه: ${c.category ?? "-"} | توضیحات: ${c.description ?? "-"} | محصولات: ${matchedProducts.map((p) => p.name).join("، ") || "-"} | وبسایت: ${c.website ?? "-"}`,
+        [
+          `شرکت: ${c.name}${c.name_en ? " / " + c.name_en : ""}`,
+          `شعار: ${c.tagline ?? "-"}`,
+          `شهر: ${c.city ?? "-"}`,
+          `حوزه: ${c.category ?? "-"}`,
+          `معرفی: ${c.description ?? c.intro ?? "-"}`,
+          `بنیان‌گذاران: ${c.founders ?? "-"}`,
+          `سال تاسیس: ${c.founded_at ?? "-"}`,
+          `نیروی انسانی: ${headcount}`,
+          `پتانسیل صادراتی: ${c.export_potential ?? "-"}`,
+          `محصولات دانش‌بنیان: ${c.knowledge_products_intro ?? "-"}`,
+          `محصولات: ${products}`,
+          `وبسایت: ${c.website ?? "-"}`,
+          `لینکدین: ${c.linkedin_url ?? "-"}`,
+        ].join(" | "),
       );
     });
     parkMatches.forEach((p) => {
