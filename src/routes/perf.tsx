@@ -4,7 +4,7 @@ import { Logo3D, type PerfStats } from "@/components/hero/Logo3D";
 
 export const Route = createFileRoute("/perf")({
   component: PerfPage,
-  head: () => ({ meta: [{ title: "Logo perf test • FAVA" }] }),
+  head: () => ({ meta: [{ title: "Logo perf test • ICT PARK" }] }),
 });
 
 const SIZES = [96, 180, 280, 360, 480, 640];

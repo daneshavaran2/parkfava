@@ -23,7 +23,7 @@ export async function askOpenRouter(
       "content-type": "application/json",
       authorization: `Bearer ${apiKey}`,
       "HTTP-Referer": "https://parkfava.ir",
-      "X-Title": "Fava Park Assistant",
+      "X-Title": "ICT PARK Assistant",
     },
     body: JSON.stringify({
       model,
