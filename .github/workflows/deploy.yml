@@ -1,0 +1,26 @@
+name: Deploy to Liara
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Liara CLI
+        run: npm install -g @liara/cli
+
+      # Secrets never touch the repo — they're read from GitHub's encrypted
+      # secret store at run time and pushed straight to Liara's env config.
+      - name: Sync secrets to Liara
+        run: |
+          liara env:set OPENROUTER_API_KEY="${{ secrets.OPENROUTER_API_KEY }}" \
+            --app favapark --api-token "${{ secrets.LIARA_API_TOKEN }}"
+
+      - name: Deploy
+        run: liara deploy --app favapark --api-token "${{ secrets.LIARA_API_TOKEN }}"
