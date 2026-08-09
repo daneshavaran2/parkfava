@@ -31,6 +31,7 @@ export const askAssistant = createServerFn({ method: "POST" })
       if (!productsByCompany.has(p.company_id)) productsByCompany.set(p.company_id, []);
       productsByCompany.get(p.company_id)!.push(p);
     });
+    const parkById = new Map(parks.map((p) => [p.park_id, p]));
 
     const companyMatches = searchCompanies(data.question, companies, productsByCompany);
     const parkMatches = companyMatches.length ? [] : searchParks(data.question, parks);
@@ -42,24 +43,35 @@ export const askAssistant = createServerFn({ method: "POST" })
         .length
         ? `${c.headcount_full_time ?? 0} تمام‌وقت / ${c.headcount_part_time ?? 0} پاره‌وقت`
         : "-";
-      const products = matchedProducts.length
-        ? matchedProducts.map((p) => `${p.name}${p.description ? " (" + p.description + ")" : ""}`).join("، ")
-        : "-";
+      const park = c.park_id ? parkById.get(c.park_id) : null;
+      const allProducts = productsByCompany.get(c.company_id) ?? [];
+      const productsList = (matchedProducts.length ? matchedProducts : allProducts)
+        .map((p) =>
+          [p.name, p.description, p.link_url ? `لینک: ${p.link_url}` : null].filter(Boolean).join(" — "),
+        )
+        .join("، ") || "-";
       contextLines.push(
         [
           `شرکت: ${c.name}${c.name_en ? " / " + c.name_en : ""}`,
           `شعار: ${c.tagline ?? "-"}`,
           `شهر: ${c.city ?? "-"}`,
+          `پارک فناوری: ${park ? `${park.name}${park.province ? " — " + park.province : ""}` : "-"}`,
           `حوزه: ${c.category ?? "-"}`,
-          `معرفی: ${c.description ?? c.intro ?? "-"}`,
+          `معرفی کوتاه: ${c.description ?? "-"}`,
+          `معرفی کامل: ${c.intro ?? "-"}`,
           `بنیان‌گذاران: ${c.founders ?? "-"}`,
           `سال تاسیس: ${c.founded_at ?? "-"}`,
           `نیروی انسانی: ${headcount}`,
           `پتانسیل صادراتی: ${c.export_potential ?? "-"}`,
           `محصولات دانش‌بنیان: ${c.knowledge_products_intro ?? "-"}`,
-          `محصولات: ${products}`,
+          `محصولات: ${productsList}`,
+          `تلفن: ${c.phone ?? "-"}`,
+          `ایمیل: ${c.email ?? "-"}`,
+          `آدرس: ${c.address ?? "-"}`,
           `وبسایت: ${c.website ?? "-"}`,
           `لینکدین: ${c.linkedin_url ?? "-"}`,
+          `کاتالوگ: ${c.catalog_url ?? "-"}`,
+          `ویدیوی معرفی: ${c.video_url ?? "-"}`,
         ].join(" | "),
       );
     });
