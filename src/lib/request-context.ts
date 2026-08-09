@@ -1,42 +1,38 @@
 // Request-scoped context propagated via AsyncLocalStorage on the server.
-// Client-safe: `node:async_hooks` is loaded via a runtime `require` that Vite
-// does not statically analyze, so the browser bundle never touches it.
-
-type AsyncLocalStorageCtor = new <T>() => {
-  run<R>(store: T, fn: () => R): R;
-  getStore(): T | undefined;
-};
+//
+// Client-safe by construction: this module never names `node:async_hooks` at
+// all. The server entry (src/server.ts) imports it and installs the store on
+// startup, so nothing here pulls a Node built-in into the browser bundle.
+//
+// The previous approach loaded it through a runtime `require` deliberately
+// hidden from Vite's static analysis — but the server runs as ESM, where
+// `require` does not exist, so the lookup always returned null and every
+// caller silently fell back to "no context": getRequestId() returned
+// undefined for the whole life of the feature, leaving log envelopes without
+// the id they exist to correlate on.
 
 export type RequestContext = { requestId: string };
 
-let storage:
-  | { run<R>(store: RequestContext, fn: () => R): R; getStore(): RequestContext | undefined }
-  | null = null;
-let attempted = false;
+type ContextStore = {
+  run<R>(store: RequestContext, fn: () => R): R;
+  getStore(): RequestContext | undefined;
+};
 
-function getStorage() {
-  if (typeof window !== "undefined") return null;
-  if (storage || attempted) return storage;
-  attempted = true;
-  try {
-    const req = (0, eval)("typeof require === 'function' ? require : null") as
-      | ((m: string) => { AsyncLocalStorage: AsyncLocalStorageCtor })
-      | null;
-    if (req) {
-      const mod = req(["node", "async_hooks"].join(":"));
-      storage = new mod.AsyncLocalStorage<RequestContext>();
-    }
-  } catch {
-    storage = null;
-  }
-  return storage;
+let storage: ContextStore | null = null;
+
+/**
+ * Installs the AsyncLocalStorage instance backing request context. Called
+ * once from the server entry; first call wins, so a re-import can't swap the
+ * store out from under in-flight requests.
+ */
+export function installRequestContextStorage(store: ContextStore): void {
+  if (!storage) storage = store;
 }
 
 export function runWithRequestContext<T>(ctx: RequestContext, fn: () => T): T {
-  const s = getStorage();
-  return s ? s.run(ctx, fn) : fn();
+  return storage ? storage.run(ctx, fn) : fn();
 }
 
 export function getRequestId(): string | undefined {
-  return getStorage()?.getStore()?.requestId;
+  return storage?.getStore()?.requestId;
 }

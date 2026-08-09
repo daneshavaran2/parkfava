@@ -4,7 +4,7 @@ import { renderErrorPage } from "./lib/error-page";
 import { i18nGuardMiddleware } from "@/lib/i18n-guard";
 import { logError } from "@/lib/log-envelope";
 import { getOrCreateRequestId, REQUEST_ID_HEADER } from "@/lib/request-id";
-import { runWithRequestContext } from "@/lib/request-context";
+import { getRequestId, runWithRequestContext } from "@/lib/request-context";
 
 // Client-side middleware: forward the current request id (if any) to server fns.
 // Server fns don't get a Request object client-side, so we mint/read here.
@@ -23,8 +23,15 @@ const attachRequestId = createMiddleware({ type: "function" }).client(async ({ n
 // server request (SSR, server routes, server fns) and log unhandled throws
 // with the envelope.
 const requestContextMiddleware = createMiddleware().server(async ({ next, request }) => {
-  const requestId = getOrCreateRequestId(request);
-  return runWithRequestContext({ requestId }, () => next());
+  // The server entry (src/server.ts) already opens a context for anything it
+  // handles, and stamps that same id onto the response header. Minting a
+  // second one here would replace it for the inner handlers only, so the id a
+  // caller reads from the header and the id that reaches the code and its log
+  // envelopes would disagree — invisible whenever the client supplies
+  // x-request-id, because then both call sites derive the same value.
+  // Only establish a context when there genuinely isn't one.
+  if (getRequestId()) return next();
+  return runWithRequestContext({ requestId: getOrCreateRequestId(request) }, () => next());
 });
 
 const errorMiddleware = createMiddleware().server(async ({ next }) => {

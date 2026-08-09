@@ -9,9 +9,20 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { CSP_POLICY, shouldEnforceCsp } from "./lib/csp";
+import { AsyncLocalStorage } from "node:async_hooks";
+
 import { getOrCreateRequestId, REQUEST_ID_HEADER } from "./lib/request-id";
-import { runWithRequestContext } from "./lib/request-context";
+import {
+  installRequestContextStorage,
+  runWithRequestContext,
+  type RequestContext,
+} from "./lib/request-context";
 import { logError } from "./lib/log-envelope";
+
+// This module is the server entry and never reaches the browser, so it is the
+// right place to own the Node built-in. Installed at import time, before any
+// request is handled, so getRequestId() works from the first request onward.
+installRequestContextStorage(new AsyncLocalStorage<RequestContext>());
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
