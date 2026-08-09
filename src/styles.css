@@ -1235,18 +1235,13 @@ body[data-threed='off'] .cat-grid { perspective: none; }
 @media (prefers-reduced-motion: no-preference) { .asst-fab-core { animation: aiPulse 2.6s ease-in-out infinite; } }
 
 /* ---- FAB LOTTIE ROBOT ---- */
-/* The Lottie's native canvas (500x394) isn't square and shows a full scene
-   (robot + raised sign + letters) — crop/zoom into the head so the FAB
-   reads as a face, not the whole scene shrunk down. Absolutely positioned
-   (not static) so the oversized player anchors to the top-left of its
-   container regardless of page direction — a statically-positioned
-   overflowing block anchors to the *inline-start* edge, which is the right
-   side in this app's RTL layout, throwing off the crop's translate offset. */
+/* Lottie's default preserveAspectRatio ("xMidYMid meet") first fits the
+   whole 500x394 scene (robot + far-off sign/antenna-dot decoration) inside
+   the circle uncropped — that leaves the robot itself small. Scale back up
+   from near its own center (not a corner) so it reads clearly while still
+   keeping the whole character, head to feet, inside the circle. */
 .robot-fab-lottie { display: block; overflow: hidden; border-radius: 50%; position: relative; }
-.robot-fab-lottie-player {
-  position: absolute; top: 0; left: 0;
-  width: 250%; height: 250%; transform: translate(-35%, -23.75%);
-}
+.robot-fab-lottie-player { width: 100%; height: 100%; transform: scale(1.6); transform-origin: 49% 52%; }
 
 /* ---- ROBOT FACE ---- */
 .robot { position: relative; display: inline-block; width: 1em; height: 1em; flex-shrink: 0; line-height: 0; vertical-align: middle; }
