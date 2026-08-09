@@ -27,6 +27,7 @@ import { Route as AdminExhibitionRouteImport } from './routes/admin.exhibition'
 import { Route as AdminAttachmentsRouteImport } from './routes/admin.attachments'
 import { Route as AdminAboutRouteImport } from './routes/admin.about'
 import { Route as CompanyIdIndexRouteImport } from './routes/company.$id.index'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicDebugEchoRouteImport } from './routes/api/public/debug-echo'
 import { Route as ApiPublicCspReportRouteImport } from './routes/api/public/csp-report'
 import { Route as CompanyIdProductPidRouteImport } from './routes/company.$id.product.$pid'
@@ -121,6 +122,11 @@ const CompanyIdIndexRoute = CompanyIdIndexRouteImport.update({
   path: '/company/$id/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicDebugEchoRoute = ApiPublicDebugEchoRouteImport.update({
   id: '/api/public/debug-echo',
   path: '/api/public/debug-echo',
@@ -157,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/dev/logo': typeof DevLogoRoute
   '/api/public/csp-report': typeof ApiPublicCspReportRoute
   '/api/public/debug-echo': typeof ApiPublicDebugEchoRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/company/$id/': typeof CompanyIdIndexRoute
   '/company/$id/product/$pid': typeof CompanyIdProductPidRoute
 }
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/dev/logo': typeof DevLogoRoute
   '/api/public/csp-report': typeof ApiPublicCspReportRoute
   '/api/public/debug-echo': typeof ApiPublicDebugEchoRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/company/$id': typeof CompanyIdIndexRoute
   '/company/$id/product/$pid': typeof CompanyIdProductPidRoute
 }
@@ -204,6 +212,7 @@ export interface FileRoutesById {
   '/dev/logo': typeof DevLogoRoute
   '/api/public/csp-report': typeof ApiPublicCspReportRoute
   '/api/public/debug-echo': typeof ApiPublicDebugEchoRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/company/$id/': typeof CompanyIdIndexRoute
   '/company/$id/product/$pid': typeof CompanyIdProductPidRoute
 }
@@ -229,6 +238,7 @@ export interface FileRouteTypes {
     | '/dev/logo'
     | '/api/public/csp-report'
     | '/api/public/debug-echo'
+    | '/api/public/health'
     | '/company/$id/'
     | '/company/$id/product/$pid'
   fileRoutesByTo: FileRoutesByTo
@@ -252,6 +262,7 @@ export interface FileRouteTypes {
     | '/dev/logo'
     | '/api/public/csp-report'
     | '/api/public/debug-echo'
+    | '/api/public/health'
     | '/company/$id'
     | '/company/$id/product/$pid'
   id:
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/dev/logo'
     | '/api/public/csp-report'
     | '/api/public/debug-echo'
+    | '/api/public/health'
     | '/company/$id/'
     | '/company/$id/product/$pid'
   fileRoutesById: FileRoutesById
@@ -299,6 +311,7 @@ export interface RootRouteChildren {
   DevLogoRoute: typeof DevLogoRoute
   ApiPublicCspReportRoute: typeof ApiPublicCspReportRoute
   ApiPublicDebugEchoRoute: typeof ApiPublicDebugEchoRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   CompanyIdIndexRoute: typeof CompanyIdIndexRoute
   CompanyIdProductPidRoute: typeof CompanyIdProductPidRoute
 }
@@ -431,6 +444,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompanyIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/debug-echo': {
       id: '/api/public/debug-echo'
       path: '/api/public/debug-echo'
@@ -475,6 +495,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevLogoRoute: DevLogoRoute,
   ApiPublicCspReportRoute: ApiPublicCspReportRoute,
   ApiPublicDebugEchoRoute: ApiPublicDebugEchoRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   CompanyIdIndexRoute: CompanyIdIndexRoute,
   CompanyIdProductPidRoute: CompanyIdProductPidRoute,
 }

@@ -8,7 +8,7 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "build:cloudflare": "NITRO_PRESET=cloudflare-module vite build",
-    "start": "node .output/server/index.mjs",
+    "start": "node server/cluster.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:i18n": "bun run scripts/lint-i18n.ts",

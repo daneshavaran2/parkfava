@@ -3,8 +3,10 @@
 // on Liara this must be a mounted persistent disk, or uploads vanish on
 // every redeploy/restart since the container filesystem is otherwise
 // ephemeral.
-import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
+import { createReadStream } from "node:fs";
+import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { dirname, join, normalize, sep } from "node:path";
+import { Readable } from "node:stream";
 
 function uploadRoot(): string {
   return process.env.UPLOAD_DIR || "./data/uploads";
@@ -45,4 +47,32 @@ export async function readLocalFile(relPath: string): Promise<Buffer | null> {
   } catch {
     return null;
   }
+}
+
+export type LocalFileStat = { size: number; mtimeMs: number };
+
+/** Size + mtime for a stored file, or null if it isn't there. */
+export async function statLocalFile(relPath: string): Promise<LocalFileStat | null> {
+  try {
+    const full = resolveSafePath(relPath);
+    const s = await stat(full);
+    if (!s.isFile()) return null;
+    return { size: s.size, mtimeMs: s.mtimeMs };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Streams a stored file (optionally a byte range) as a web ReadableStream,
+ * so serving a large catalog or video doesn't pull the whole thing into
+ * memory the way readLocalFile does.
+ */
+export function streamLocalFile(
+  relPath: string,
+  range?: { start: number; end: number },
+): ReadableStream<Uint8Array> {
+  const full = resolveSafePath(relPath);
+  const nodeStream = createReadStream(full, range);
+  return Readable.toWeb(nodeStream) as ReadableStream<Uint8Array>;
 }

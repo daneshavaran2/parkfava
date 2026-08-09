@@ -24,6 +24,18 @@ export async function createSession(userId: string): Promise<void> {
   const token = randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
   await sql`INSERT INTO sessions (id, user_id, expires_at) VALUES (${token}, ${userId}, ${expiresAt})`;
+
+  // Expired rows are otherwise never removed — getSessionUser() filters them
+  // out but leaves them in place, so the table would grow forever. Pruning
+  // opportunistically on login (a rare operation) keeps it bounded without
+  // pg_cron or a separate worker. Uses the expires_at index.
+  if (Math.random() < 0.1) {
+    try {
+      await sql`DELETE FROM sessions WHERE expires_at < now()`;
+    } catch {
+      // Housekeeping must never turn a successful login into a failure.
+    }
+  }
   setCookie(COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

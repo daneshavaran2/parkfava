@@ -542,6 +542,7 @@
     "found_one_park": "I found this park in the system:",
     "found_many_parks": "Parks registered in the system:",
     "not_found": "Nothing under this name is registered in the system — I'm not sure of the details, so I'd rather say I couldn't find it than give you wrong information. Try the name of a technology field, city, or product.",
-    "ai_error": "Sorry, I can't answer right now — please try again shortly."
+    "ai_error": "Sorry, I can't answer right now — please try again shortly.",
+    "rate_limited": "You've asked a lot of questions in a short time. Please wait a few minutes and try again."
   }
 }

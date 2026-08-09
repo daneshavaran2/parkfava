@@ -97,8 +97,13 @@ export function Assistant() {
         .filter(Boolean)
         .map((c) => ({ id: c.company_id, name: pickName(c, i18n.language), color: "blue" }));
       setMsgs((m) => [...m, { role: "bot", text: answer, chips }]);
-    } catch {
-      setMsgs((m) => [...m, { role: "bot", text: t("assistant.ai_error"), chips: [] }]);
+    } catch (e) {
+      // The server throws RATE_LIMITED when a caller has used up their
+      // allowance — worth its own message, since "try again shortly" would
+      // otherwise read as a fault rather than a deliberate limit.
+      const limited = String(e?.message ?? e).includes("RATE_LIMITED");
+      const text = t(limited ? "assistant.rate_limited" : "assistant.ai_error");
+      setMsgs((m) => [...m, { role: "bot", text, chips: [] }]);
     } finally {
       setBusy(false);
     }

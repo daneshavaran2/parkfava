@@ -20,6 +20,10 @@ dist-ssr
 .env
 .env.local
 
+# Local upload storage (UPLOAD_DIR default). In production this is a mounted
+# disk; locally it fills with uploaded logos/catalogs that must not be committed.
+data/
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
