@@ -60,11 +60,26 @@ async def main() -> None:
             raise AssertionError("No company pages were found from the exhibition grid.")
 
         checked_products = 0
+        companies_without_products = 0
         for company_path in company_paths:
             await page.goto(urljoin(BASE_URL, company_path), wait_until="domcontentloaded")
             await page.wait_for_selector("h1", timeout=15000)
             await expect(page.locator("h1").first).to_be_visible()
-            await expect(page.get_by_text("محصولات و خدمات").first).to_be_visible(timeout=15000)
+
+            # Products are fetched client-side, so let the page settle before
+            # concluding anything about whether this company has any —
+            # checking too early would misread "still loading" as "none".
+            await page.wait_for_load_state("networkidle")
+
+            # The products panel only renders for a company that actually has
+            # products (see views.tsx: cloudProducts / c.products). A company
+            # with none is legitimate content, not a routing failure, so skip
+            # it rather than failing the run. The `checked_products == 0`
+            # guard at the end is what keeps this loop honest: if *no*
+            # company anywhere yielded a product route, the test still fails.
+            if not await page.get_by_text("محصولات و خدمات").first.is_visible():
+                companies_without_products += 1
+                continue
 
             more_links = await page.eval_on_selector_all(
                 '[data-testid="product-more-link"]',
@@ -104,7 +119,10 @@ async def main() -> None:
         if page_errors:
             raise AssertionError("Browser runtime errors during product routing test: " + " | ".join(page_errors[-8:]))
 
-        print(f"Checked {len(company_paths)} company pages and {checked_products} product routes.")
+        print(
+            f"Checked {len(company_paths)} company pages and {checked_products} product routes "
+            f"({companies_without_products} companies had no products to check)."
+        )
 
 
 if __name__ == "__main__":
