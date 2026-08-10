@@ -83,10 +83,11 @@
   --radius: 18px;
   --radius-sm: 12px;
 
-  /* PCB substrate (see .bg-wash) */
-  --grid-line: rgba(124, 152, 200, 0.085);
-  --grid-line-strong: rgba(124, 152, 200, 0.15);
-  --grid-via: rgba(61, 160, 255, 0.38);
+  /* PCB substrate (see body::before / body::after) */
+  --grid-dot: rgba(124, 152, 200, 0.16);
+  --grid-line-strong: rgba(124, 152, 200, 0.11);
+  --grid-via: rgba(61, 160, 255, 0.46);
+  --grid-beam: rgba(90, 160, 245, 0.06);
 
   --maxw: 1280px;
   --font: 'Shabnam', 'Shabnam Fallback', Tahoma, 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
@@ -139,12 +140,15 @@ h1, h2, h3, h4, h5, .h1, .h2 { font-family: var(--font-display); letter-spacing:
     radial-gradient(45% 40% at 95% 95%, rgba(247,202,23,0.08), transparent 60%);
 }
 
-/* The page plane reads as PCB substrate rather than a flat fill: a fine trace
-   pitch, a coarser board division, and copper vias at the coarse
-   intersections. The mark this whole platform is built around is a circuit
-   board, so the surface everything sits on is drawn from the same vocabulary
-   instead of a generic gradient. Kept at hairline opacity — it should register
-   as texture, not as pattern.
+/* The page plane reads as PCB substrate rather than a flat fill — but as a lit
+   panel rather than a drafting sheet. A line grid borrows its vocabulary from
+   graph paper, which reads analog; a dot matrix reads as a screen, so the fine
+   pitch is dots and the coarse board divisions are held back to a hairline that
+   only implies board sections. Vias sit at the coarse crossings as the bright
+   nodes of the network, and a very faint grain gives the plane the density flat
+   CSS gradients lack.
+   The 22px dot pitch divides 176px exactly, so every via lands on a dot
+   position rather than beside one.
    Deliberately its own layer rather than part of .bg-wash: that element is the
    coloured ambient bloom and is switched off entirely in the light theme, and
    the substrate belongs in both themes. */
@@ -152,21 +156,68 @@ body::before {
   content: '';
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background:
-    /* vias: the plated points where coarse traces cross */
-    radial-gradient(circle at 1px 1px, var(--grid-via) 1px, transparent 1.6px),
-    /* coarse board divisions */
+    /* vias: the plated nodes where coarse traces cross */
+    radial-gradient(circle at 1px 1px, var(--grid-via) 1.5px, transparent 2.1px),
+    /* fine dot matrix — the layer that carries the texture */
+    radial-gradient(circle at 1px 1px, var(--grid-dot) 1px, transparent 1.5px),
+    /* coarse board divisions, hairline */
     linear-gradient(to right, var(--grid-line-strong) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-line-strong) 1px, transparent 1px),
-    /* fine trace pitch */
-    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-  background-size: 168px 168px, 168px 168px, 168px 168px, 28px 28px, 28px 28px;
-  /* Offset so each via sits centred on its trace crossing, not tangent to it. */
-  background-position: -1px -1px, 0 0, 0 0, 0 0, 0 0;
+    linear-gradient(to bottom, var(--grid-line-strong) 1px, transparent 1px);
+  background-size: 176px 176px, 22px 22px, 176px 176px, 176px 176px;
+  /* Offset so each dot/via sits centred on its crossing, not tangent to it. */
+  background-position: -1px -1px, -1px -1px, 0 0, 0 0;
   /* Fades out toward the lower edge so long pages don't sit on a visibly
      repeating field all the way down. */
   -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 82%);
           mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 82%);
+}
+
+/* Grain + the travelling highlight. A static plane reads as printed; one slow
+   pass of light across it reads as a live surface. Both live on this one
+   element — as two background layers, the band over the grain tile — because
+   body has no third pseudo-element to give them.
+
+   The element is twice the viewport wide and drifts horizontally only:
+   `transform` is composited, whereas animating `background-position` on a
+   fixed full-screen layer repaints it every frame. The bottom fade is a
+   vertical mask, which a horizontal translation leaves untouched.
+
+   z-index: -1 rather than 0, unlike every other backdrop layer here. The app
+   renders straight into <body> — there is no #root wrapper (the `#root` rule
+   below matches nothing), so page content is a set of unpositioned body
+   children that paint in DOM order. ::before is the first child and lands
+   under them for free; ::after is the last and would paint over the whole
+   page. Verified by forcing the beam opaque: at z-index 0 it covered the hero
+   headline. */
+body::after {
+  content: '';
+  position: fixed; z-index: -1; pointer-events: none;
+  top: 0; left: -50%; width: 200%; height: 100%;
+  background:
+    linear-gradient(103deg,
+      transparent 38%,
+      var(--grid-beam) 47%,
+      var(--grid-beam) 53%,
+      transparent 62%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.055'/%3E%3C/svg%3E");
+  background-size: 100% 100%, 140px 140px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 82%);
+          mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 82%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body::after {
+    will-change: transform;
+    /* alternate + ease-in-out: a linear loop would need a seam to reset, and
+       the seam is the one thing that would draw the eye to a layer whose whole
+       job is to not be noticed. */
+    animation: substrateDrift 26s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes substrateDrift {
+  from { transform: translate3d(-6%, 0, 0); }
+  to   { transform: translate3d(6%, 0, 0); }
 }
 
 #root { position: relative; z-index: 1; }
@@ -881,9 +932,10 @@ body[data-theme='light'] {
 
   /* The substrate needs more contrast on a pale ground than on a dark one to
      read at the same strength. */
-  --grid-line: rgba(33, 56, 102, 0.070);
-  --grid-line-strong: rgba(33, 56, 102, 0.115);
-  --grid-via: rgba(47, 127, 224, 0.32);
+  --grid-dot: rgba(33, 56, 102, 0.13);
+  --grid-line-strong: rgba(33, 56, 102, 0.085);
+  --grid-via: rgba(47, 127, 224, 0.36);
+  --grid-beam: rgba(47, 127, 224, 0.05);
   --ink: #0d1426;
   --ink-soft: #384a6b;
   --ink-mute: #6477a0;
