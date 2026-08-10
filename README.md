@@ -93,7 +93,21 @@ bun dev
 ```
 
 The seed script is idempotent and prefixes every row with `[SEED]`, so you can
-re‑run it or clear it with `bun run reset:dev`.
+re‑run it or clear it with `bun run reset:dev`. Both talk to Postgres directly
+via `postgres` — they were Supabase scripts until 2026-08-09 and had been
+failing outright since that dependency was removed, which is why a fresh
+checkout used to come up with no data.
+
+Seeded content is deliberately not all publishable: alongside four approved
+companies it creates one `pending` and one `draft`, which is what
+`bun run test:api` uses to prove hidden rows stay hidden. Coordinates and the
+long-form fields (founders, headcount, export potential) are filled in too, so
+the map, the directions links and the assistant's grounding context all have
+something real to work with.
+
+> **After deploying, run `bun run db:migrate` on the server.** Migration
+> `0004` adds the `search_text` columns the assistant queries; without it the
+> assistant errors on every question.
 
 ### Available scripts
 
@@ -102,14 +116,21 @@ re‑run it or clear it with `bun run reset:dev`.
 | `bun dev`                  | Vite dev server on port 8080                                     |
 | `bun run build`            | Production build for Liara/Node (Nitro `node-server` preset)     |
 | `bun run build:cloudflare` | Production build for Cloudflare Workers instead                  |
-| `npm start`                | Run the built Node server (`node .output/server/index.mjs`)      |
+| `npm start`                | Run the built server across CPU cores (`node server/cluster.mjs`) |
 | `bun run build:dev`        | Build with development mode flags (used by CI smoke tests)       |
 | `bun run lint`             | ESLint over the whole tree                                       |
 | `bun run seed`             | Insert local demo data (parks, companies, products)              |
 | `bun run reset:dev`        | Delete rows tagged `[SEED]`                                       |
+| `bun run test:unit`        | Vitest unit tests (i18n guards, URL/coordinate helpers)          |
 | `bun run test:visual`      | Playwright screenshot diff for exhibition surfaces               |
-| `bun run test:api`         | PostgREST contract tests for company/product endpoints           |
+| `bun run test:api`         | Contract tests against the server functions (visibility, auth, validation) |
+| `bun run test:request-id`  | `x-request-id` propagation into handlers and log envelopes       |
 | `bun run test:product-routing` | Smoke test for company/product URL scheme                    |
+| `bun run test:directions`  | Directions links + copy-link payload carry the right coordinates |
+| `bun run test:company-smoke` | Company profile renders in both languages with adequate contrast |
+
+Every `test:*` above except `test:unit` needs a dev server on `:8080`; see
+[Testing Strategy](#testing-strategy) for which also need seed data.
 
 ---
 
@@ -119,7 +140,11 @@ re‑run it or clear it with `bun run reset:dev`.
 | ------------------------------- | ------- | ------------------------------------------------------------------- |
 | `DATABASE_URL`                  | server  | Postgres connection string (`db/connection.ts`). Required. Append `?sslmode=require` for a managed/remote instance. |
 | `UPLOAD_DIR`                    | server  | Local disk directory for uploaded files (`src/lib/storage/local-storage.server.ts`). Defaults to `./data/uploads`. On Liara this must be a mounted persistent disk. |
-| `LOVABLE_API_KEY`               | server  | AI gateway; leave unset if you don't need generation features       |
+| `OPENROUTER_API_KEY`            | server  | Enables the AI assistant (`src/lib/assistant-ai.server.ts`). Unset ⇒ the assistant answers with a "not available right now" message instead of crashing. **Secret** — never prefix with `VITE_`. |
+| `OPENROUTER_MODEL`              | server  | Model slug for the assistant. Defaults to `openai/gpt-4o-mini`.     |
+| `WEB_CONCURRENCY`               | server  | Worker processes started by `server/cluster.mjs`. Defaults to the CPU count, capped at 4. Set `1` to run a single process. |
+| `LOG_SINK`                      | server  | Set to `memory` to retain log envelopes in an in-memory ring buffer for `/api/public/debug-echo`. Required by `bun run test:request-id`. Never enable in production. |
+| `CSP_ENFORCE`                   | server  | Send `content-security-policy` instead of the report-only header (`src/lib/csp.ts`). |
 | `VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY` | client | Managed Maps JS key; valid only on `*.lovable.app` / `*.lovableproject.com` |
 | `VITE_GOOGLE_MAPS_DEV_KEY`      | client  | Optional developer key so Google Maps also renders on `localhost`   |
 | `MFA_ENFORCED`                  | server  | Set to `true` to require SMS-OTP on every login (all users). Unset/anything else = off. See `src/lib/auth/middleware.ts` |
@@ -134,9 +159,17 @@ Rules:
 - Server-only variables are read inside handler bodies, not at the top level
   of files that are also part of the client bundle.
 
-No Supabase env vars (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
-`VITE_SUPABASE_*`, etc.) are read by the app anymore — see the migration
-note above.
+- Secrets belong in the local `.env` (gitignored) and in Liara's Environment
+  Variables panel. `OPENROUTER_API_KEY` in particular guards a paid API — a
+  leaked key is someone else's bill.
+
+No Supabase env vars are read by the application anymore — see the migration
+note above. One dead script is the exception: `scripts/seed-attachments.ts`
+still reads `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` and imports
+`@supabase/supabase-js`, which is no longer a dependency, so it cannot run at
+all. It is not referenced by any `package.json` script; treat it as pending
+deletion or a rewrite onto `db/connection.ts` (as `seed-dev-data.ts` and
+`reset-dev-data.ts` already received).
 
 ### Maps in local development
 
@@ -473,9 +506,13 @@ stateDiagram-v2
 | `exhibition_companies` | Company profile with `status` + `is_active` workflow          | N..1 `parks`, N..1 `users` (owner)          |
 | `exhibition_products`  | Products under a company; canonical share URL                 | N..1 `exhibition_companies`                      |
 | `exhibition_images`    | Media slots per company                                       | N..1 `exhibition_companies`                      |
-| `company_attachments`  | Signed-URL files (brochures, certificates)                    | N..1 `exhibition_companies`                      |
+| `company_attachments`  | Uploaded files (brochures, certificates) on local disk, served via `/assets/*` | N..1 `exhibition_companies`      |
 | `about_sections`       | CMS blocks for `/about`                                       | standalone                                       |
+| `users`                | Accounts: email, password hash, MFA/OTP state                 | 1..N `user_roles`, `sessions`                    |
 | `user_roles`           | Role assignments; separated to prevent privilege escalation   | N..1 `users`                                |
+| `sessions`             | Opaque server-side session tokens; deleting a row revokes access instantly | N..1 `users`                        |
+| `rate_limit_hits`      | One row per accepted call to a throttled endpoint; in Postgres so the limit holds across workers and restarts | standalone |
+| `_migrations`          | Applied migration filenames, written by `db/migrate.ts`       | standalone                                       |
 
 ### Data lifecycle algorithm
 
@@ -721,6 +758,29 @@ payload before calling the server function.
 | `upsertExhibitionProduct`/`deleteExhibitionProduct`/`reorderExhibitionProducts` | POST | `requireMfaVerified` + owner/admin | product CRUD |
 | `uploadExhibitionAssetFn`          | POST (FormData) | `requireMfaVerified` + owner/admin | Upload a logo/gallery image to local disk |
 
+### AI assistant (`src/lib/assistant.functions.ts`)
+
+| Function        | Method | Auth | Purpose                                                    |
+| --------------- | ------ | ---- | ----------------------------------------------------------- |
+| `askAssistant`  | POST   | none — **rate limited** | Answer a visitor's question, grounded in live exhibition data |
+
+Public and unauthenticated by design, and it spends money on every call, so
+the throttle runs *before* any database or OpenRouter work: 15 requests per
+5 minutes per caller, plus a global ceiling of 300/hour that bounds the worst
+case under a distributed flood. Both are enforced by
+`src/lib/rate-limit.server.ts` against the `rate_limit_hits` table.
+
+The handler shortlists at most 20 candidate companies in Postgres (see
+[Performance & Scaling](#performance--scaling)), ranks them in Node, and hands
+the model only those rows as ground truth — with instructions never to invent
+details about a company in this exhibition, while still answering from general
+knowledge when the question is broader than the data. Returns
+`{ answer, companyIds }`; the client turns `companyIds` into clickable chips.
+
+With `OPENROUTER_API_KEY` unset the function throws `AI_NOT_CONFIGURED` and
+the UI shows a friendly message — the assistant degrades, the page does not
+break.
+
 ### Parks / park content (`src/lib/parks.functions.ts`, `src/lib/park-content.functions.ts`)
 
 `getParks`/`getActiveParks`/`getParkContent` are all public reads (no auth —
@@ -770,47 +830,74 @@ parks have no draft/private state). Every write (`upsertParkAdmin`,
 
 ## Testing Strategy
 
-We keep three layers, each cheap enough to run in CI:
+| Suite                       | What it proves                                                                 | Needs |
+| --------------------------- | ------------------------------------------------------------------------------ | ----- |
+| `bun run test:unit`         | Pure logic — i18n guards, URL/coordinate helpers                                | nothing |
+| `bun run test:api`          | Contracts: anonymous reads expose only approved+active rows, unauthenticated writes are rejected and change nothing, zod rejects malformed input | server + seed |
+| `bun run test:request-id`   | `x-request-id` propagates into handlers and log envelopes, including across `await` boundaries | server + `LOG_SINK=memory` |
+| `bun run test:product-routing` | `/company/:id/product/:pid` links navigate, render, and survive a reload      | server + seed |
+| `bun run test:directions`   | Directions links and the copy-link payload carry the right coordinates          | server + seed |
+| `bun run test:company-smoke`| Company profile renders in both languages with adequate heading contrast         | server + seed |
+| `bun run test:visual`       | Pixel diffs across three viewports for the company/product pages                | server + seed |
 
-1. **Contract tests** (`bun run test:api`) hit PostgREST with the publishable
-   key and assert RLS behaviour and status codes. They double as living
-   documentation for the API table above.
-2. **Visual regression** (`bun run test:visual`) captures three viewports
-   (desktop 1280, tablet 768, mobile 375) for the company profile and product
-   detail pages. Diffs are uploaded as CI artifacts.
-3. **Routing smoke** (`bun run test:product-routing`) verifies the canonical
-   URL scheme for shareable product links.
+"server" means a dev server on `:8080`; "seed" means `bun run seed` has been
+applied, since the contract assertions depend on the seeded draft/pending
+companies existing in order to prove they stay hidden.
 
-A change that alters the DOM structure of the company or product page must
-either preserve pixel output or update baselines in the same PR. A change to
-RLS must update the contract test.
+Two rules that keep these honest, both learned the hard way here:
+
+- **A test that cannot fail is worse than no test.** The contract suite used to
+  target PostgREST with a Supabase key and skipped itself when those env vars
+  were missing — so after the Postgres migration it passed as a silent no-op
+  for months. When changing a suite, verify it still fails against a deliberate
+  regression before trusting it.
+- **An absence assertion must first prove the call succeeded.** "id not in
+  response" also passes when the response is an error. `test-api-contracts.py`
+  routes those checks through a helper that rejects an errored body first.
+
+A change that alters the DOM of the company or product page must either
+preserve pixel output or update baselines in the same PR. A change to
+visibility rules (`status` / `is_active` handling) or to auth middleware must
+be reflected in `scripts/test-api-contracts.py`.
 
 ### Test pyramid
 
 ```mermaid
 graph TB
   V[Visual regression<br/>3 viewports x 2 routes<br/>slow, high fidelity]
-  A[API contract tests<br/>~20 cases against PostgREST<br/>medium, high leverage]
-  U[Unit + type checks<br/>tsgo, eslint, zod parses<br/>fast, foundational]
-  V --> A --> U
+  E[Browser e2e<br/>routing, directions, smoke<br/>slow, catches integration breaks]
+  A[Contract tests<br/>13 cases against server functions<br/>medium, high leverage]
+  U[Unit + type checks<br/>tsc, eslint, zod parses<br/>fast, foundational]
+  V --> E --> A --> U
 ```
 
 ### CI pipeline
 
+`.github/workflows/ci.yml` runs these as parallel jobs; each e2e job starts
+its own dev server first.
+
 ```mermaid
 flowchart LR
-  P[git push / PR] --> L[lint + tsgo]
-  L --> B[bun run build:dev]
-  B --> C[test:api - contracts]
-  B --> R[test:product-routing]
-  B --> S[bun dev :8080 in background]
-  S --> V[test:visual - 3 viewports]
-  V --> D{green?}
-  C --> D
-  R --> D
-  D -- yes --> M[merge allowed]
-  D -- no --> AR[upload diff PNGs + logs]
+  P[git push / PR] --> U[unit tests]
+  P --> T[typecheck + i18n lint]
+  P --> S[bun dev :8080 per job]
+  S --> R[test:request-id<br/>LOG_SINK=memory]
+  S --> D2[test:directions]
+  S --> CS[test:company-smoke]
+  S --> V[test:visual]
+  U --> G{green?}
+  T --> G
+  R --> G
+  D2 --> G
+  CS --> G
+  V --> G
+  G -- yes --> M[merge allowed]
+  G -- no --> AR[upload diff PNGs + logs]
 ```
+
+`test:api` and `test:product-routing` are not wired into CI yet — they need a
+seeded database, which the workflow does not currently provision. Run them
+locally against a seeded dev server.
 
 ---
 
@@ -834,7 +921,15 @@ git pull origin main
 liara deploy
 ```
 
-run manually, from a clone that's up to date with `main`.
+run manually, from a clone that's up to date with `main`, followed by
+`bun run db:migrate` against the production `DATABASE_URL` whenever the
+release adds a migration.
+
+The container starts `server/cluster.mjs`, not the Nitro entry directly, so
+the app uses every core rather than one (`WEB_CONCURRENCY` to override, `1` to
+opt out). The Dockerfile's `HEALTHCHECK` polls `/api/public/health`, which
+runs `SELECT 1` — a process that is listening but cannot reach Postgres is
+reported unhealthy rather than passing a port check while serving errors.
 
 ### Postgres and file storage on Liara
 
@@ -972,7 +1067,7 @@ stateDiagram-v2
 
 ### Performance & Scaling
 
-هر کوئری از میان لایه RLS عبور می‌کند؛ سربار predicate روی جدول‌های بدون ایندکس مناسب به سرعت O(N) می‌شود. Budgetها را هرگز نقض نکنید.
+هر کوئری عمومی روی `status`/`is_active` فیلتر می‌شود؛ بدون ایندکس پشتیبان، این فیلتر روی جدول بزرگ به سرعت O(N) می‌شود. Budgetها را هرگز نقض نکنید.
 
 | متریک                          | Budget                    | ابزار سنجش                     |
 | ------------------------------ | ------------------------- | ------------------------------ |
@@ -982,7 +1077,46 @@ stateDiagram-v2
 | Server function p95            | ≤ 300 ms                  | Logflare / Sentry Performance  |
 | Query plan rows scanned        | ≤ 1000 در filtered read   | `EXPLAIN ANALYZE`              |
 
-**قانون ایندکس‌گذاری:** هر جدول با RLS باید ایندکس کامپوزیت روی ستون‌های predicate داشته باشد. کوئری روی `status` و `is_active` بدون ایندکس پشتیبان — ممنوع.
+**قانون ایندکس‌گذاری:** هر کوئری داغ باید ایندکس کامپوزیت روی ستون‌های predicate خودش داشته باشد. کوئری روی `status` و `is_active` بدون ایندکس پشتیبان — ممنوع. (ایندکس `idx_exh_companies_public_listing` روی `(status, is_active, sort_order)` دقیقاً همین را پوشش می‌دهد و مرتب‌سازی را هم از حافظه خارج می‌کند.)
+
+#### Text search (migration `0004`)
+
+Searching used to load every company and product into Node and scan them in
+JavaScript. Now `exhibition_companies`, `exhibition_products` and `parks` each
+carry a generated `search_text` column with a GIN trigram index (`pg_trgm`).
+
+The column normalises Persian on the way in — Arabic yeh/kaf (`ي`/`ك`) folded
+to Persian (`ی`/`ک`), ZWNJ to a space — using the same rules
+`src/lib/assistant/match.ts` applies to the incoming question. A company
+entered as `كيان‌شبكه` is therefore found by a search for `کیان`, which plain
+`LIKE` would miss entirely.
+
+**Write the candidate query as a `UNION`, never as `OR EXISTS`.** Measured on
+20k companies / 40k products:
+
+```
+company_matches OR EXISTS (product subquery)   →  38.5 ms, 20 001 rows filtered by hand
+UNION of two indexed lookups                   →   1.6 ms, both trigram indexes used
+```
+
+Postgres cannot use a bitmap scan for the company side of that `OR`, so it
+falls back to scanning every published row. Same results, ~24× the cost.
+
+#### Serving uploads
+
+`/assets/*` streams from disk rather than buffering: a 50 MB catalogue used to
+mean a 50 MB allocation per concurrent request. It also answers conditional
+requests with `304` and honours byte ranges, which is what lets a browser seek
+inside an uploaded video instead of refetching it.
+
+#### Using more than one CPU
+
+`node .output/server/index.mjs` is a single process and therefore a single
+core, whatever the container is sized at. Production runs `server/cluster.mjs`,
+which forks workers sharing one listening socket, replaces one that dies, and
+gives up after 10 crashes in 60 seconds rather than fork-bombing when the app
+simply cannot start. Anything that must be consistent *between* workers — the
+rate limiter — lives in Postgres, not process memory.
 
 ```sql
 CREATE INDEX IF NOT EXISTS idx_companies_status_pub
@@ -1011,30 +1145,21 @@ du -sh dist/client/assets/*.js | sort -h
 
 | Header                        | مقدار توصیه‌شده                                                                                       |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `Content-Security-Policy`     | `default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'` |
+| `Content-Security-Policy`     | Defined in `src/lib/csp.ts` as `CSP_POLICY` — **that file is the source of truth, not this table.** It allows `'self'` plus the third parties actually used: Google Maps, OpenStreetMap tiles, Google Fonts and jsDelivr. Sent report-only unless `CSP_ENFORCE` is set (`shouldEnforceCsp()`); violations are collected at `/api/public/csp-report`. |
 | `X-Frame-Options`             | `DENY`                                                                                                |
 | `X-Content-Type-Options`      | `nosniff`                                                                                             |
 | `Referrer-Policy`             | `strict-origin-when-cross-origin`                                                                     |
 | `Permissions-Policy`          | `camera=(), microphone=(), geolocation=(), interest-cohort=()`                                        |
 | `Strict-Transport-Security`   | `max-age=63072000; includeSubDomains; preload`                                                        |
 
-نمونه اعمال در Worker:
+`src/server.ts` applies the policy to every HTML response via
+`withStandardHeaders()`, alongside the request id — headers are set in one
+place rather than per route.
 
-```ts
-// src/server.ts — پس از دریافت response از handler
-const SECURITY_HEADERS: Record<string, string> = {
-  "Content-Security-Policy":
-    "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; " +
-    "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; " +
-    "connect-src 'self' https://*.supabase.co; frame-ancestors 'none'; base-uri 'self'",
-  "X-Frame-Options": "DENY",
-  "X-Content-Type-Options": "nosniff",
-  "Referrer-Policy": "strict-origin-when-cross-origin",
-  "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
-};
-for (const [k, v] of Object.entries(SECURITY_HEADERS)) response.headers.set(k, v);
-```
+> The policy documented here until 2026-08-09 listed `https://*.supabase.co`
+> for `img-src`/`connect-src`. It never matched the code after the Supabase
+> migration. Anything that needs a new origin must be added to `CSP_POLICY`
+> itself; a value written only into this README changes nothing at runtime.
 
 **قوانین سخت‌گیرانه:**
 
@@ -1059,7 +1184,7 @@ for (const [k, v] of Object.entries(SECURITY_HEADERS)) response.headers.set(k, v
 **Enforcement rollout checklist — قبل از deploy اول به production:**
 
 1. حداقل ۷ روز production traffic زیر report-only.
-2. صفر critical violation (منظور: هر violation از دامنه خودی یا `*.supabase.co`).
+2. صفر critical violation (منظور: هر violation از دامنه خودی یا مبدأهای مجاز در `CSP_POLICY`).
 3. violationهای غیر critical (extension، DevTools) در `.lovable/csp-known-noise.md` مستند شوند.
 
 **Rollback:** ست کردن `CSP_ENFORCE=0` روی Worker → deploy → بازگشت به report-only (تخمین ۲ دقیقه).
@@ -1174,16 +1299,37 @@ export const Route = createFileRoute('/company/$id/')({
 | Catalog / Form (PDF)    | 10 MB      | `application/pdf`                              | `park-assets/attachments/.../catalog` |
 | Word document           | 5 MB       | `application/vnd.openxmlformats-...`           | `park-assets/attachments/.../form_*` |
 
-**قانون نمایش:** گالری و لوگو باید از Supabase Image Transformation در لبه resize شوند. سرو مستقیم اصل فایل به کلاینت — ممنوع.
+**قانون نمایش:** فایل‌ها از دیسک محلی و از طریق `/assets/<path>` سرو می‌شوند
+(`src/routes/assets.$.ts`). این مسیر فایل را stream می‌کند، به `ETag`/`304`
+پاسخ می‌دهد و از byte range پشتیبانی می‌کند — پس یک PDF بزرگ یا ویدئو، به‌ازای
+هر درخواست همزمان کل حجمش در حافظه بارگذاری نمی‌شود و seek در ویدئو کار می‌کند.
 
-```
-https://<project>.supabase.co/storage/v1/render/image/public/park-assets/<path>
-  ?width=800&quality=75&resize=contain
-```
+> هیچ لایه‌ی resize در لبه وجود ندارد. نسخه‌ی قبلی این بخش، تبدیل تصویر
+> Supabase (`/storage/v1/render/image/...`) را الزامی می‌کرد؛ آن سرویس دیگر
+> در این پروژه نیست. تا وقتی resize سمت سرور اضافه نشده، محدودیت حجم آپلود
+> (جدول بالا) تنها چیزی است که از سرو تصاویر بیش‌ازحد بزرگ جلوگیری می‌کند —
+> این یک بدهی فنی شناخته‌شده است.
 
 اعتبارسنجی سمت کلاینت (پیش از upload) **و** سمت سرور (در serverFn) هر دو الزامی است؛ اعتبارسنجی صرفاً کلاینتی — ممنوع.
 
 ### Observability & Logging
+
+> **Logs written before 2026-08-09 carry no `request_id`.** The context was
+> propagated through an `AsyncLocalStorage` that was never actually
+> constructed: `src/lib/request-context.ts` reached for it via a runtime
+> `require`, which does not exist in ESM, so `getRequestId()` silently
+> returned `undefined` for the entire life of the feature. The response
+> header was correct throughout — it came from a local variable — which is
+> why nothing looked wrong. Fixed by having the server entry own
+> `node:async_hooks` and install the store at startup. Do not try to
+> correlate anything in older log output by request id; there is nothing
+> there to correlate on.
+
+The id is minted once, in `src/server.ts`, and is the same value on the
+response header and inside every handler and log envelope. The middleware in
+`src/start.ts` defers to it rather than minting a second one — for a while it
+did mint its own, so header and logs disagreed whenever the client did *not*
+send `x-request-id`. `bun run test:request-id` covers both paths.
 
 **Log envelope اجباری** — هر خط لاگ باید این شکل JSON تک‌خطی باشد؛ متن آزاد (`console.log("hi")`) — ممنوع:
 
@@ -1275,67 +1421,31 @@ response.headers.set('x-request-id', requestId);
 
 ### Pagination Contract
 
-PostgREST از `Range` header استفاده می‌کند. cursor سفارشی روی جدول‌های عمومی — ممنوع.
+**There is no pagination today, and that is a known debt rather than a
+decision.** Public reads (`getExhibitionCompanies`, `getActiveParks`, the
+per-company product/image queries) return their full result set. At the
+current scale — dozens of parks, tens of companies each — that is fine, and
+the composite index on `(status, is_active, sort_order)` keeps the listing
+query cheap.
 
-**درخواست کامل:**
+This section previously specified PostgREST `Range` headers against
+`<project>.supabase.co`. That API no longer exists; the only surface is
+`createServerFn` RPC, so none of it applied.
 
-```http
-GET /rest/v1/exhibition_companies?status=eq.approved&is_active=eq.true&select=company_id,name,logo_url&order=sort_order.asc HTTP/1.1
-Host: <project>.supabase.co
-apikey: <publishable-key>
-Authorization: Bearer <publishable-key>
-Range-Unit: items
-Range: 0-9
-Prefer: count=exact
-```
+When a listing does need paging, add it inside the server function:
 
-**پاسخ:**
-
-```http
-HTTP/1.1 206 Partial Content
-Content-Type: application/json; charset=utf-8
-Content-Range: 0-9/247
-Range-Unit: items
-
-[
-  { "company_id": "seed-alpha", "name": "شرکت آلفا", "logo_url": "..." },
-  … 9 more rows
-]
-```
-
-از داخل کلاینت SDK:
-
-```ts
-const from = page * pageSize;
-const to = from + pageSize - 1;
-const { data, count, error } = await supabase
-  .from('exhibition_companies')
-  .select('company_id,name,logo_url', { count: 'exact' })
-  .eq('status', 'approved')
-  .eq('is_active', true)
-  .order('sort_order', { ascending: true })
-  .range(from, to);
-// count = 247, data.length ≤ pageSize
-```
-
-**چرا Offset ممنوع است** (چهار دلیل مستقل، هر کدام به‌تنهایی کافی است):
-
-1. **پیچیدگی O(n):** `LIMIT k OFFSET n` روی جدول بزرگ باید n ردیف را بخواند و دور بریزد. صفحه ۱۰۰۰ = خواندن ۲۰٬۰۰۰ ردیف برای برگرداندن ۲۰. Range همراه با ایندکس روی `sort_order` مستقیم به صفحه هدف می‌پرد (O(log n)).
-2. **تعامل با RLS:** planner باید policy `USING (...)` را روی هر ردیف قبل از skip اعمال کند — سربار predicate در OFFSET خطی می‌ماند. با Range و ایندکس مناسب، فقط ردیف‌های صفحه هدف ارزیابی می‌شوند.
-3. **یک منبع حقیقت برای شمارش:** `Content-Range: 0-9/247` هم صفحه و هم total را در یک round-trip می‌دهد. با OFFSET سفارشی، `SELECT COUNT(*)` جدا لازم است — دو کوئری RLS به‌جای یکی.
-4. **کش‌پذیری edge:** URL با `?offset=` و `?limit=` سه بار برای همان دیتا cache-miss می‌سازد؛ `Range` header key کش را عوض نمی‌کند و invalidation ساده‌تر است. cursor سفارشی contract PostgREST را می‌شکند و client SDK را دور می‌زند.
-
-| قانون                                                          | چرا                                       |
-| -------------------------------------------------------------- | ----------------------------------------- |
-| pageSize پیش‌فرض ≤ 20، سقف 100                                 | جلوگیری از over-fetch و overload RLS      |
-| infinite scroll باید بر همین contract سوار شود                 | یک منبع حقیقت برای صفحه‌بندی              |
-| `count=exact` فقط صفحه اول؛ صفحات بعدی `count=planned`         | `exact` سنگین است روی جدول‌های بزرگ        |
-| بدون `order` صریح — ممنوع                                      | ترتیب تکرارپذیر برای صفحه‌بندی الزامی است  |
-| `?offset=`, `?limit=` در URL کلاینت — ممنوع                    | contract فقط از طریق `Range` header       |
-
----
-
-
+- Take `limit` and `offset` (or a keyset cursor) through the existing zod
+  `inputValidator`, with a hard maximum on `limit` — an unbounded page size
+  read straight from the caller is a denial-of-service knob.
+- Prefer **keyset** pagination (`WHERE (sort_order, company_id) > (:last_sort,
+  :last_id) ORDER BY sort_order, company_id LIMIT :n`) over `OFFSET` for
+  anything that can grow. `LIMIT k OFFSET n` makes Postgres read and discard
+  `n` rows, so page 1000 costs 20 000 row reads to return 20.
+- Return the total separately only if the UI truly needs it; `COUNT(*)` over a
+  large filtered set is its own scan.
+- Extend `scripts/test-api-contracts.py` in the same PR — a paged endpoint
+  that leaks a non-public row on page 2 is exactly the regression that suite
+  exists to catch.
 
 
 ## Troubleshooting
