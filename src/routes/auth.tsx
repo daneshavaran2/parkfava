@@ -69,7 +69,7 @@ function AuthScene({ children }: { children: ReactNode }) {
     <div className="auth-scene">
       <div className="auth-photo" aria-hidden="true" />
       <div className="auth-corner">
-        <Link to="/" title={t("auth.back_to_site")}>
+        <Link to="/" title={t("auth.back_to_site")} aria-label={t("auth.back_to_site")}>
           <Home size={15} aria-hidden="true" />
           <span>{t("auth.back_to_site")}</span>
         </Link>
