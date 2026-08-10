@@ -10,6 +10,10 @@ import { getDb } from "../../../db/connection";
 
 const COOKIE_NAME = "session";
 const SESSION_DAYS = 30;
+// Without "remember me" the session dies with the browser: the cookie gets no
+// max-age (so it is discarded on close) and the row expires the next day, so a
+// shared or public machine does not keep anyone signed in for a month.
+const SHORT_SESSION_DAYS = 1;
 
 export type SessionUser = {
   id: string;
@@ -19,10 +23,11 @@ export type SessionUser = {
   mfaVerified: boolean;
 };
 
-export async function createSession(userId: string): Promise<void> {
+export async function createSession(userId: string, remember = true): Promise<void> {
   const sql = getDb();
   const token = randomBytes(32).toString("hex");
-  const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+  const days = remember ? SESSION_DAYS : SHORT_SESSION_DAYS;
+  const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
   await sql`INSERT INTO sessions (id, user_id, expires_at) VALUES (${token}, ${userId}, ${expiresAt})`;
 
   // Expired rows are otherwise never removed — getSessionUser() filters them
@@ -41,7 +46,7 @@ export async function createSession(userId: string): Promise<void> {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: SESSION_DAYS * 24 * 60 * 60,
+    ...(remember ? { maxAge: days * 24 * 60 * 60 } : {}),
   });
 }
 

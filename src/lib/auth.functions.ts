@@ -14,6 +14,9 @@ import { requireAuth } from "./auth/middleware";
 const credentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, "Password must be at least 8 characters"),
+  // Absent means "remember me", which is what every caller predating the
+  // login-page checkbox expected.
+  remember: z.boolean().optional(),
 });
 
 export const signUp = createServerFn({ method: "POST" })
@@ -29,7 +32,7 @@ export const signUp = createServerFn({ method: "POST" })
       INSERT INTO users (email, password_hash) VALUES (${email}, ${password_hash})
       RETURNING id
     `;
-    await createSession(user.id);
+    await createSession(user.id, data.remember ?? true);
     return { ok: true };
   });
 
@@ -48,7 +51,7 @@ export const signIn = createServerFn({ method: "POST" })
     const ok = await verifyPassword(data.password, rows[0].password_hash);
     if (!ok) throw invalid();
 
-    await createSession(rows[0].id);
+    await createSession(rows[0].id, data.remember ?? true);
     return { ok: true };
   });
 

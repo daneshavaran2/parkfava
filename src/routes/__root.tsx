@@ -16,6 +16,7 @@ import { Assistant } from "../components/fava/Assistant";
 import { CircuitCanvas, installRobotPointer } from "../components/fava/primitives";
 import { ClientOnly } from "../components/fava/ClientOnly";
 import { LanguageProvider } from "../i18n/LanguageProvider";
+import { loadStoredTheme, setTheme as setThemeStore, subscribeTheme, THEME_STORAGE_KEY } from "../lib/theme";
 import { useTranslation } from "react-i18next";
 
 // Kick off the FAVA vendor bundle as soon as the root module is evaluated on
@@ -114,7 +115,9 @@ function RootComponent() {
   const router = useRouter();
   const path = router.state.location.pathname;
   const isKiosk = path.startsWith("/kiosk");
-  const isStandalone = path.startsWith("/hero");
+  // The login page is a full-screen scene of its own — nav, footer, assistant
+  // and page shell would all sit on top of it.
+  const isStandalone = path.startsWith("/hero") || path === "/auth";
   const isParksFull = path === "/parks" || path.startsWith("/parks/");
 
   const [query, setQuery] = useState("");
@@ -125,14 +128,14 @@ function RootComponent() {
     // Vendor is also kicked off at module scope below — this awaits the same
     // in-flight promise if it's still loading, and is a cheap no-op otherwise.
     import("@/lib/fava/load").then((m) => m.loadFavaVendor()).catch(() => {});
-    try {
-      const saved = localStorage.getItem("fava-theme") as "dark" | "light" | null;
-      if (saved === "dark" || saved === "light") setTheme(saved);
-    } catch {}
+    setTheme(loadStoredTheme());
+    // Pages outside this layout (the login scene) toggle the theme through the
+    // shared store rather than through the nav.
+    return subscribeTheme(setTheme);
   }, []);
   useEffect(() => {
     document.body.dataset.theme = theme;
-    try { localStorage.setItem("fava-theme", theme); } catch {}
+    try { localStorage.setItem(THEME_STORAGE_KEY, theme); } catch {}
   }, [theme]);
 
   const view =
@@ -152,7 +155,7 @@ function RootComponent() {
         <>
           <ClientOnly><div className="bg-wash" /></ClientOnly>
           <Nav view={view} query={query} setQuery={setQuery}
-            theme={theme} toggleTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))} />
+            theme={theme} toggleTheme={() => setThemeStore(theme === "dark" ? "light" : "dark")} />
           <div className={"page-shell" + (isParksFull ? " page-shell-full" : "")}>
             <Outlet />
           </div>

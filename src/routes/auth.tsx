@@ -1,12 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Home, Lock, Mail, Moon, Sun } from "lucide-react";
 import { signUp, signIn, signOutFn, getCurrentUser } from "@/lib/auth.functions";
 import { getMyRoles } from "@/lib/admin-users.functions";
 import { getMfaStatus, setPhone as setPhoneFn, requestOtp, verifyOtp } from "@/lib/mfa.functions";
 import { normalizePhone, maskPhone } from "@/lib/mfa/phone";
+import { getTheme, setTheme, subscribeTheme, type Theme } from "@/lib/theme";
+import logoSpin from "@/assets/logo-spin.webp";
 
 async function resolveDestination(fallback: string): Promise<string> {
   if (fallback && fallback !== "/") return fallback;
@@ -49,6 +51,48 @@ function mfaErrorMessage(e: any, t: (key: string) => string, fallbackKey: string
   return t(key ?? fallbackKey);
 }
 
+/**
+ * Full-screen ICT Park scene. The frosted panel behind the form belongs to the
+ * background photograph — see the LOGIN SCENE block in styles.css for why the
+ * card's geometry has to track `background-size: cover`.
+ */
+function AuthScene({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
+  const [theme, setLocalTheme] = useState<Theme>("light");
+
+  useEffect(() => {
+    setLocalTheme(getTheme());
+    return subscribeTheme(setLocalTheme);
+  }, []);
+
+  return (
+    <div className="auth-scene">
+      <div className="auth-photo" aria-hidden="true" />
+      <div className="auth-corner">
+        <Link to="/" title={t("auth.back_to_site")}>
+          <Home size={15} aria-hidden="true" />
+          <span>{t("auth.back_to_site")}</span>
+        </Link>
+        <button
+          type="button"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          aria-label={t("common.toggle_theme")}
+          title={theme === "dark" ? t("common.theme_day") : t("common.theme_night")}
+        >
+          {theme === "dark" ? <Sun size={15} aria-hidden="true" /> : <Moon size={15} aria-hidden="true" />}
+        </button>
+      </div>
+      <section className="auth-card">
+        <img className="auth-logo" src={logoSpin} alt="" aria-hidden="true" />
+        <div className="auth-brand">{t("auth.brand")}</div>
+        <div className="auth-brand-sub">{t("auth.brand_sub")}</div>
+        <div className="auth-brand-en">{t("auth.brand_en")}</div>
+        {children}
+      </section>
+    </div>
+  );
+}
+
 function AuthPage() {
   const { next } = Route.useSearch();
   const { t } = useTranslation();
@@ -58,7 +102,9 @@ function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [showForgotNote, setShowForgotNote] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -113,9 +159,9 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        await signUpFn({ data: { email, password } });
+        await signUpFn({ data: { email, password, remember } });
       } else {
-        await signInFn({ data: { email, password } });
+        await signInFn({ data: { email, password, remember } });
       }
       await proceedAfterAuth();
     } catch (e: any) {
@@ -181,172 +227,147 @@ function AuthPage() {
 
   if (mfaStep === "phone") {
     return (
-      <div className="view">
-        <div className="shell" style={{ maxWidth: 460, margin: "60px auto" }}>
-          <div className="panel" style={{ padding: 28 }}>
-            <h2 className="h2" style={{ fontSize: 24 }}>{t("auth.phone_title")}</h2>
-            <p className="lead" style={{ marginTop: 6, fontSize: 14 }}>
-              {t("auth.phone_lead")}
-            </p>
-            <form onSubmit={submitPhone} style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 18 }}>
-              <input
-                type="tel"
-                required
-                dir="ltr"
-                value={mfaPhoneInput}
-                onChange={(e) => setMfaPhoneInput(e.target.value)}
-                placeholder={t("auth.phone_placeholder")}
-                aria-label={t("auth.phone_label")}
-                className="input"
-                style={inputStyle}
-              />
-              {err && <div role="alert" style={{ color: "#ff7676", fontSize: 13 }}>{err}</div>}
-              <button type="submit" className="btn btn-primary" disabled={busy}>
-                {busy ? "…" : t("auth.send_otp")}
-              </button>
-            </form>
-            <div style={{ marginTop: 18, textAlign: "center" }}>
-              <button type="button" onClick={backToCredentials}
-                style={{ background: "transparent", color: "var(--ink-soft)", border: 0, cursor: "pointer", fontSize: 12 }}>
-                {t("auth.back_to_signin")}
-              </button>
-            </div>
-          </div>
+      <AuthScene>
+        <h1 className="auth-title">{t("auth.phone_title")}</h1>
+        <p className="auth-lead">{t("auth.phone_lead")}</p>
+        <form className="auth-form" onSubmit={submitPhone}>
+          <label className="auth-field">
+            <input
+              type="tel"
+              required
+              dir="ltr"
+              value={mfaPhoneInput}
+              onChange={(e) => setMfaPhoneInput(e.target.value)}
+              placeholder={t("auth.phone_placeholder")}
+              aria-label={t("auth.phone_label")}
+            />
+          </label>
+          {err && <div role="alert" className="auth-error">{err}</div>}
+          <button type="submit" className="auth-submit" disabled={busy}>
+            {busy ? "…" : t("auth.send_otp")}
+          </button>
+        </form>
+        <div className="auth-alt">
+          <button type="button" className="auth-linkbtn" onClick={backToCredentials}>
+            {t("auth.back_to_signin")}
+          </button>
         </div>
-      </div>
+      </AuthScene>
     );
   }
 
   if (mfaStep === "otp") {
     return (
-      <div className="view">
-        <div className="shell" style={{ maxWidth: 460, margin: "60px auto" }}>
-          <div className="panel" style={{ padding: 28 }}>
-            <h2 className="h2" style={{ fontSize: 24 }}>{t("auth.otp_title")}</h2>
-            <p className="lead" style={{ marginTop: 6, fontSize: 14 }}>
-              {t("auth.otp_lead", { phone: mfaPhone ? maskPhone(mfaPhone) : t("auth.otp_lead_your_number") })}
-            </p>
-            <form onSubmit={submitOtp} style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 18 }}>
-              <input
-                type="text"
-                inputMode="numeric"
-                required
-                dir="ltr"
-                maxLength={6}
-                value={otpCode}
-                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                placeholder={t("auth.otp_placeholder")}
-                aria-label={t("auth.otp_label")}
-                className="input"
-                style={{ ...inputStyle, letterSpacing: 6, textAlign: "center", fontSize: 20 }}
-              />
-              {err && <div role="alert" style={{ color: "#ff7676", fontSize: 13 }}>{err}</div>}
-              <button type="submit" className="btn btn-primary" disabled={busy || otpCode.length < 4}>
-                {busy ? "…" : t("auth.confirm")}
-              </button>
-            </form>
-            <div style={{ marginTop: 14, display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-              <button type="button" onClick={triggerRequestOtp} disabled={Date.now() < resendAt}
-                style={{ background: "transparent", color: "var(--accent-glow)", border: 0, cursor: "pointer" }}>
-                {t("auth.resend_otp")}
-              </button>
-              <button type="button" onClick={backToCredentials}
-                style={{ background: "transparent", color: "var(--ink-soft)", border: 0, cursor: "pointer" }}>
-                {t("auth.back_to_signin")}
-              </button>
-            </div>
-          </div>
+      <AuthScene>
+        <h1 className="auth-title">{t("auth.otp_title")}</h1>
+        <p className="auth-lead">
+          {t("auth.otp_lead", { phone: mfaPhone ? maskPhone(mfaPhone) : t("auth.otp_lead_your_number") })}
+        </p>
+        <form className="auth-form" onSubmit={submitOtp}>
+          <label className="auth-field">
+            <input
+              type="text"
+              inputMode="numeric"
+              required
+              dir="ltr"
+              maxLength={6}
+              value={otpCode}
+              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+              placeholder={t("auth.otp_placeholder")}
+              aria-label={t("auth.otp_label")}
+              style={{ letterSpacing: 6, textAlign: "center" }}
+            />
+          </label>
+          {err && <div role="alert" className="auth-error">{err}</div>}
+          <button type="submit" className="auth-submit" disabled={busy || otpCode.length < 4}>
+            {busy ? "…" : t("auth.confirm")}
+          </button>
+        </form>
+        <div className="auth-alt auth-options" style={{ width: "100%" }}>
+          <button type="button" className="auth-linkbtn" onClick={triggerRequestOtp} disabled={Date.now() < resendAt}>
+            {t("auth.resend_otp")}
+          </button>
+          <button type="button" className="auth-linkbtn" onClick={backToCredentials}>
+            {t("auth.back_to_signin")}
+          </button>
         </div>
-      </div>
+      </AuthScene>
     );
   }
 
   return (
-    <div className="view">
-      <div className="shell" style={{ maxWidth: 460, margin: "60px auto" }}>
-        <div className="panel" style={{ padding: 28 }}>
-          <h2 className="h2" style={{ fontSize: 24 }}>
-            {mode === "signin" ? t("auth.signin_title") : t("auth.signup_title")}
-          </h2>
-          <p className="lead" style={{ marginTop: 6, fontSize: 14 }}>
-            {t("auth.lead")}
-          </p>
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 18 }}>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t("auth.email")}
-              aria-label={t("auth.email")}
-              autoComplete="email"
-              className="input"
-              style={inputStyle}
-            />
-            <div style={{ position: "relative" }}>
-              <input
-                type={showPassword ? "text" : "password"}
-                required
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={t("auth.password")}
-                aria-label={t("auth.password")}
-                autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                className="input"
-                style={{ ...inputStyle, paddingInlineEnd: 44, width: "100%" }}
-                data-testid="password-input"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? t("auth.hide_password") : t("auth.show_password")}
-                aria-pressed={showPassword}
-                title={showPassword ? t("auth.hide_password") : t("auth.show_password")}
-                data-testid="toggle-password"
-                style={{
-                  position: "absolute",
-                  insetInlineEnd: 8,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "transparent",
-                  border: 0,
-                  color: "var(--ink-soft)",
-                  cursor: "pointer",
-                  padding: 6,
-                  display: "inline-flex",
-                  alignItems: "center",
-                }}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-            {err && <div role="alert" style={{ color: "#ff7676", fontSize: 13 }}>{err}</div>}
-            <button type="submit" className="btn btn-primary" disabled={busy}>
-              {busy ? "…" : mode === "signin" ? t("auth.signin") : t("auth.signup")}
-            </button>
-          </form>
-          <div style={{ marginTop: 14, fontSize: 13, textAlign: "center" }}>
-            <button type="button" onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-              style={{ background: "transparent", color: "var(--accent-glow)", border: 0, cursor: "pointer" }}>
-              {mode === "signin" ? t("auth.no_account") : t("auth.have_account")}
-            </button>
-          </div>
-          <div style={{ marginTop: 18, textAlign: "center" }}>
-            <Link to="/" style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("auth.back_to_site")}</Link>
-          </div>
+    <AuthScene>
+      <h1 className="auth-title">
+        {mode === "signin" ? t("auth.signin_title") : t("auth.signup_title")}
+      </h1>
+      <p className="auth-lead">{t("auth.lead")}</p>
+
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <label className="auth-field">
+          <Mail size={18} aria-hidden="true" />
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={t("auth.email")}
+            aria-label={t("auth.email")}
+            autoComplete="email"
+          />
+        </label>
+
+        <label className="auth-field">
+          <Lock size={18} aria-hidden="true" />
+          <input
+            type={showPassword ? "text" : "password"}
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={t("auth.password")}
+            aria-label={t("auth.password")}
+            autoComplete={mode === "signin" ? "current-password" : "new-password"}
+            data-testid="password-input"
+          />
+          <button
+            type="button"
+            className="auth-eye"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? t("auth.hide_password") : t("auth.show_password")}
+            aria-pressed={showPassword}
+            title={showPassword ? t("auth.hide_password") : t("auth.show_password")}
+            data-testid="toggle-password"
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </label>
+
+        <div className="auth-options">
+          <button type="button" className="auth-linkbtn" onClick={() => setShowForgotNote((v) => !v)}>
+            {t("auth.forgot_password")}
+          </button>
+          <label className="auth-remember">
+            <span>{t("auth.remember_me")}</span>
+            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+          </label>
         </div>
+        {/* No self-service reset exists yet, so the link explains the actual
+            recovery path instead of leading nowhere. */}
+        {showForgotNote && <div className="auth-note">{t("auth.forgot_note")}</div>}
+
+        {err && <div role="alert" className="auth-error">{err}</div>}
+
+        <button type="submit" className="auth-submit" disabled={busy}>
+          {busy ? "…" : mode === "signin" ? t("auth.signin") : t("auth.signup")}
+        </button>
+      </form>
+
+      <div className="auth-alt">
+        {mode === "signin" ? t("auth.no_account_q") : t("auth.have_account_q")}{" "}
+        <button type="button" className="auth-linkbtn" onClick={() => setMode(mode === "signin" ? "signup" : "signin")}>
+          {mode === "signin" ? t("auth.signup_action") : t("auth.signin_action")}
+        </button>
       </div>
-    </div>
+    </AuthScene>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  background: "var(--panel)",
-  border: "1px solid var(--stroke)",
-  borderRadius: 10,
-  padding: "12px 14px",
-  color: "inherit",
-  fontFamily: "inherit",
-  fontSize: 14,
-};

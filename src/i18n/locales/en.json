@@ -147,9 +147,9 @@
     "document": "Document"
   },
   "auth": {
-    "signin_title": "Sign in to the admin panel",
-    "signup_title": "Create an admin account",
-    "lead": "Sign in to edit park information.",
+    "signin_title": "Sign in to your account",
+    "signup_title": "Create your account",
+    "lead": "Please enter your account details",
     "email": "Email",
     "password": "Password",
     "signin": "Sign in",
@@ -185,7 +185,17 @@
     "otp_incorrect": "The code you entered is incorrect",
     "phone_not_set": "Register your phone number first",
     "confirm": "Confirm",
-    "resend_otp": "Resend code"
+    "resend_otp": "Resend code",
+    "brand": "FAVA",
+    "brand_sub": "Information and Communications Technology Park",
+    "brand_en": "ICT Park",
+    "remember_me": "Remember me",
+    "forgot_password": "Forgot your password?",
+    "forgot_note": "Contact the system administrator to reset your password.",
+    "no_account_q": "Don't have an account?",
+    "signup_action": "Sign up",
+    "have_account_q": "Already have an account?",
+    "signin_action": "Sign in"
   },
   "validation": {
     "lat_invalid": "Latitude must be a valid number",
