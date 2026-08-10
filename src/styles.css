@@ -2396,12 +2396,50 @@ body[data-theme='light'] .map-label { box-shadow: var(--shadow-sm); }
   display: grid; place-items: center;
 }
 body[data-theme='dark'] .auth-scene {
-  --auth-ink: #eaf2ff;
+  --auth-ink: #f2f7ff;
   --auth-soft: #a9bedc;
   --auth-accent: #62a6ff;
-  --auth-field: rgba(10, 24, 48, 0.34);
-  --auth-field-stroke: rgba(150, 190, 255, 0.22);
-  --auth-scrim: linear-gradient(180deg, rgba(6,16,36,0.18), rgba(6,16,36,0.34));
+  --auth-field: rgba(9, 26, 56, 0.42);
+  --auth-field-stroke: rgba(126, 165, 218, 0.46);
+  /* Diagonal, not vertical: the panel in the night render is lit from the
+     top-left and grades to a deeper navy at the bottom-right (sampled
+     #01275f → #0d2140). A flat dark wash sank it into the scene instead. */
+  --auth-scrim: linear-gradient(148deg,
+    rgba(10, 52, 122, 0.40) 0%,
+    rgba(8, 30, 70, 0.34) 45%,
+    rgba(6, 17, 40, 0.40) 100%);
+}
+
+/* The card's own edge. The frosted panel in the photo has one, but a 1px line
+   in a 1536px-wide asset all but disappears once the browser scales it down,
+   and this border is what separates the card from a night scene of nearly the
+   same tone. Drawn in CSS so it stays crisp at any viewport. */
+body[data-theme='dark'] .auth-card {
+  border: 1px solid rgba(186, 214, 245, 0.45);
+  box-shadow:
+    0 calc(26 * var(--c)) calc(70 * var(--c)) calc(-28 * var(--c)) rgba(0, 6, 20, 0.66),
+    inset 0 1px 0 rgba(214, 233, 255, 0.22);
+}
+
+/* Circuit traces at the two corners the night design calls for. */
+body[data-theme='dark'] .auth-card::before,
+body[data-theme='dark'] .auth-card::after {
+  content: '';
+  position: absolute;
+  width: calc(148 * var(--c)); height: calc(114 * var(--c));
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='216' height='166' viewBox='0 0 216 166' fill='none' stroke='%237fb8ff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 42 L36 8 L146 8'/%3E%3Cpath d='M2 64 L48 18 L126 18 L146 38'/%3E%3Cpath d='M2 86 L60 28 L108 28'/%3E%3Cpath d='M18 112 L74 56 L96 56'/%3E%3Cpath d='M42 140 L88 94'/%3E%3Ccircle cx='146' cy='8' r='3.4'/%3E%3Ccircle cx='146' cy='38' r='3.4'/%3E%3Ccircle cx='108' cy='28' r='3.4'/%3E%3Ccircle cx='96' cy='56' r='3.4'/%3E%3Ccircle cx='88' cy='94' r='3.4'/%3E%3C/svg%3E") no-repeat center / contain;
+  opacity: .55;
+  pointer-events: none;
+}
+body[data-theme='dark'] .auth-card::before { top: calc(10 * var(--c)); left: calc(10 * var(--c)); }
+body[data-theme='dark'] .auth-card::after { bottom: calc(10 * var(--c)); right: calc(10 * var(--c)); rotate: 180deg; }
+
+/* Deep navy, not the daylight blue — sampled #0e42a0 → #03276d. */
+body[data-theme='dark'] .auth-submit {
+  background: linear-gradient(180deg, #14509f, #052a6d);
+  box-shadow:
+    0 calc(10 * var(--c)) calc(26 * var(--c)) calc(-10 * var(--c)) rgba(10, 60, 150, 0.75),
+    inset 0 1px 0 rgba(190, 220, 255, 0.28);
 }
 
 .auth-photo {
@@ -2558,4 +2596,8 @@ body[data-theme='dark'] .auth-error { color: #ff8a97; }
   .auth-submit { height: 50px; border-radius: 12px; }
   .auth-corner { top: 14px; inset-inline-start: 14px; }
   .auth-corner > * { height: 34px; padding-inline: 12px; border-radius: 999px; }
+  /* At full size the corner traces reach almost halfway across a phone-width
+     card and collide with the sign-up line. */
+  body[data-theme='dark'] .auth-card::before,
+  body[data-theme='dark'] .auth-card::after { width: 88px; height: 68px; opacity: .38; }
 }
