@@ -140,6 +140,7 @@ Every `test:*` above except `test:unit` needs a dev server on `:8080`; see
 | ------------------------------- | ------- | ------------------------------------------------------------------- |
 | `DATABASE_URL`                  | server  | Postgres connection string (`db/connection.ts`). Required. Append `?sslmode=require` for a managed/remote instance. |
 | `UPLOAD_DIR`                    | server  | Local disk directory for uploaded files (`src/lib/storage/local-storage.server.ts`). Defaults to `./data/uploads`. On Liara this must be a mounted persistent disk. |
+| `SEED_ASSET_DIR`                | server  | Read-only fallback for images baked into the container image (`src/lib/storage/seed-assets.ts`). Leave unset — `./seed-assets` and `./scripts/atlas-images` are probed automatically. |
 | `OPENROUTER_API_KEY`            | server  | Enables the AI assistant (`src/lib/assistant-ai.server.ts`). Unset ⇒ the assistant answers with a "not available right now" message instead of crashing. **Secret** — never prefix with `VITE_`. |
 | `OPENROUTER_MODEL`              | server  | Model slug for the assistant. Defaults to `openai/gpt-4o-mini`.     |
 | `WEB_CONCURRENCY`               | server  | Worker processes started by `server/cluster.mjs`. Defaults to the CPU count, capped at 4. Set `1` to run a single process. |
