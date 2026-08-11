@@ -50,9 +50,7 @@ export const Route = createFileRoute("/assets/$")({
           });
         }
         if (range) {
-          const body = await streamLocalFile(path, range);
-          if (!body) return new Response("Not found", { status: 404 });
-          return new Response(body, {
+          return new Response(streamLocalFile(path, range), {
             status: 206,
             headers: {
               ...baseHeaders,
@@ -62,9 +60,7 @@ export const Route = createFileRoute("/assets/$")({
           });
         }
 
-        const body = await streamLocalFile(path);
-        if (!body) return new Response("Not found", { status: 404 });
-        return new Response(body, {
+        return new Response(streamLocalFile(path), {
           headers: { ...baseHeaders, "content-length": String(info.size) },
         });
       },

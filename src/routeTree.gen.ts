@@ -30,7 +30,6 @@ import { Route as CompanyIdIndexRouteImport } from './routes/company.$id.index'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicDebugEchoRouteImport } from './routes/api/public/debug-echo'
 import { Route as ApiPublicCspReportRouteImport } from './routes/api/public/csp-report'
-import { Route as ApiPublicAssetAuditRouteImport } from './routes/api/public/asset-audit'
 import { Route as CompanyIdProductPidRouteImport } from './routes/company.$id.product.$pid'
 
 const RegisterCompanyRoute = RegisterCompanyRouteImport.update({
@@ -138,11 +137,6 @@ const ApiPublicCspReportRoute = ApiPublicCspReportRouteImport.update({
   path: '/api/public/csp-report',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicAssetAuditRoute = ApiPublicAssetAuditRouteImport.update({
-  id: '/api/public/asset-audit',
-  path: '/api/public/asset-audit',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CompanyIdProductPidRoute = CompanyIdProductPidRouteImport.update({
   id: '/company/$id/product/$pid',
   path: '/company/$id/product/$pid',
@@ -167,7 +161,6 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/assets/$': typeof AssetsSplatRoute
   '/dev/logo': typeof DevLogoRoute
-  '/api/public/asset-audit': typeof ApiPublicAssetAuditRoute
   '/api/public/csp-report': typeof ApiPublicCspReportRoute
   '/api/public/debug-echo': typeof ApiPublicDebugEchoRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -192,7 +185,6 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/assets/$': typeof AssetsSplatRoute
   '/dev/logo': typeof DevLogoRoute
-  '/api/public/asset-audit': typeof ApiPublicAssetAuditRoute
   '/api/public/csp-report': typeof ApiPublicCspReportRoute
   '/api/public/debug-echo': typeof ApiPublicDebugEchoRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -218,7 +210,6 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/assets/$': typeof AssetsSplatRoute
   '/dev/logo': typeof DevLogoRoute
-  '/api/public/asset-audit': typeof ApiPublicAssetAuditRoute
   '/api/public/csp-report': typeof ApiPublicCspReportRoute
   '/api/public/debug-echo': typeof ApiPublicDebugEchoRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -245,7 +236,6 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/assets/$'
     | '/dev/logo'
-    | '/api/public/asset-audit'
     | '/api/public/csp-report'
     | '/api/public/debug-echo'
     | '/api/public/health'
@@ -270,7 +260,6 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/assets/$'
     | '/dev/logo'
-    | '/api/public/asset-audit'
     | '/api/public/csp-report'
     | '/api/public/debug-echo'
     | '/api/public/health'
@@ -295,7 +284,6 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/assets/$'
     | '/dev/logo'
-    | '/api/public/asset-audit'
     | '/api/public/csp-report'
     | '/api/public/debug-echo'
     | '/api/public/health'
@@ -321,7 +309,6 @@ export interface RootRouteChildren {
   AdminUsersRoute: typeof AdminUsersRoute
   AssetsSplatRoute: typeof AssetsSplatRoute
   DevLogoRoute: typeof DevLogoRoute
-  ApiPublicAssetAuditRoute: typeof ApiPublicAssetAuditRoute
   ApiPublicCspReportRoute: typeof ApiPublicCspReportRoute
   ApiPublicDebugEchoRoute: typeof ApiPublicDebugEchoRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
@@ -478,13 +465,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCspReportRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/asset-audit': {
-      id: '/api/public/asset-audit'
-      path: '/api/public/asset-audit'
-      fullPath: '/api/public/asset-audit'
-      preLoaderRoute: typeof ApiPublicAssetAuditRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/company/$id/product/$pid': {
       id: '/company/$id/product/$pid'
       path: '/company/$id/product/$pid'
@@ -513,7 +493,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminUsersRoute: AdminUsersRoute,
   AssetsSplatRoute: AssetsSplatRoute,
   DevLogoRoute: DevLogoRoute,
-  ApiPublicAssetAuditRoute: ApiPublicAssetAuditRoute,
   ApiPublicCspReportRoute: ApiPublicCspReportRoute,
   ApiPublicDebugEchoRoute: ApiPublicDebugEchoRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
