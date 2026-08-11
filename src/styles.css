@@ -83,11 +83,9 @@
   --radius: 18px;
   --radius-sm: 12px;
 
-  /* PCB substrate (see body::before / body::after) */
-  --grid-dot: rgba(124, 152, 200, 0.16);
-  --grid-line-strong: rgba(124, 152, 200, 0.11);
-  --grid-via: rgba(61, 160, 255, 0.46);
-  --grid-beam: rgba(90, 160, 245, 0.06);
+  /* Ambient light (see .bg-wash) */
+  --ambient: rgba(37, 110, 205, 0.26);
+  --ambient-soft: rgba(37, 110, 205, 0.13);
 
   --maxw: 1280px;
   --font: 'Shabnam', 'Shabnam Fallback', Tahoma, 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
@@ -132,92 +130,47 @@ h1, h2, h3, h4, h5, .h1, .h2 { font-family: var(--font-display); letter-spacing:
   width: 100%; height: 100%;
   pointer-events: none;
 }
+
+/* Ambient light, and nothing else. This surface used to carry a dot matrix and
+   a hairline grid; read as "dotted and checkered" rather than as texture, so
+   the pattern is gone and what is left is one soft field of the accent hue.
+   Both stops are the same blue on purpose — a single accent over a flat ground
+   is the whole idea, and two hues start to read as decoration again.
+
+   Lives on .bg-wash rather than a pseudo-element because that element already
+   exists (rendered from src/routes/__root.tsx), is already fixed at z-index 0
+   under the page content, and was already doing this job in the dark theme. */
 .bg-wash {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background:
-    radial-gradient(70% 55% at 78% 8%, rgba(31,127,214,0.16), transparent 60%),
-    radial-gradient(60% 50% at 10% 90%, rgba(0,168,88,0.12), transparent 60%),
-    radial-gradient(45% 40% at 95% 95%, rgba(247,202,23,0.08), transparent 60%);
-}
-
-/* The page plane reads as PCB substrate rather than a flat fill — but as a lit
-   panel rather than a drafting sheet. A line grid borrows its vocabulary from
-   graph paper, which reads analog; a dot matrix reads as a screen, so the fine
-   pitch is dots and the coarse board divisions are held back to a hairline that
-   only implies board sections. Vias sit at the coarse crossings as the bright
-   nodes of the network, and a very faint grain gives the plane the density flat
-   CSS gradients lack.
-   The 22px dot pitch divides 176px exactly, so every via lands on a dot
-   position rather than beside one.
-   Deliberately its own layer rather than part of .bg-wash: that element is the
-   coloured ambient bloom and is switched off entirely in the light theme, and
-   the substrate belongs in both themes. */
-body::before {
-  content: '';
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background:
-    /* vias: the plated nodes where coarse traces cross */
-    radial-gradient(circle at 1px 1px, var(--grid-via) 1.5px, transparent 2.1px),
-    /* fine dot matrix — the layer that carries the texture */
-    radial-gradient(circle at 1px 1px, var(--grid-dot) 1px, transparent 1.5px),
-    /* coarse board divisions, hairline */
-    linear-gradient(to right, var(--grid-line-strong) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-line-strong) 1px, transparent 1px);
-  background-size: 176px 176px, 22px 22px, 176px 176px, 176px 176px;
-  /* Offset so each dot/via sits centred on its crossing, not tangent to it. */
-  background-position: -1px -1px, -1px -1px, 0 0, 0 0;
-  /* Fades out toward the lower edge so long pages don't sit on a visibly
-     repeating field all the way down. */
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 82%);
-          mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 82%);
-}
-
-/* Grain + the travelling highlight. A static plane reads as printed; one slow
-   pass of light across it reads as a live surface. Both live on this one
-   element — as two background layers, the band over the grain tile — because
-   body has no third pseudo-element to give them.
-
-   The element is twice the viewport wide and drifts horizontally only:
-   `transform` is composited, whereas animating `background-position` on a
-   fixed full-screen layer repaints it every frame. The bottom fade is a
-   vertical mask, which a horizontal translation leaves untouched.
-
-   z-index: -1 rather than 0, unlike every other backdrop layer here. The app
-   renders straight into <body> — there is no #root wrapper (the `#root` rule
-   below matches nothing), so page content is a set of unpositioned body
-   children that paint in DOM order. ::before is the first child and lands
-   under them for free; ::after is the last and would paint over the whole
-   page. Verified by forcing the beam opaque: at z-index 0 it covered the hero
-   headline. */
-body::after {
-  content: '';
-  position: fixed; z-index: -1; pointer-events: none;
-  top: 0; left: -50%; width: 200%; height: 100%;
-  background:
-    linear-gradient(103deg,
-      transparent 38%,
-      var(--grid-beam) 47%,
-      var(--grid-beam) 53%,
-      transparent 62%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.055'/%3E%3C/svg%3E");
-  background-size: 100% 100%, 140px 140px;
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 82%);
-          mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 82%);
+    radial-gradient(78% 58% at 76% -6%, var(--ambient), transparent 62%),
+    radial-gradient(62% 48% at 8% 104%, var(--ambient-soft), transparent 66%);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  body::after {
-    will-change: transform;
-    /* alternate + ease-in-out: a linear loop would need a seam to reset, and
-       the seam is the one thing that would draw the eye to a layer whose whole
-       job is to not be noticed. */
-    animation: substrateDrift 26s ease-in-out infinite alternate;
-  }
+  /* One ambient motion, not two: the travelling beam that used to sit on
+     body::after was a second moving light competing with this one for the same
+     job. A slow breath on the field itself is quieter and harder to notice,
+     which is the point. */
+  .bg-wash { animation: ambientBreath 34s ease-in-out infinite alternate; }
+}
+@keyframes ambientBreath {
+  from { opacity: 0.82; }
+  to   { opacity: 1; }
 }
 
-@keyframes substrateDrift {
-  from { transform: translate3d(-6%, 0, 0); }
-  to   { transform: translate3d(6%, 0, 0); }
+/* Grain only. Flat CSS gradients are too clean on a large surface — a
+   sub-perceptual noise tile is what keeps this from banding, and it is the one
+   piece of "texture" that survives.
+
+   z-index: -1 rather than 0, unlike .bg-wash. The app renders straight into
+   <body> — there is no #root wrapper (the `#root` rule below matches nothing),
+   so page content is a set of unpositioned body children that paint in DOM
+   order, and ::after is the last of them. At z-index 0 it covered the page. */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.055'/%3E%3C/svg%3E") 0 0 / 140px 140px;
 }
 
 #root { position: relative; z-index: 1; }
@@ -930,12 +883,9 @@ body[data-theme='light'] {
   --stroke: rgba(33, 56, 102, 0.10);
   --stroke-strong: rgba(33, 56, 102, 0.16);
 
-  /* The substrate needs more contrast on a pale ground than on a dark one to
-     read at the same strength. */
-  --grid-dot: rgba(33, 56, 102, 0.13);
-  --grid-line-strong: rgba(33, 56, 102, 0.085);
-  --grid-via: rgba(47, 127, 224, 0.36);
-  --grid-beam: rgba(47, 127, 224, 0.05);
+  /* A pale ground takes far less light before it stops reading as neutral. */
+  --ambient: rgba(47, 127, 224, 0.13);
+  --ambient-soft: rgba(47, 127, 224, 0.07);
   --ink: #0d1426;
   --ink-soft: #384a6b;
   --ink-mute: #6477a0;
@@ -951,17 +901,14 @@ body[data-theme='light'] {
   --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
-/* airy gradient-mesh backdrop (no harsh white) */
+/* Near-flat cool neutral. The blue/green/gold mesh that used to live here has
+   moved into .bg-wash as a single accent; the ground itself is now just a
+   ground, which is what makes the surface read as calm rather than busy. */
 body[data-theme='light'] {
-  background:
-    radial-gradient(60% 50% at 82% -5%, rgba(90, 160, 245, 0.18), transparent 60%),
-    radial-gradient(55% 45% at 0% 100%, rgba(52, 197, 133, 0.14), transparent 60%),
-    radial-gradient(40% 40% at 100% 100%, rgba(245, 198, 58, 0.10), transparent 60%),
-    linear-gradient(180deg, #f1f5fb, #e8eef7);
+  background: linear-gradient(180deg, #f7f9fc, #eef2f8);
   background-attachment: fixed;
 }
 body[data-theme='light'] #bg-canvas { opacity: 0.16 !important; }
-body[data-theme='light'] .bg-wash { display: none; }
 
 /* frosted glass for every surface */
 body[data-theme='light'] .panel,
