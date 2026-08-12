@@ -15,6 +15,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/.output ./.output
 COPY --from=build /app/server ./server
+# Read-only fallback for images whose only route to the uploads disk was a
+# one-off script pasted into a shell. Shipping the bytes with the code means a
+# fresh container serves them whether or not that script ever ran again.
+COPY --from=build /app/scripts/atlas-images ./seed-assets
 
 EXPOSE 3000
 

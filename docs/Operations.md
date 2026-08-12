@@ -34,6 +34,20 @@ bite:
 - `DATABASE_URL` — required; append `?sslmode=require` for managed Postgres.
 - `UPLOAD_DIR` — **must** point at a mounted persistent disk on Liara, or
   uploads vanish on every redeploy.
+
+
+### When images stop loading
+
+`/api/public/asset-audit` (admin session required) counts every image path in
+the database and reports whether the bytes are on the uploads disk, baked into
+the container image, or absent entirely. Check it before theorising: "the
+images are gone" and "the app cannot serve them" look identical in a browser
+and have completely different fixes.
+
+The 135 product images imported from the atlas are baked into the image, so a
+wiped or unmounted disk no longer takes them with it. Anything uploaded through
+the admin panel still lives only on the disk — if those come back `missing`,
+the disk is the problem.
 - `OPENROUTER_API_KEY` — secret, never `VITE_`-prefixed.
 - `LOG_SINK=memory` — dev/test only.
 
