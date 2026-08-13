@@ -162,6 +162,7 @@
     "login_failed": "Login failed",
     "email_already_registered": "This email is already registered",
     "invalid_credentials": "Invalid email or password",
+    "too_many_attempts": "Too many attempts. Please wait a few minutes and try again.",
     "password_too_short": "Password must be at least 8 characters",
     "otp_send_failed": "Failed to send code",
     "phone_title": "Register your phone number",

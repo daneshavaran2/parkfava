@@ -11,7 +11,11 @@ import { getTheme, setTheme, subscribeTheme, type Theme } from "@/lib/theme";
 import logoSpin from "@/assets/logo-spin.webp";
 
 async function resolveDestination(fallback: string): Promise<string> {
-  if (fallback && fallback !== "/") return fallback;
+  // Re-checked here rather than trusted from the route: validateSearch runs on
+  // the server too, where there is no origin to resolve against, and this is
+  // the last step before window.location.assign actually navigates.
+  const requested = safeNext(fallback);
+  if (requested && requested !== "/") return requested;
   try {
     const info = await getMyRoles();
     if (info.roles.includes("admin")) return "/admin/exhibition";
@@ -20,10 +24,33 @@ async function resolveDestination(fallback: string): Promise<string> {
   return "/";
 }
 
+/**
+ * A post-login destination, or "" if it would leave this origin.
+ *
+ * Pattern-matching the string is not enough: the URL parser treats a backslash
+ * as a slash in the authority position, so "/\evil.com" — which starts with a
+ * single slash and passes a `startsWith("//")` check — resolves to
+ * "http://evil.com/". Same for a tab or newline inside the prefix, which the
+ * parser strips before parsing. Resolving the candidate and comparing the
+ * origin it actually produces is the only check that cannot be tricked this
+ * way, since it asks the same parser that will perform the navigation.
+ */
+function safeNext(raw: unknown): string {
+  if (typeof raw !== "string" || !raw.startsWith("/")) return "";
+  // No base on the server, so fall back to the string rules there; the value
+  // is re-checked in the browser before it is ever navigated to.
+  const base = typeof window === "undefined" ? "http://localhost" : window.location.origin;
+  try {
+    const url = new URL(raw, base);
+    if (url.origin !== base) return "";
+    return url.pathname + url.search + url.hash;
+  } catch {
+    return "";
+  }
+}
+
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>) => ({
-    next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//") ? s.next : "",
-  }),
+  validateSearch: (s: Record<string, unknown>) => ({ next: safeNext(s.next) }),
   head: () => ({ meta: [{ title: "ورود — شبکه فاوا" }] }),
   component: AuthPage,
 });
@@ -32,6 +59,10 @@ function authErrorMessage(e: any, t: (key: string) => string): string {
   const code = e?.message;
   if (code === "EMAIL_ALREADY_REGISTERED") return t("auth.email_already_registered");
   if (code === "INVALID_CREDENTIALS") return t("auth.invalid_credentials");
+  // Throttled. Worth its own message: "login failed" would read as a wrong
+  // password and invite the user to keep trying, which is the one thing that
+  // cannot work here.
+  if (code === "RATE_LIMITED") return t("auth.too_many_attempts");
   return t("auth.login_failed");
 }
 

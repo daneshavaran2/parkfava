@@ -55,6 +55,10 @@ export const deleteParkAdmin = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
+    // Same polymorphic-attachment problem as a company delete: nothing
+    // cascades to company_attachments, and park_images leaves its files.
+    const { purgeParkAssets } = await import("./storage/owner-assets.server");
+    await purgeParkAssets(sql, data.park_id);
     await sql`DELETE FROM parks WHERE park_id = ${data.park_id}`;
     return { ok: true };
   });

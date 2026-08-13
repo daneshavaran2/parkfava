@@ -111,7 +111,12 @@ body {
   font-family: var(--font);
   background: var(--bg);
   color: var(--ink);
-  direction: rtl;
+  /* Persian is the primary language, so RTL is the default — but inherit from
+     <html> when it says otherwise. LangDomSync (src/i18n/LanguageProvider.tsx)
+     switches that attribute per language; hardcoding `direction: rtl` here
+     silently overrode it, leaving the English UI mirrored: form fields
+     right-aligned and sentence-final punctuation rendered on the wrong side. */
+  direction: inherit;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;

@@ -30,3 +30,32 @@ export function assertSafeUploadExtension(filename: string): string {
   }
   return ext;
 }
+
+// Video is the only thing here that legitimately runs large; everything else
+// is a logo, a photo, or a form. Generous enough not to reject a real catalog
+// or a phone-shot clip, small enough that it is not a way to fill the uploads
+// disk or the process's memory.
+const MAX_UPLOAD_BYTES: Record<string, number> = {
+  mp4: 100 * 1024 * 1024,
+  webm: 100 * 1024 * 1024,
+  mov: 100 * 1024 * 1024,
+};
+const DEFAULT_MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+
+export function maxUploadBytes(ext: string): number {
+  return MAX_UPLOAD_BYTES[ext] ?? DEFAULT_MAX_UPLOAD_BYTES;
+}
+
+/**
+ * Extension and size in one call, so a handler cannot check one and forget the
+ * other.
+ *
+ * Size has to be rejected from `file.size` *before* `arrayBuffer()`, because
+ * that call is what pulls the whole upload into the process's memory — reading
+ * it first and measuring afterwards would already have done the damage.
+ */
+export function assertUploadAllowed(file: { name: string; size: number }): string {
+  const ext = assertSafeUploadExtension(file.name);
+  if (file.size > maxUploadBytes(ext)) throw new Error("FILE_TOO_LARGE");
+  return ext;
+}

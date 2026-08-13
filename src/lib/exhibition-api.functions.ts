@@ -240,6 +240,11 @@ export const deleteExhibitionCompanyAdmin = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
+    // Attachments have no foreign key to cascade through, and cascaded rows
+    // leave their files behind either way, so both are cleared first — while
+    // the rows naming them still exist.
+    const { purgeCompanyAssets } = await import("./storage/owner-assets.server");
+    await purgeCompanyAssets(sql, data.company_id);
     await sql`DELETE FROM exhibition_companies WHERE company_id = ${data.company_id}`;
     return { ok: true };
   });
@@ -439,8 +444,8 @@ export const uploadExhibitionAssetFn = createServerFn({ method: "POST" })
     const sql = getDb();
     await assertCanEditCompany(sql, context, data.company_id);
 
-    const { assertSafeUploadExtension } = await import("./storage/mime");
-    const ext = assertSafeUploadExtension(data.file.name);
+    const { assertUploadAllowed } = await import("./storage/mime");
+    const ext = assertUploadAllowed(data.file);
     const path = `exhibition/${data.company_id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const { saveLocalFile } = await import("./storage/local-storage.server");
     await saveLocalFile(path, Buffer.from(await data.file.arrayBuffer()));
