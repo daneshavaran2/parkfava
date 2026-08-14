@@ -10,7 +10,8 @@ import { getDb } from "../../db/connection";
 import { hashPassword, verifyPassword } from "./auth/password.server";
 import { createSession, destroySession, getSessionUser } from "./auth/session.server";
 import { requireAuth } from "./auth/middleware";
-import { clientKey, enforceRateLimit } from "./rate-limit.server";
+import { clientKey, enforceRateLimit, RateLimitError } from "./rate-limit.server";
+import { logWarn } from "./log-envelope";
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -44,6 +45,36 @@ const LOGIN_LIMITS = {
   signupPerClient: { limit: 5, windowSeconds: 3600 },
 } as const;
 
+/**
+ * Applies a limit, but never lets the limiter's own failure block a login.
+ *
+ * A caller who is genuinely over the limit must still be refused — that is the
+ * whole point. What must not happen is that `rate_limit_hits` being absent
+ * (migration 0004 not yet applied to this database) or momentarily unreachable
+ * turns every sign-in into a 500. The same reasoning already governs the
+ * session prune in session.server.ts, which is wrapped so "housekeeping must
+ * never turn a successful login into a failure", and the MFA check in auth.tsx,
+ * which fails open rather than risk locking everyone out.
+ *
+ * The degraded state is logged rather than silent, so a throttle that has
+ * quietly stopped throttling is visible instead of being assumed to work.
+ */
+async function applyLimit(
+  bucket: string,
+  limits: { limit: number; windowSeconds: number },
+): Promise<void> {
+  try {
+    await enforceRateLimit(bucket, limits);
+  } catch (e) {
+    if (e instanceof RateLimitError) throw e;
+    logWarn({
+      event: "rate_limit_unavailable",
+      message: "Credential throttle skipped — the rate limiter failed",
+      meta: { bucket, error: e instanceof Error ? e.message : String(e) },
+    });
+  }
+}
+
 export const signUp = createServerFn({ method: "POST" })
   .inputValidator((i) => credentialsSchema.parse(i))
   .handler(async ({ data }) => {
@@ -51,7 +82,7 @@ export const signUp = createServerFn({ method: "POST" })
     const email = data.email.trim().toLowerCase();
     // Before the password hash: scrypt is deliberately expensive, so letting
     // an unthrottled caller reach it is itself the denial-of-service.
-    await enforceRateLimit(`signup:${clientKey()}`, LOGIN_LIMITS.signupPerClient);
+    await applyLimit(`signup:${clientKey()}`, LOGIN_LIMITS.signupPerClient);
 
     const existing = await sql`SELECT id FROM users WHERE email = ${email}`;
     if (existing.length) throw new Error("EMAIL_ALREADY_REGISTERED");
@@ -74,8 +105,8 @@ export const signIn = createServerFn({ method: "POST" })
     // Counted before the lookup, so an attempt against an address that has no
     // account still consumes allowance. Checking only real accounts would let
     // the throttle itself confirm which addresses are registered.
-    await enforceRateLimit(`signin:${email}`, LOGIN_LIMITS.perAccount);
-    await enforceRateLimit(`signin-ip:${clientKey()}`, LOGIN_LIMITS.perClient);
+    await applyLimit(`signin:${email}`, LOGIN_LIMITS.perAccount);
+    await applyLimit(`signin-ip:${clientKey()}`, LOGIN_LIMITS.perClient);
 
     const rows = await sql<{ id: string; password_hash: string }[]>`
       SELECT id, password_hash FROM users WHERE email = ${email}
@@ -89,8 +120,13 @@ export const signIn = createServerFn({ method: "POST" })
 
     // A correct password clears the account's counter, so a user who fumbles
     // a few times and then succeeds is not left throttled — only a run of
-    // failures keeps the limit in force.
-    await sql`DELETE FROM rate_limit_hits WHERE bucket = ${`signin:${email}`}`;
+    // failures keeps the limit in force. Housekeeping, so it cannot be the
+    // thing that fails an otherwise successful login.
+    try {
+      await sql`DELETE FROM rate_limit_hits WHERE bucket = ${`signin:${email}`}`;
+    } catch {
+      /* the counter simply expires on its own instead */
+    }
 
     await createSession(rows[0].id, data.remember ?? true);
     return { ok: true };
