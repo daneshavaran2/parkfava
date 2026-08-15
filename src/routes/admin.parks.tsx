@@ -240,10 +240,34 @@ function NewsEditor({ parkId, news }: { parkId: string; news: ParkNews[] }) {
   const qc = useQueryClient();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  // Held until the item is added, so an upload that is never submitted leaves
+  // no news row behind — only an unreferenced file.
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoName, setVideoName] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function handleVideoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setErr(null);
+    setUploading(true);
+    try {
+      const path = await uploadParkAsset(parkId, file);
+      setVideoUrl(path);
+      setVideoName(file.name);
+    } catch (e: any) {
+      setErr(`${t("adminParks.upload_error")}: ${e.message ?? e}`);
+    }
+    setUploading(false);
+    e.target.value = "";
+  }
+
   async function add() {
     if (!title.trim()) return;
-    await upsertParkNews({ park_id: parkId, title, body });
+    await upsertParkNews({ park_id: parkId, title, body, video_url: videoUrl });
     setTitle(""); setBody("");
+    setVideoUrl(null); setVideoName("");
     qc.invalidateQueries({ queryKey: ["park-admin", parkId] });
     qc.invalidateQueries({ queryKey: ["park-public", parkId] });
   }
@@ -258,7 +282,28 @@ function NewsEditor({ parkId, news }: { parkId: string; news: ParkNews[] }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("adminParks.news_title_placeholder")} style={field} />
         <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder={t("adminParks.news_body_placeholder")} rows={3} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
-        <button className="btn btn-primary" onClick={add} style={{ alignSelf: "flex-start" }}>{t("adminParks.add")}</button>
+
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <label className="btn btn-ghost" style={{ fontSize: 12, cursor: uploading ? "wait" : "pointer" }}>
+            {uploading ? t("adminParks.uploading") : t("adminParks.add_video")}
+            <input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={handleVideoUpload}
+              disabled={uploading} style={{ display: "none" }} />
+          </label>
+          {videoUrl && (
+            <>
+              <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{videoName}</span>
+              <button type="button" onClick={() => { setVideoUrl(null); setVideoName(""); }}
+                className="btn btn-ghost" style={{ fontSize: 11, padding: "4px 10px" }}>
+                {t("adminParks.remove_video")}
+              </button>
+            </>
+          )}
+          {err && <span style={{ fontSize: 12, color: "var(--danger, #e5484d)" }}>{err}</span>}
+        </div>
+        {videoUrl && <NewsVideo path={videoUrl} />}
+        <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("adminParks.video_autoplay_hint")}</div>
+
+        <button className="btn btn-primary" onClick={add} disabled={uploading} style={{ alignSelf: "flex-start" }}>{t("adminParks.add")}</button>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {news.map((n) => (
@@ -266,6 +311,7 @@ function NewsEditor({ parkId, news }: { parkId: string; news: ParkNews[] }) {
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700 }}>{n.title}</div>
               {n.body && <div style={{ fontSize: 13, color: "var(--ink-soft)", marginTop: 4 }}>{n.body}</div>}
+              {n.video_url && <NewsVideo path={n.video_url} />}
             </div>
             <button onClick={() => del(n.id)} className="btn btn-ghost" style={{ fontSize: 11, padding: "4px 10px" }}>{t("adminParks.delete")}</button>
           </div>
@@ -273,6 +319,39 @@ function NewsEditor({ parkId, news }: { parkId: string; news: ParkNews[] }) {
         {!news.length && <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("adminParks.no_news_yet")}</div>}
       </div>
     </div>
+  );
+}
+
+/**
+ * Preview of a news video, matching how the public park page plays it.
+ *
+ * `muted` is not a style choice: every browser blocks autoplay of a video with
+ * sound, so without it `autoPlay` is silently ignored and the video just sits
+ * there. `playsInline` stops iOS Safari taking it fullscreen on play. Controls
+ * stay on so a visitor can unmute or pause.
+ */
+function NewsVideo({ path }: { path: string }) {
+  const src = useAssetUrl(path);
+  if (!src) return null;
+  return (
+    <video
+      src={src}
+      autoPlay
+      loop
+      muted
+      playsInline
+      controls
+      preload="metadata"
+      style={{
+        marginTop: 8,
+        width: "100%",
+        maxWidth: 420,
+        aspectRatio: "16/9",
+        borderRadius: 10,
+        background: "#000",
+        objectFit: "cover",
+      }}
+    />
   );
 }
 

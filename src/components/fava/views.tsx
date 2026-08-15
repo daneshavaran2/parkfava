@@ -689,6 +689,31 @@ function AssetVideo({ path, style }) {
   if (!src) return null;
   return <video src={src} controls style={style} />;
 }
+
+/**
+ * A news video: starts on its own and loops.
+ *
+ * `muted` is required, not cosmetic — browsers refuse to autoplay a video with
+ * sound, and an unmuted autoPlay is simply ignored, leaving a still frame.
+ * Controls stay available so a visitor can unmute or stop it, and
+ * `playsInline` keeps iOS Safari from hijacking the page into fullscreen.
+ */
+function NewsVideo({ path }) {
+  const src = useAssetUrl(path);
+  if (!src) return null;
+  return (
+    <video
+      className="pd-news-video"
+      src={src}
+      autoPlay
+      loop
+      muted
+      playsInline
+      controls
+      preload="metadata"
+    />
+  );
+}
 function AssetLink({ path, label }) {
   const src = useAssetUrl(path);
   if (!src) return null;
@@ -2391,6 +2416,7 @@ function ParkDashboard({ park, PARKS, parkCompanies, onSelect, sel, navigate }) 
               <div key={n.id} className="pd-news-item">
                 <div className="pd-news-title">{n.title}</div>
                 {n.body && <div className="pd-news-body">{n.body}</div>}
+                {n.video_url && <NewsVideo path={n.video_url} />}
               </div>
             ))}
           </div>

@@ -26,6 +26,8 @@ export type ParkNews = {
   park_id: string;
   title: string;
   body: string | null;
+  /** Stored upload path, served through /assets/$ — not an embed URL. */
+  video_url: string | null;
   published_at: string;
 };
 
@@ -62,7 +64,15 @@ export async function deleteParkImage(id: string) {
   return deleteParkImageAdmin({ data: { id } });
 }
 export async function upsertParkNews(n: Partial<ParkNews> & { park_id: string; title: string }) {
-  return upsertParkNewsAdmin({ data: { id: n.id, park_id: n.park_id, title: n.title, body: n.body ?? null } });
+  return upsertParkNewsAdmin({
+    data: {
+      id: n.id,
+      park_id: n.park_id,
+      title: n.title,
+      body: n.body ?? null,
+      video_url: n.video_url ?? null,
+    },
+  });
 }
 export async function deleteParkNews(id: string) {
   return deleteParkNewsAdmin({ data: { id } });

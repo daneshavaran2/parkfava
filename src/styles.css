@@ -2134,6 +2134,10 @@ body[data-theme='dark'] .news-card::after {
 }
 .pd-news-title { font-size: 13px; font-weight: 700; }
 .pd-news-body { font-size: 12px; color: var(--ink-soft); margin-top: 4px; line-height: 1.6; }
+.pd-news-video {
+  margin-top: 8px; width: 100%; max-width: 460px; aspect-ratio: 16 / 9;
+  border-radius: 8px; background: #000; object-fit: cover; display: block;
+}
 
 .pd-companies { display: flex; flex-direction: column; gap: 6px; }
 .pd-company {

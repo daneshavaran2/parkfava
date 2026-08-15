@@ -88,6 +88,7 @@ export const upsertParkNewsAdmin = createServerFn({ method: "POST" })
         park_id: z.string().trim().min(1).max(120),
         title: z.string().trim().min(1).max(255),
         body: z.string().trim().max(20000).nullable().optional(),
+        video_url: z.string().trim().max(1000).nullable().optional(),
       })
       .parse(i),
   )
@@ -95,9 +96,17 @@ export const upsertParkNewsAdmin = createServerFn({ method: "POST" })
     assertIsAdmin(context);
     const sql = getDb();
     if (data.id) {
-      await sql`UPDATE park_news SET title = ${data.title}, body = ${data.body ?? null} WHERE id = ${data.id}`;
+      await sql`
+        UPDATE park_news
+        SET title = ${data.title}, body = ${data.body ?? null},
+            video_url = ${data.video_url ?? null}
+        WHERE id = ${data.id}
+      `;
     } else {
-      await sql`INSERT INTO park_news (park_id, title, body) VALUES (${data.park_id}, ${data.title}, ${data.body ?? null})`;
+      await sql`
+        INSERT INTO park_news (park_id, title, body, video_url)
+        VALUES (${data.park_id}, ${data.title}, ${data.body ?? null}, ${data.video_url ?? null})
+      `;
     }
     return { ok: true };
   });

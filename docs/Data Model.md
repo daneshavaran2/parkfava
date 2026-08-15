@@ -36,6 +36,11 @@ behaviour is pinned by a contract test; see [[Testing]].
 - `owner_user_id` — the company representative; `saveOwnedCompany` scopes
   updates through it and strips `status`/`is_active` so an owner cannot
   self-publish.
+- `park_news.video_url` — one optional video per news item (migration `0005`),
+  stored as an upload path served through `/assets/$` like every other file, not
+  an embed URL. It plays muted, on its own, and loops; muted is a requirement
+  rather than a preference, because browsers ignore `autoplay` on a video that
+  has sound.
 
 ## Foreign keys added late
 

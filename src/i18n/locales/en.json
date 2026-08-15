@@ -349,6 +349,10 @@
     "news_events": "News and events",
     "news_title_placeholder": "News title",
     "news_body_placeholder": "Short text (optional)",
+    "add_video": "+ Add video",
+    "remove_video": "Remove video",
+    "uploading": "Uploading…",
+    "video_autoplay_hint": "The video plays automatically, muted, and loops on the park page. MP4, WebM and MOV are supported.",
     "add": "Add",
     "no_news_yet": "No news added yet."
   },

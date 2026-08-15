@@ -349,6 +349,10 @@
     "news_events": "اخبار و رویدادها",
     "news_title_placeholder": "عنوان خبر",
     "news_body_placeholder": "متن کوتاه (اختیاری)",
+    "add_video": "+ افزودن ویدیو",
+    "remove_video": "حذف ویدیو",
+    "uploading": "در حال آپلود…",
+    "video_autoplay_hint": "ویدیو در صفحهٔ پارک خودکار و بی‌صدا پخش و تکرار می‌شود. فرمت‌های MP4، WebM و MOV پشتیبانی می‌شوند.",
     "add": "افزودن",
     "no_news_yet": "هنوز خبری ثبت نشده."
   },
