@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getDb } from "../../db/connection";
+import { getDb, hasDb } from "../../db/connection";
 import { requireMfaVerified } from "./auth/middleware";
 import type { ParkContent, ParkImage, ParkNews } from "@/lib/park-content-api";
 
@@ -11,6 +11,9 @@ function assertIsAdmin(context: { user: { roles: string[] } }) {
 export const getParkContent = createServerFn({ method: "GET" })
   .inputValidator((i) => z.object({ parkId: z.string().trim().min(1).max(120) }).parse(i))
   .handler(async ({ data }) => {
+    // Preview/local runs without DATABASE_URL fall back to bundled park data
+    // instead of crashing the route with a database error.
+    if (!hasDb()) return { content: null, images: [] as ParkImage[], news: [] as ParkNews[] };
     const sql = getDb();
     const [[content], images, news] = await Promise.all([
       sql<ParkContent[]>`SELECT * FROM park_content WHERE park_id = ${data.parkId}`,
@@ -33,6 +36,7 @@ export const upsertParkContentAdmin = createServerFn({ method: "POST" })
         display_name: z.string().trim().max(255).nullable().optional(),
         description: z.string().trim().max(20000).nullable().optional(),
         logo_url: z.string().trim().max(1000).nullable().optional(),
+        video_url: z.string().trim().max(1000).nullable().optional(),
       })
       .parse(i),
   )

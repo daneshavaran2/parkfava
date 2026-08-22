@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getDb } from "../../db/connection";
+import { getDb, hasDb } from "../../db/connection";
 import { requireMfaVerified } from "./auth/middleware";
 import type { AboutSection } from "@/lib/exhibition-api";
 
@@ -24,6 +24,7 @@ const aboutSectionSchema = z.object({
 });
 
 export const getAboutSections = createServerFn({ method: "GET" }).handler(async () => {
+  if (!hasDb()) return [] as AboutSection[];
   const sql = getDb();
   return await sql<AboutSection[]>`SELECT * FROM about_sections ORDER BY sort_order ASC`;
 });

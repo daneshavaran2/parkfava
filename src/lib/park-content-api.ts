@@ -13,6 +13,8 @@ export type ParkContent = {
   display_name: string | null;
   description: string | null;
   logo_url: string | null;
+  /** The park's own showcase film — an upload path served through /assets/$. */
+  video_url?: string | null;
 };
 export type ParkImage = {
   id: string;

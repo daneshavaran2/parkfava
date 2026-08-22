@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getDb } from "../../db/connection";
+import { getDb, hasDb } from "../../db/connection";
 import { requireMfaVerified } from "./auth/middleware";
 import type { Park } from "@/lib/parks-api";
 
@@ -13,7 +13,9 @@ const parkSchema = z.object({
   name: z.string().trim().min(1).max(255),
   name_en: z.string().trim().max(255).nullable().optional(),
   province: z.string().trim().max(120).nullable().optional(),
+  province_en: z.string().trim().max(120).nullable().optional(),
   city: z.string().trim().max(120).nullable().optional(),
+  city_en: z.string().trim().max(120).nullable().optional(),
   mx: z.number(),
   my: z.number(),
   color: z.string().trim().max(40),
@@ -25,11 +27,13 @@ const parkSchema = z.object({
 });
 
 export const getParks = createServerFn({ method: "GET" }).handler(async () => {
+  if (!hasDb()) return [] as Park[];
   const sql = getDb();
   return await sql<Park[]>`SELECT * FROM parks ORDER BY sort_order ASC`;
 });
 
 export const getActiveParks = createServerFn({ method: "GET" }).handler(async () => {
+  if (!hasDb()) return [] as Park[];
   const sql = getDb();
   return await sql<Park[]>`SELECT * FROM parks WHERE is_active = true ORDER BY sort_order ASC`;
 });

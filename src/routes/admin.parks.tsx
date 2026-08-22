@@ -15,6 +15,7 @@ import {
   type ParkNews,
 } from "@/lib/park-content-api";
 import { signOutFn } from "@/lib/auth.functions";
+import { fetchParks, upsertPark, type Park } from "@/lib/parks-api";
 import { AttachmentsManager } from "@/components/admin/AttachmentsManager";
 import { ZipImporter } from "@/components/admin/ZipImporter";
 
@@ -74,6 +75,7 @@ function AdminParksPage() {
             <Link to="/admin/kahkeshan" className="btn btn-ghost">{t("adminParks.kahkeshan_link")}</Link>
             <Link to="/admin/attachments" className="btn btn-ghost">{t("adminParks.attachments_dashboard")}</Link>
             <Link to="/admin/exhibition" className="btn btn-ghost">{t("adminParks.exhibition_link")}</Link>
+            <Link to="/admin/ai" className="btn btn-ghost">{t("adminParks.assistant_link")}</Link>
             <button className="btn btn-ghost" onClick={async () => { await signOutFn(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
           </div>
         </div>
@@ -148,6 +150,33 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
     setBusy(false);
   }
 
+  async function handleVideoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    try {
+      const path = await uploadParkAsset(parkId, file);
+      setForm((f) => ({ ...f, video_url: path }));
+      await upsertParkContent({ ...form, video_url: path });
+      qc.invalidateQueries({ queryKey: ["park-admin", parkId] });
+      qc.invalidateQueries({ queryKey: ["park-public", parkId] });
+      setMsg(t("adminParks.video_uploaded"));
+    } catch (e: any) {
+      setMsg(`${t("adminParks.upload_error")}: ${e.message ?? e}`);
+    }
+    setBusy(false);
+    e.target.value = "";
+  }
+
+  async function removeParkVideo() {
+    setBusy(true);
+    setForm((f) => ({ ...f, video_url: null }));
+    await upsertParkContent({ ...form, video_url: null });
+    qc.invalidateQueries({ queryKey: ["park-admin", parkId] });
+    qc.invalidateQueries({ queryKey: ["park-public", parkId] });
+    setBusy(false);
+  }
+
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -194,6 +223,27 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
       </div>
 
       <div className="panel" style={{ padding: 20 }}>
+        <h3 style={{ marginBottom: 6 }}>{t("adminParks.park_video")}</h3>
+        <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 10 }}>{t("adminParks.park_video_hint")}</div>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <label className="btn btn-ghost" style={{ fontSize: 12, cursor: busy ? "wait" : "pointer" }}>
+            {form.video_url ? t("adminParks.replace_video") : t("adminParks.add_video")}
+            <input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={handleVideoUpload}
+              disabled={busy} style={{ display: "none" }} />
+          </label>
+          {form.video_url && (
+            <button type="button" className="btn btn-ghost" disabled={busy} onClick={removeParkVideo}
+              style={{ fontSize: 11, padding: "4px 10px" }}>
+              {t("adminParks.remove_video")}
+            </button>
+          )}
+        </div>
+        {form.video_url && <NewsVideo path={form.video_url} />}
+      </div>
+
+      <ParkStatsEditor parkId={parkId} />
+
+      <div className="panel" style={{ padding: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <h3>{t("adminParks.gallery_images")}</h3>
           <label className="btn btn-ghost" style={{ fontSize: 12, cursor: "pointer" }}>
@@ -217,6 +267,88 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
 
       <ZipImporter ownerType="park" ownerId={parkId} />
       <AttachmentsManager ownerType="park" ownerId={parkId} />
+    </div>
+  );
+}
+
+function ParkStatsEditor({ parkId }: { parkId: string }) {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const { data, isLoading } = useQuery({ queryKey: ["parks-admin-rows"], queryFn: fetchParks });
+  const row = useMemo(() => data?.find((p) => p.park_id === parkId), [data, parkId]);
+  const [stats, setStats] = useState({ companies_hint: 0, jobs: 0, area: 0, province: "", province_en: "", city: "", city_en: "" });
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!row) return;
+    setStats({
+      companies_hint: Number(row.companies_hint ?? 0),
+      jobs: Number(row.jobs ?? 0),
+      area: Number(row.area ?? 0),
+      province: row.province ?? "",
+      province_en: row.province_en ?? "",
+      city: row.city ?? "",
+      city_en: row.city_en ?? "",
+    });
+  }, [row]);
+
+  async function save() {
+    if (!row) return;
+    setBusy(true);
+    setMsg(null);
+    const { error } = await upsertPark({ ...(row as Park), ...stats });
+    if (error) setMsg(`${t("common.error")}: ${error.message ?? error}`);
+    else {
+      setMsg(t("common.saved"));
+      qc.invalidateQueries({ queryKey: ["parks-admin-rows"] });
+    }
+    setBusy(false);
+  }
+
+  if (isLoading) return <div className="panel" style={{ padding: 20 }}>{t("common.loading")}</div>;
+  if (!row) {
+    return (
+      <div className="panel" style={{ padding: 20 }}>
+        <h3 style={{ marginBottom: 8 }}>{t("adminParks.stats_title")}</h3>
+        <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("adminParks.stats_missing_row")}</div>
+      </div>
+    );
+  }
+
+  const numField = (key: "companies_hint" | "jobs" | "area", label: string) => (
+    <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <span style={{ fontSize: 12, fontWeight: 700 }}>{label}</span>
+      <input type="number" min={0} value={stats[key]} style={field}
+        onChange={(e) => setStats((s) => ({ ...s, [key]: Math.max(0, Number(e.target.value) || 0) }))} />
+    </label>
+  );
+
+  const textField = (key: "province" | "province_en" | "city" | "city_en", label: string, ltr = false) => (
+    <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <span style={{ fontSize: 12, fontWeight: 700 }}>{label}</span>
+      <input value={stats[key]} style={ltr ? { ...field, direction: "ltr", textAlign: "left" } : field}
+        onChange={(e) => setStats((s) => ({ ...s, [key]: e.target.value }))} />
+    </label>
+  );
+
+  return (
+    <div className="panel" style={{ padding: 20 }}>
+      <h3 style={{ marginBottom: 6 }}>{t("adminParks.stats_title")}</h3>
+      <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 12 }}>{t("adminParks.stats_hint")}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 12 }}>
+        {numField("companies_hint", t("adminParks.stats_companies"))}
+        {numField("jobs", t("adminParks.stats_jobs"))}
+        {numField("area", t("adminParks.stats_area"))}
+        {textField("province", t("adminParks.stats_province"))}
+        {textField("province_en", t("adminParks.stats_province_en"), true)}
+        {textField("city", t("adminParks.stats_city"))}
+        {textField("city_en", t("adminParks.stats_city_en"), true)}
+      </div>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 14 }}>
+        <button className="btn btn-primary" onClick={save} disabled={busy}>{t("adminParks.save")}</button>
+        {msg && <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>{msg}</span>}
+      </div>
     </div>
   );
 }

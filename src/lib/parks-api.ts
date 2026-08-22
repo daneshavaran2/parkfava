@@ -5,7 +5,9 @@ export type Park = {
   name: string;
   name_en?: string | null;
   province: string | null;
+  province_en?: string | null;
   city: string | null;
+  city_en?: string | null;
   mx: number;
   my: number;
   color: string;

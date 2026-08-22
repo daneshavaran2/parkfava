@@ -4,6 +4,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Logo3D } from "@/components/hero/Logo3D";
 import { AnimatedChipRow } from "@/components/fava/AnimatedChip";
+import { getClientI18n } from "@/i18n";
 
 const LazyRobotFabLottie = lazy(() =>
   import("./RobotFabLottie").then((m) => ({ default: m.RobotFabLottie })),
@@ -11,7 +12,15 @@ const LazyRobotFabLottie = lazy(() =>
 
 /* ---------- utilities ---------- */
 const FA_DIGITS = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
-export function toFa(n) { return String(n).replace(/[0-9]/g, (d) => FA_DIGITS[+d]); }
+// Digits stay latin when the UI is in English so exhibition numbers read
+// naturally there; Persian keeps its native digits.
+function isEnglishUi() {
+  try { return getClientI18n()?.language?.startsWith("en") ?? false; } catch { return false; }
+}
+export function toFa(n) {
+  if (isEnglishUi()) return String(n);
+  return String(n).replace(/[0-9]/g, (d) => FA_DIGITS[+d]);
+}
 export function faNum(n) { return toFa(Number(n).toLocaleString("en-US")); }
 // CATEGORIES entries (src/lib/fava/data.js) carry an optional *_en variant
 // for their Persian title/desc — falls back to the Persian value if a
@@ -27,10 +36,31 @@ export function pickName(o, lang) { return (lang === "en" && o?.name_en) ? o.nam
 export function pickLocalized(o, field, lang) {
   return (lang === "en" && o?.[`${field}_en`]) ? o[`${field}_en`] : o?.[field];
 }
+// Localized string arrays (tags, products): use the *_en list only when it
+// lines up with the Persian one, otherwise fall back to the Persian list.
+export function pickList(o, field, lang) {
+  const fa = o?.[field] || [];
+  const en = o?.[`${field}_en`] || [];
+  return (lang === "en" && en.length === fa.length && en.length > 0) ? en : fa;
+}
+// Avatar initials: Persian entries store their own two-letter initials, the
+// English UI derives latin initials from the English name.
+export function pickInitials(o, lang) {
+  if (lang === "en") {
+    const n = (o?.name_en || "").trim();
+    if (n) {
+      const parts = n.split(/\s+/).filter((w) => /[A-Za-z]/.test(w));
+      const letters = parts.slice(0, 2).map((w) => w[0].toUpperCase()).join("");
+      if (letters) return letters;
+    }
+  }
+  return o?.initials;
+}
 export function faMoney(toman) {
-  if (toman >= 1e12) return toFa((toman / 1e12).toFixed(1).replace(/\.0$/, "")) + " هزار میلیارد";
-  if (toman >= 1e9) return toFa(Math.round(toman / 1e9)) + " میلیارد";
-  if (toman >= 1e6) return toFa(Math.round(toman / 1e6)) + " میلیون";
+  const en = isEnglishUi();
+  if (toman >= 1e12) return toFa((toman / 1e12).toFixed(1).replace(/\.0$/, "")) + (en ? " trillion" : " هزار میلیارد");
+  if (toman >= 1e9) return toFa(Math.round(toman / 1e9)) + (en ? " billion" : " میلیارد");
+  if (toman >= 1e6) return toFa(Math.round(toman / 1e6)) + (en ? " million" : " میلیون");
   return faNum(toman);
 }
 const FALLBACK_COLORS = {

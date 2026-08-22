@@ -24,6 +24,8 @@ import {
   catDesc,
   pickName,
   pickLocalized,
+  pickList,
+  pickInitials,
 } from "./primitives";
 import { ClientOnly, useFavaReady } from "./ClientOnly";
 import { fetchParkContent } from "@/lib/park-content-api";
@@ -396,8 +398,9 @@ function HomeFallback() {
 }
 
 function StatNum({ s }) {
+  const { i18n } = useTranslation();
   const [val, ref] = useCountUp(s.n);
-  const display = s.fmt === "money" ? faMoney(val) + " ت" : faNum(Math.round(val));
+  const display = s.fmt === "money" ? faMoney(val) + (i18n.language === "en" ? " T" : " ت") : faNum(Math.round(val));
   return (
     <div
       ref={ref}
@@ -565,7 +568,7 @@ export function Exhibition({ query, setQuery, sort, initialCat, park }) {
             <span className="fb-dot" />
             <span>
               {t("exhibition.park_filter_prefix")} <b>{pickName(parkObj, i18n.language)}</b> (
-              {parkObj.city})
+              {pickLocalized(parkObj, "city", i18n.language)})
             </span>
             <button className="fb-clear" onClick={() => navigate({ to: "/exhibition" })}>
               <Icon name="close" size={14} /> {t("common.clear_filter")}
@@ -623,7 +626,7 @@ export function CompanyCard({ c }) {
             />
           ) : (
             <>
-              <span className="co-logo-initials">{c.initials}</span>
+              <span className="co-logo-initials">{pickInitials(c, i18n.language)}</span>
               <image-slot id={"logo-" + c.id} shape="rounded" radius="13" placeholder="" />
             </>
           )}
@@ -886,7 +889,9 @@ export function CompanyProfile({ id }) {
     color: staticC?.color || "blue",
     initials: staticC?.initials || (cc_data?.name || id).slice(0, 2),
     tags: staticC?.tags || [],
+    tags_en: staticC?.tags_en || null,
     products: staticC?.products || [],
+    products_en: staticC?.products_en || null,
     workers: staticC?.workers,
     founded: staticC?.founded,
     description: cc_data?.description ?? staticC?.description ?? "",
@@ -971,7 +976,7 @@ export function CompanyProfile({ id }) {
               </p>
             )}
             <div className="co-badges" style={{ marginTop: 12 }}>
-              {c.tags.map((t, i) => (
+              {pickList(c, "tags", i18n.language).map((t, i) => (
                 <span key={i} className="badge">
                   {t}
                 </span>
@@ -1173,7 +1178,7 @@ export function CompanyProfile({ id }) {
                     <Icon name="box" size={18} className="pi" /> {t("company.products_services")}
                   </h3>
                   <div className="prod-list">
-                    {c.products.map((p, i) => (
+                    {pickList(c, "products", i18n.language).map((p, i) => (
                       <div key={i} className="prod">
                         <span className="pn">{toFa(i + 1)}</span>
                         <span className="pt">{p}</span>
@@ -1301,7 +1306,7 @@ export function CompanyProfile({ id }) {
                     (c.contact.email ? "\nEMAIL:" + c.contact.email : "") +
                     (websiteHref ? "\nURL:" + websiteHref : "") +
                     "\nADR:;;;" +
-                    (c.city || "") +
+                    (pickLocalized(c, "city", i18n.language) || "") +
                     "\nEND:VCARD"
                   }
                 />
@@ -1341,7 +1346,7 @@ export function CompanyProfile({ id }) {
                 </h3>
                 <div style={{ fontWeight: 800, fontSize: 16 }}>{pickName(park, i18n.language)}</div>
                 <div className="co-cat" style={{ marginTop: 4 }}>
-                  {park.province} · {park.city}
+                  {pickLocalized(park, "province", i18n.language)} · {pickLocalized(park, "city", i18n.language)}
                 </div>
                 <div
                   className="go"
@@ -1718,7 +1723,9 @@ export function ProductPage({ id, pid }) {
               </div>
               <div style={{ fontSize: 11, color: "var(--ink-mute)" }}>
                 {company?.category || ""}
-                {company?.city ? ` · ${company.city}` : ""}
+                {pickLocalized(company, "city", i18n.language)
+                  ? ` · ${pickLocalized(company, "city", i18n.language)}`
+                  : ""}
               </div>
             </div>
           </Link>
@@ -2170,6 +2177,7 @@ const LABEL_TF = {
 };
 
 export function ParksMap({ selectedId }) {
+  const { i18n } = useTranslation();
   const favaReady = useFavaReady();
   const fava = favaReady ? F() : null;
   const navigate = useNavigate();
@@ -2336,7 +2344,7 @@ export function ParksMap({ selectedId }) {
                     zIndex: isSel ? 8 : 3,
                   }}
                 >
-                  {p.city}
+                  {pickLocalized(p, "city", i18n.language)}
                 </button>
               );
             })}
@@ -2381,10 +2389,10 @@ function ParkDashboard({ park, PARKS, parkCompanies, onSelect, sel, navigate }) 
           )}
         </div>
         <div className="pd-head-text">
-          <span className="park-detail-prov">{park.province}</span>
+          <span className="park-detail-prov">{pickLocalized(park, "province", i18n.language)}</span>
           <h3 className="park-detail-name">{displayName}</h3>
           <div className="park-detail-city">
-            <Icon name="pin" size={14} /> {park.city}
+            <Icon name="pin" size={14} /> {pickLocalized(park, "city", i18n.language)}
           </div>
         </div>
       </div>
@@ -2437,6 +2445,13 @@ function ParkDashboard({ park, PARKS, parkCompanies, onSelect, sel, navigate }) 
         </div>
       )}
 
+      {data?.content?.video_url && (
+        <div className="pd-section">
+          <div className="pd-section-title">{t("park.video")}</div>
+          <NewsVideo path={data.content.video_url} />
+        </div>
+      )}
+
       {parkCompanies.length > 0 && (
         <div className="pd-section">
           <div className="pd-section-title">
@@ -2452,11 +2467,11 @@ function ParkDashboard({ park, PARKS, parkCompanies, onSelect, sel, navigate }) 
                 style={{ textDecoration: "none", color: "inherit" }}
               >
                 <span className="pd-co-dot" style={{ background: colorVar(c.color) }}>
-                  {c.initials}
+                  {pickInitials(c, i18n.language)}
                 </span>
                 <div>
                   <div className="pd-co-name">{pickName(c, i18n.language)}</div>
-                  <div className="pd-co-tag">{c.tagline}</div>
+                  <div className="pd-co-tag">{pickLocalized(c, "tagline", i18n.language)}</div>
                 </div>
               </Link>
             ))}
@@ -2483,8 +2498,8 @@ function ParkDashboard({ park, PARKS, parkCompanies, onSelect, sel, navigate }) 
             >
               <span className="pdot" />
               <div className="pd-pr-main">
-                <div className="pname">{p.province}</div>
-                <div className="pcity">{p.city}</div>
+                <div className="pname">{pickLocalized(p, "province", i18n.language)}</div>
+                <div className="pcity">{pickLocalized(p, "city", i18n.language)}</div>
               </div>
               <div className="pnum">
                 <b className="num">{toFa(p.companies)}</b>

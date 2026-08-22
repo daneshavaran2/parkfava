@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getDb } from "../../db/connection";
+import { getDb, hasDb } from "../../db/connection";
 import { getActiveParks } from "./parks.functions";
 import { searchCompanies, searchParks, terms } from "./assistant/match";
 import { askOpenRouter } from "./assistant-ai.server";
@@ -34,7 +34,7 @@ const MAX_TERMS = 8;
  */
 async function findCandidateCompanies(question: string): Promise<ExhibitionCompany[]> {
   const t = terms(question).slice(0, MAX_TERMS);
-  if (!t.length) return [];
+  if (!t.length || !hasDb()) return [];
   const sql = getDb();
 
   // Composed as one parameterized LIKE per term (`search_text LIKE $n`) so
@@ -71,18 +71,22 @@ export const askAssistant = createServerFn({ method: "POST" })
     // throttle comes first, before any database or OpenRouter work. Two
     // layers: per-caller fairness, plus a global ceiling that caps the worst
     // case for the API budget even under a distributed flood.
-    await enforceRateLimit(`assistant:${clientKey()}`, { limit: 15, windowSeconds: 300 });
-    await enforceRateLimit("assistant:global", { limit: 300, windowSeconds: 3600 });
+    if (hasDb()) {
+      await enforceRateLimit(`assistant:${clientKey()}`, { limit: 15, windowSeconds: 300 });
+      await enforceRateLimit("assistant:global", { limit: 300, windowSeconds: 3600 });
+    }
 
-    const sql = getDb();
+    // Without a database the assistant still answers — just from general
+    // knowledge, with no live exhibition context attached.
     const [companies, parks] = await Promise.all([
-      findCandidateCompanies(data.question),
-      getActiveParks(),
+      findCandidateCompanies(data.question).catch(() => [] as ExhibitionCompany[]),
+      hasDb() ? getActiveParks().catch(() => []) : Promise.resolve([]),
     ]);
 
     // Only the shortlisted companies' products — not the whole table.
     const candidateIds = companies.map((c) => c.company_id);
-    const products = candidateIds.length
+    const sql = hasDb() ? getDb() : null;
+    const products = candidateIds.length && sql
       ? await sql<ExhibitionProduct[]>`
           SELECT * FROM exhibition_products
           WHERE company_id IN ${sql(candidateIds)}

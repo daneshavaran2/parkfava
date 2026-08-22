@@ -165,6 +165,7 @@ function AdminExhibitionPage() {
             <Link to="/admin/ai" className="btn btn-ghost">{t("nav.admin_ai")}</Link>
             <Link to="/admin/parks" className="btn btn-ghost">{t("adminExhibition.parks_link")}</Link>
             <Link to="/admin/about" className="btn btn-ghost">{t("adminExhibition.about_link")}</Link>
+            <Link to="/admin/ai" className="btn btn-ghost">{t("adminParks.assistant_link")}</Link>
             <button className="btn btn-ghost" onClick={async () => { await signOutFn(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
           </div>
         </div>

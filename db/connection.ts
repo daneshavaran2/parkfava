@@ -7,6 +7,10 @@ import postgres from "postgres";
 
 let sql: ReturnType<typeof postgres> | null = null;
 
+export function hasDb() {
+  return !!process.env.DATABASE_URL;
+}
+
 export function getDb() {
   if (sql) return sql;
   const url = process.env.DATABASE_URL;

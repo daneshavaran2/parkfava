@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getDb } from "../../db/connection";
+import { getDb, hasDb } from "../../db/connection";
 import { requireAuth, requireMfaVerified } from "./auth/middleware";
 import { parseLatLngValue } from "@/lib/geo";
 import type { ExhibitionCompany, ExhibitionImage, ExhibitionProduct } from "@/lib/exhibition-api";
@@ -368,6 +368,9 @@ export const reorderExhibitionProducts = createServerFn({ method: "POST" })
 /* ============ PUBLIC READS ============ */
 
 export const getExhibitionCompanies = createServerFn({ method: "GET" }).handler(async () => {
+  // No database configured (e.g. local preview): fall back to the bundled
+  // static dataset instead of crashing the page.
+  if (!hasDb()) return [] as ExhibitionCompany[];
   const sql = getDb();
   return await sql<ExhibitionCompany[]>`
     SELECT * FROM exhibition_companies
@@ -379,7 +382,7 @@ export const getExhibitionCompanies = createServerFn({ method: "GET" }).handler(
 export const getPublicExhibitionProducts = createServerFn({ method: "GET" })
   .inputValidator((i) => z.object({ companyIds: z.array(z.string()) }).parse(i))
   .handler(async ({ data }) => {
-    if (!data.companyIds.length) return [] as ExhibitionProduct[];
+    if (!data.companyIds.length || !hasDb()) return [] as ExhibitionProduct[];
     const sql = getDb();
     // Join against the parent company's publish state rather than trusting
     // the caller's companyIds — mirrors the old "exh_products public read"
@@ -396,6 +399,7 @@ export const getPublicExhibitionProducts = createServerFn({ method: "GET" })
 export const getExhibitionCompanyDetail = createServerFn({ method: "GET" })
   .inputValidator((i) => z.object({ id: z.string().trim().min(1).max(120) }).parse(i))
   .handler(async ({ data }) => {
+    if (!hasDb()) return { company: null, images: [] as ExhibitionImage[], products: [] as ExhibitionProduct[] };
     const sql = getDb();
     const [company] = await sql<
       ExhibitionCompany[]

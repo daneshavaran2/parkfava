@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getDb } from "../../db/connection";
+import { getDb, hasDb } from "../../db/connection";
 import { requireMfaVerified } from "./auth/middleware";
 import type { AttachmentKind, CompanyAttachment } from "@/lib/attachments-api";
 
@@ -25,6 +25,7 @@ export const getAttachments = createServerFn({ method: "GET" })
     z.object({ ownerType: ownerTypeSchema, ownerId: z.string().min(1) }).parse(i),
   )
   .handler(async ({ data }) => {
+    if (!hasDb()) return [] as CompanyAttachment[];
     const sql = getDb();
     return await sql<CompanyAttachment[]>`
       SELECT * FROM company_attachments
