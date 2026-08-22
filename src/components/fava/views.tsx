@@ -1066,9 +1066,14 @@ export function CompanyProfile({ id }) {
                   <b className="num">
                     {cc_data?.founded_at
                       ? toFa(
-                          new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numeric" }).format(
-                            new Date(cc_data.founded_at),
-                          ),
+                          // en-US-u-ca-persian: the Jalali *calendar* (correct
+                          // year number) with Latin digits and formatToParts
+                          // to drop the "AP" era suffix — fa-IR bakes in
+                          // Persian-numeral glyphs that toFa() can only add,
+                          // never strip back out for the English UI.
+                          new Intl.DateTimeFormat("en-US-u-ca-persian", { year: "numeric" })
+                            .formatToParts(new Date(cc_data.founded_at))
+                            .find((p) => p.type === "year")?.value ?? "",
                         )
                       : c.founded
                         ? toFa(c.founded)
