@@ -31,14 +31,25 @@ function searchCompanies(
     .map((c) => {
       const myProducts = productsByCompany.get(c.company_id) || [];
       const hay = norm(
-        [c.name, c.name_en, c.tagline, c.city, c.category, c.description].join(" "),
+        [
+          c.name,
+          c.name_en,
+          c.tagline,
+          c.tagline_en,
+          c.city,
+          c.city_en,
+          c.category,
+          c.description,
+          c.description_en,
+        ].join(" "),
       );
       let score = 0;
       const matchedProducts: ExhibitionProduct[] = [];
       t.forEach((term) => {
         if (hay.includes(term)) score += 1;
         myProducts.forEach((p) => {
-          if (norm(p.name).includes(term) && !matchedProducts.includes(p)) {
+          const productHay = norm([p.name, p.name_en].join(" "));
+          if (productHay.includes(term) && !matchedProducts.includes(p)) {
             matchedProducts.push(p);
             score += 1;
           }
@@ -55,7 +66,9 @@ function searchParks(question: string, parks: Park[]) {
   const t = terms(question);
   if (!t.length) return [];
   const matched = parks.filter((p) => {
-    const hay = norm([p.name, p.name_en, p.city, p.province].join(" "));
+    const hay = norm(
+      [p.name, p.name_en, p.city, p.city_en, p.province, p.province_en].join(" "),
+    );
     return t.some((term) => hay.includes(term));
   });
   if (matched.length) return matched.slice(0, 4);
