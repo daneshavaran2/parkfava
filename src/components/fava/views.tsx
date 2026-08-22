@@ -23,6 +23,7 @@ import {
   catTitle,
   catDesc,
   pickName,
+  pickLocalized,
 } from "./primitives";
 import { ClientOnly, useFavaReady } from "./ClientOnly";
 import { fetchParkContent } from "@/lib/park-content-api";
@@ -182,6 +183,7 @@ export function Nav({ view, query, setQuery, theme, toggleTheme }) {
             icon: "store",
           },
           { id: "admin-users", to: "/admin/users", label: t("nav.admin_users"), icon: "spark" },
+          { id: "admin-ai", to: "/admin/ai", label: t("nav.admin_ai"), icon: "robot" },
           { id: "admin-about", to: "/admin/about", label: t("nav.admin_about"), icon: "spark" },
         ]
       : session
@@ -485,10 +487,13 @@ export function Exhibition({ query, setQuery, sort, initialCat, park }) {
         name: cc.name || base.name,
         name_en: cc.name_en ?? base.name_en ?? null,
         tagline: cc.tagline ?? base.tagline ?? "",
+        tagline_en: cc.tagline_en ?? base.tagline_en ?? null,
         category: cc.category || base.category,
         parkId: cc.park_id || base.parkId,
         city: cc.city || base.city || "",
+        city_en: cc.city_en ?? base.city_en ?? null,
         description: cc.description ?? base.description ?? "",
+        description_en: cc.description_en ?? base.description_en ?? null,
         logo_url: cc.logo_url ?? base.logo_url ?? null,
         headcount_full_time: cc.headcount_full_time ?? null,
         headcount_part_time: cc.headcount_part_time ?? null,
@@ -499,6 +504,7 @@ export function Exhibition({ query, setQuery, sort, initialCat, park }) {
           phone: cc.phone || base.contact?.phone,
           email: cc.email || base.contact?.email,
           address: cc.address || base.contact?.address,
+          address_en: cc.address_en ?? base.contact?.address_en ?? null,
         },
       });
     }
@@ -651,7 +657,7 @@ export function CompanyCard({ c }) {
           </div>
         </div>
       </div>
-      <div className="co-tag">{c.tagline}</div>
+      <div className="co-tag">{pickLocalized(c, "tagline", i18n.language)}</div>
       <div className="co-meta">
         <div className="m">
           <b className="num">{c.headcount_full_time != null ? toFa(c.headcount_full_time) : "—"}</b>
@@ -870,10 +876,13 @@ export function CompanyProfile({ id }) {
     name: cc_data?.name || staticC?.name || id,
     name_en: cc_data?.name_en ?? staticC?.name_en ?? null,
     tagline: cc_data?.tagline ?? staticC?.tagline ?? "",
+    tagline_en: cc_data?.tagline_en ?? staticC?.tagline_en ?? null,
     category: cc_data?.category || staticC?.category,
     parkId: cc_data?.park_id || staticC?.parkId,
     city: cc_data?.city || staticC?.city || "",
+    city_en: cc_data?.city_en ?? staticC?.city_en ?? null,
     address: cc_data?.address || staticC?.address || "",
+    address_en: cc_data?.address_en ?? staticC?.address_en ?? null,
     color: staticC?.color || "blue",
     initials: staticC?.initials || (cc_data?.name || id).slice(0, 2),
     tags: staticC?.tags || [],
@@ -881,6 +890,7 @@ export function CompanyProfile({ id }) {
     workers: staticC?.workers,
     founded: staticC?.founded,
     description: cc_data?.description ?? staticC?.description ?? "",
+    description_en: cc_data?.description_en ?? staticC?.description_en ?? null,
     contact: {
       phone: cc_data?.phone || staticC?.contact?.phone,
       email: cc_data?.email || staticC?.contact?.email,
@@ -947,8 +957,8 @@ export function CompanyProfile({ id }) {
               {cat ? catTitle(cat, i18n.language) : ""}
             </span>
             <h1>{pickName(c, i18n.language)}</h1>
-            <p className="ph-tag">{c.tagline}</p>
-            {c.description && (
+            <p className="ph-tag">{pickLocalized(c, "tagline", i18n.language)}</p>
+            {pickLocalized(c, "description", i18n.language) && (
               <p
                 style={{
                   marginTop: 8,
@@ -957,7 +967,7 @@ export function CompanyProfile({ id }) {
                   whiteSpace: "pre-wrap",
                 }}
               >
-                {c.description}
+                {pickLocalized(c, "description", i18n.language)}
               </p>
             )}
             <div className="co-badges" style={{ marginTop: 12 }}>
@@ -1070,16 +1080,14 @@ export function CompanyProfile({ id }) {
               </div>
             </div>
 
-            {(cc_data?.intro ||
-              cc_data?.founders ||
-              cc_data?.export_potential ||
-              cc_data?.knowledge_products_intro) && (
+            {(["intro", "founders", "export_potential", "knowledge_products_intro"]
+              .some((field) => pickLocalized(cc_data, field, i18n.language))) && (
               <div className="panel">
                 <h3>
                   <Icon name="spark" size={18} className="pi" /> {t("company.about_company")}
                 </h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {cc_data?.intro && (
+                  {pickLocalized(cc_data, "intro", i18n.language) && (
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
                         {t("company.intro")}
@@ -1091,21 +1099,21 @@ export function CompanyProfile({ id }) {
                           whiteSpace: "pre-wrap",
                         }}
                       >
-                        {cc_data.intro}
+                        {pickLocalized(cc_data, "intro", i18n.language)}
                       </p>
                     </div>
                   )}
-                  {cc_data?.founders && (
+                  {pickLocalized(cc_data, "founders", i18n.language) && (
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
                         {t("company.founders")}
                       </div>
                       <p style={{ color: "var(--ink-soft)", lineHeight: 1.8 }}>
-                        {cc_data.founders}
+                        {pickLocalized(cc_data, "founders", i18n.language)}
                       </p>
                     </div>
                   )}
-                  {cc_data?.export_potential && (
+                  {pickLocalized(cc_data, "export_potential", i18n.language) && (
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
                         {t("company.export_potential")}
@@ -1117,11 +1125,11 @@ export function CompanyProfile({ id }) {
                           whiteSpace: "pre-wrap",
                         }}
                       >
-                        {cc_data.export_potential}
+                        {pickLocalized(cc_data, "export_potential", i18n.language)}
                       </p>
                     </div>
                   )}
-                  {cc_data?.knowledge_products_intro && (
+                  {pickLocalized(cc_data, "knowledge_products_intro", i18n.language) && (
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
                         {t("company.knowledge_products")}
@@ -1133,7 +1141,7 @@ export function CompanyProfile({ id }) {
                           whiteSpace: "pre-wrap",
                         }}
                       >
-                        {cc_data.knowledge_products_intro}
+                        {pickLocalized(cc_data, "knowledge_products_intro", i18n.language)}
                       </p>
                     </div>
                   )}
@@ -1200,15 +1208,15 @@ export function CompanyProfile({ id }) {
                       >
                         <AssetImg
                           path={img.image_url}
-                          alt={img.caption || ""}
+                          alt={pickLocalized(img, "caption", i18n.language) || ""}
                           style={{ width: "100%", height: "100%", objectFit: "cover" }}
                         />
                       </div>
-                      {img.caption && (
+                      {pickLocalized(img, "caption", i18n.language) && (
                         <figcaption
                           style={{ marginTop: 6, fontSize: 12, color: "var(--ink-soft)" }}
                         >
-                          {img.caption}
+                          {pickLocalized(img, "caption", i18n.language)}
                         </figcaption>
                       )}
                     </figure>
@@ -1269,15 +1277,15 @@ export function CompanyProfile({ id }) {
                   </div>
                 </div>
               )}
-              {c.address && (
+              {pickLocalized(c, "address", i18n.language) && (
                 <div className="contact-row">
                   <span className="ci">
                     <Icon name="pin" size={17} />
                   </span>
                   <div>
                     <div className="cl">{t("company.address")}</div>
-                    <div className="cv" style={{ direction: "rtl", fontWeight: 600 }}>
-                      {c.address}
+                    <div className="cv" style={{ fontWeight: 600 }}>
+                      {pickLocalized(c, "address", i18n.language)}
                     </div>
                   </div>
                 </div>
@@ -1377,7 +1385,9 @@ export function CompanyProfile({ id }) {
 }
 
 function ProductCard({ p, cc, companyId }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const productName = pickLocalized(p, "name", i18n.language);
+  const productDescription = pickLocalized(p, "description", i18n.language);
   const img = useAssetUrl(p.image_url);
   const vid = useAssetUrl(p.video_url);
   const cat = useAssetUrl(p.catalog_url);
@@ -1402,7 +1412,7 @@ function ProductCard({ p, cc, companyId }) {
       ) : img ? (
         <img
           src={img}
-          alt={p.name}
+          alt={productName}
           style={{ width: "100%", aspectRatio: "16/10", objectFit: "cover" }}
         />
       ) : (
@@ -1422,8 +1432,8 @@ function ProductCard({ p, cc, companyId }) {
         </div>
       )}
       <div style={{ padding: 10, display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
-        <div style={{ fontWeight: 700, fontSize: 14 }}>{p.name}</div>
-        {p.description && (
+        <div style={{ fontWeight: 700, fontSize: 14 }}>{productName}</div>
+        {productDescription && (
           <div
             style={{
               fontSize: 12,
@@ -1435,7 +1445,7 @@ function ProductCard({ p, cc, companyId }) {
               overflow: "hidden",
             }}
           >
-            {p.description}
+            {productDescription}
           </div>
         )}
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: "auto" }}>
@@ -1444,7 +1454,7 @@ function ProductCard({ p, cc, companyId }) {
               to="/company/$id/product/$pid"
               params={{ id: companyId, pid: p.id }}
               data-testid="product-more-link"
-              aria-label={t("product.details_for", { name: p.name })}
+              aria-label={t("product.details_for", { name: productName })}
               onClick={(event) => event.stopPropagation()}
               className="btn btn-ghost"
               style={{ fontSize: 12, "--accent": cc }}
@@ -1619,7 +1629,8 @@ export function ProductPage({ id, pid }) {
   const cc = colorVar(company?.category || "ict");
   const mainPath = productImages[activeIdx];
   const shareLink = typeof window !== "undefined" ? window.location.href : "";
-  const desc = product.description || "";
+  const productName = pickLocalized(product, "name", i18n.language);
+  const desc = pickLocalized(product, "description", i18n.language) || "";
   const shortDesc = desc.split(/\n\n|\.\s/)[0]?.slice(0, 220) || "";
   const hasLongDesc = desc.length > shortDesc.length;
   const thumbsToShow = productImages.slice(0, vid ? 3 : 4);
@@ -1660,7 +1671,7 @@ export function ProductPage({ id, pid }) {
               {pickName(company, i18n.language) || id}
             </Link>
             <span style={{ opacity: 0.5 }}>/</span>
-            <span style={{ color: "var(--ink)", fontWeight: 700 }}>{product.name}</span>
+            <span style={{ color: "var(--ink)", fontWeight: 700 }}>{productName}</span>
           </div>
           <Link
             to="/company/$id"
@@ -1739,7 +1750,7 @@ export function ProductPage({ id, pid }) {
                   }}
                 />
               ) : mainPath ? (
-                <ProductGalleryImage path={mainPath} alt={product.name} />
+                <ProductGalleryImage path={mainPath} alt={productName} />
               ) : (
                 <div
                   style={{
@@ -1834,7 +1845,7 @@ export function ProductPage({ id, pid }) {
               </span>
             )}
             <h1 style={{ fontSize: 34, lineHeight: 1.25, fontWeight: 900, margin: 0 }}>
-              {product.name}
+              {productName}
             </h1>
             {shortDesc && (
               <p style={{ marginTop: 14, color: "var(--ink-soft)", lineHeight: 1.9, fontSize: 15 }}>
@@ -2024,7 +2035,10 @@ export function ProductPage({ id, pid }) {
 }
 
 function OtherProductRow({ p, companyId }: { p: any; companyId: string }) {
+  const { i18n } = useTranslation();
   const img = useAssetUrl(p.image_url);
+  const name = pickLocalized(p, "name", i18n.language);
+  const description = pickLocalized(p, "description", i18n.language);
   return (
     <Link
       to="/company/$id/product/$pid"
@@ -2071,9 +2085,9 @@ function OtherProductRow({ p, companyId }: { p: any; companyId: string }) {
             whiteSpace: "nowrap",
           }}
         >
-          {p.name}
+          {name}
         </div>
-        {p.description && (
+        {description && (
           <div
             style={{
               fontSize: 11,
@@ -2083,7 +2097,7 @@ function OtherProductRow({ p, companyId }: { p: any; companyId: string }) {
               whiteSpace: "nowrap",
             }}
           >
-            {p.description}
+            {description}
           </div>
         )}
       </div>

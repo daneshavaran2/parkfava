@@ -21,6 +21,12 @@ export function catDesc(c, lang) { return (lang === "en" && c?.desc_en) ? c.desc
 // Company/park objects (both static and Supabase-backed) carry an optional
 // name_en — falls back to the Persian name if none has been entered yet.
 export function pickName(o, lang) { return (lang === "en" && o?.name_en) ? o.name_en : o?.name; }
+// Picks any bilingual content field (tagline/tagline_en, description/description_en, ...).
+// English intentionally falls back to the original value so older records remain usable
+// while their translations are being completed in the admin panel.
+export function pickLocalized(o, field, lang) {
+  return (lang === "en" && o?.[`${field}_en`]) ? o[`${field}_en`] : o?.[field];
+}
 export function faMoney(toman) {
   if (toman >= 1e12) return toFa((toman / 1e12).toFixed(1).replace(/\.0$/, "")) + " هزار میلیارد";
   if (toman >= 1e9) return toFa(Math.round(toman / 1e9)) + " میلیارد";

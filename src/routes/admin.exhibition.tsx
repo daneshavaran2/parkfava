@@ -162,6 +162,7 @@ function AdminExhibitionPage() {
           <div style={{ display: "flex", gap: 8 }}>
             <Link to="/exhibition" className="btn btn-ghost">{t("adminExhibition.view_exhibition")}</Link>
             <Link to="/admin/attachments" className="btn btn-ghost">{t("adminExhibition.attachments_dashboard")}</Link>
+            <Link to="/admin/ai" className="btn btn-ghost">{t("nav.admin_ai")}</Link>
             <Link to="/admin/parks" className="btn btn-ghost">{t("adminExhibition.parks_link")}</Link>
             <Link to="/admin/about" className="btn btn-ghost">{t("adminExhibition.about_link")}</Link>
             <button className="btn btn-ghost" onClick={async () => { await signOutFn(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
@@ -445,9 +446,11 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
                 <Field label={t("adminExhibition.field_company_name")}><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} style={field} /></Field>
                 <Field label={t("adminExhibition.field_company_name_en")}><input value={form.name_en ?? ""} onChange={(e) => setForm({ ...form, name_en: e.target.value })} style={{ ...field, direction: "ltr", textAlign: "left" }} placeholder={t("adminExhibition.field_company_name_en_placeholder")} /></Field>
                 <Field label={t("adminExhibition.field_tagline")}><input value={form.tagline ?? ""} onChange={(e) => setForm({ ...form, tagline: e.target.value })} style={field} /></Field>
+                <Field label={t("adminExhibition.field_tagline_en")}><input value={form.tagline_en ?? ""} onChange={(e) => setForm({ ...form, tagline_en: e.target.value })} style={{ ...field, direction: "ltr", textAlign: "left" }} /></Field>
                 <Field label={t("adminExhibition.field_category_id")}><input value={form.category ?? ""} onChange={(e) => setForm({ ...form, category: e.target.value })} style={field} /></Field>
                 <Field label={t("adminExhibition.field_park")}><ParkSelect value={form.park_id ?? ""} onChange={(v) => setForm({ ...form, park_id: v })} /></Field>
                 <Field label={t("adminExhibition.field_city")}><input value={form.city ?? ""} onChange={(e) => setForm({ ...form, city: e.target.value })} style={field} /></Field>
+                <Field label={t("adminExhibition.field_city_en")}><input value={form.city_en ?? ""} onChange={(e) => setForm({ ...form, city_en: e.target.value })} style={{ ...field, direction: "ltr", textAlign: "left" }} /></Field>
                 <Field label={t("adminExhibition.field_founded_shamsi")}>
                   <PersianDateInput value={form.founded_at ?? null} onChange={(v) => setForm({ ...form, founded_at: v })} />
                 </Field>
@@ -469,6 +472,9 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
                 <Field label={t("adminExhibition.field_founders")} hint={t("adminExhibition.founders_hint")}>
                   <input value={form.founders ?? ""} onChange={(e) => setForm({ ...form, founders: e.target.value })} placeholder={t("adminExhibition.founders_placeholder")} style={field} />
                 </Field>
+                <Field label={t("adminExhibition.field_founders_en")}>
+                  <input value={form.founders_en ?? ""} onChange={(e) => setForm({ ...form, founders_en: e.target.value })} style={{ ...field, direction: "ltr", textAlign: "left" }} />
+                </Field>
                 <Field label={t("adminExhibition.field_linkedin")} hint={t("adminExhibition.linkedin_hint")}>
                   <input value={form.linkedin_url ?? ""} onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })} placeholder="https://linkedin.com/company/..." style={field} dir="ltr" />
                 </Field>
@@ -484,6 +490,7 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
                 <Field label={t("company.phone")}><input value={form.phone ?? ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} style={field} /></Field>
                 <div style={{ gridColumn: "1 / -1" }}>
                   <Field label={t("company.address")}><input value={form.address ?? ""} onChange={(e) => setForm({ ...form, address: e.target.value })} style={field} /></Field>
+                  <Field label={t("adminExhibition.field_address_en")}><input value={form.address_en ?? ""} onChange={(e) => setForm({ ...form, address_en: e.target.value })} style={{ ...field, direction: "ltr", textAlign: "left" }} /></Field>
                 </div>
                 <Field label={t("myCompany.field_lat")}>
                   <input value={latRaw} onChange={(e) => onLatChange(e.target.value)}
@@ -527,14 +534,26 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
                 <Field label={t("adminExhibition.field_short_intro")}>
                   <textarea value={form.intro ?? ""} onChange={(e) => setForm({ ...form, intro: e.target.value })} rows={3} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
                 </Field>
+                <Field label={t("adminExhibition.field_short_intro_en")}>
+                  <textarea value={form.intro_en ?? ""} onChange={(e) => setForm({ ...form, intro_en: e.target.value })} rows={3} style={{ ...field, resize: "vertical", fontFamily: "inherit", direction: "ltr", textAlign: "left" }} />
+                </Field>
                 <Field label={t("adminExhibition.field_knowledge_products_intro")}>
                   <textarea value={form.knowledge_products_intro ?? ""} onChange={(e) => setForm({ ...form, knowledge_products_intro: e.target.value })} rows={3} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
+                </Field>
+                <Field label={t("adminExhibition.field_knowledge_products_intro_en")}>
+                  <textarea value={form.knowledge_products_intro_en ?? ""} onChange={(e) => setForm({ ...form, knowledge_products_intro_en: e.target.value })} rows={3} style={{ ...field, resize: "vertical", fontFamily: "inherit", direction: "ltr", textAlign: "left" }} />
                 </Field>
                 <Field label={t("company.export_potential")}>
                   <textarea value={form.export_potential ?? ""} onChange={(e) => setForm({ ...form, export_potential: e.target.value })} rows={2} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
                 </Field>
+                <Field label={t("adminExhibition.field_export_potential_en")}>
+                  <textarea value={form.export_potential_en ?? ""} onChange={(e) => setForm({ ...form, export_potential_en: e.target.value })} rows={2} style={{ ...field, resize: "vertical", fontFamily: "inherit", direction: "ltr", textAlign: "left" }} />
+                </Field>
                 <Field label={t("adminExhibition.field_full_description")}>
                   <textarea value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={5} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
+                </Field>
+                <Field label={t("adminExhibition.field_full_description_en")}>
+                  <textarea value={form.description_en ?? ""} onChange={(e) => setForm({ ...form, description_en: e.target.value })} rows={5} style={{ ...field, resize: "vertical", fontFamily: "inherit", direction: "ltr", textAlign: "left" }} />
                 </Field>
               </div>
             </section>
@@ -745,7 +764,9 @@ function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionPro
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t("myCompany.field_name")} style={field} />
+        <input value={form.name_en ?? ""} onChange={(e) => setForm({ ...form, name_en: e.target.value })} placeholder={t("adminExhibition.product_name_en_placeholder")} style={{ ...field, direction: "ltr", textAlign: "left" }} />
         <textarea value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={t("adminExhibition.product_desc_placeholder")} rows={3} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
+        <textarea value={form.description_en ?? ""} onChange={(e) => setForm({ ...form, description_en: e.target.value })} placeholder={t("adminExhibition.product_desc_en_placeholder")} rows={3} style={{ ...field, resize: "vertical", fontFamily: "inherit", direction: "ltr", textAlign: "left" }} />
         <input value={form.link_url ?? ""} onChange={(e) => setForm({ ...form, link_url: e.target.value })} placeholder={t("adminExhibition.product_link_placeholder")} style={field} />
 
         {/* Per-product gallery */}

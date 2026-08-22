@@ -11,28 +11,37 @@ const nullableUrlText = z.string().trim().max(1000).nullable().optional();
 const companyPatchSchema = z.object({
   company_id: z.string().trim().min(1).max(120),
   name: z.string().trim().min(1).max(255).optional(),
+  name_en: z.string().trim().max(255).nullable().optional(),
   tagline: nullableText,
+  tagline_en: nullableText,
   category: z.string().trim().max(120).nullable().optional(),
   park_id: z.string().trim().max(120).nullable().optional(),
   city: z.string().trim().max(120).nullable().optional(),
+  city_en: z.string().trim().max(120).nullable().optional(),
   description: nullableText,
+  description_en: nullableText,
   logo_url: nullableUrlText,
   website: nullableUrlText,
   phone: z.string().trim().max(80).nullable().optional(),
   email: z.string().trim().max(255).nullable().optional(),
   address: nullableText,
+  address_en: nullableText,
   sort_order: z.number().int().nullable().optional(),
   is_active: z.boolean().optional(),
   catalog_url: nullableUrlText,
   video_url: nullableUrlText,
   founded_at: z.string().trim().max(80).nullable().optional(),
   intro: nullableText,
+  intro_en: nullableText,
   founders: nullableText,
+  founders_en: nullableText,
   export_potential: nullableText,
+  export_potential_en: nullableText,
   headcount: z.number().int().min(0).nullable().optional(),
   headcount_full_time: z.number().int().min(0).nullable().optional(),
   headcount_part_time: z.number().int().min(0).nullable().optional(),
   knowledge_products_intro: nullableText,
+  knowledge_products_intro_en: nullableText,
   linkedin_url: nullableUrlText,
   owner_user_id: z.string().uuid().nullable().optional(),
   status: z.enum(["draft", "pending", "approved", "rejected"]).nullable().optional(),
@@ -165,6 +174,7 @@ export const addExhibitionImage = createServerFn({ method: "POST" })
         company_id: z.string().trim().min(1).max(120),
         image_url: z.string().trim().min(1).max(1000),
         caption: nullableText,
+        caption_en: nullableText,
       })
       .parse(i),
   )
@@ -172,8 +182,8 @@ export const addExhibitionImage = createServerFn({ method: "POST" })
     const sql = getDb();
     await assertCanEditCompany(sql, context, data.company_id);
     await sql`
-      INSERT INTO exhibition_images (company_id, image_url, caption, sort_order)
-      VALUES (${data.company_id}, ${data.image_url}, ${data.caption ?? null}, 0)
+      INSERT INTO exhibition_images (company_id, image_url, caption, caption_en, sort_order)
+      VALUES (${data.company_id}, ${data.image_url}, ${data.caption ?? null}, ${data.caption_en ?? null}, 0)
     `;
     return { ok: true };
   });
@@ -196,7 +206,9 @@ const productWriteSchema = z.object({
   id: z.string().uuid().optional(),
   company_id: z.string().trim().min(1).max(120),
   name: z.string().trim().min(1).max(255),
+  name_en: z.string().trim().max(255).nullable().optional(),
   description: nullableText,
+  description_en: nullableText,
   image_url: nullableUrlText,
   video_url: nullableUrlText,
   catalog_url: nullableUrlText,
@@ -299,7 +311,9 @@ export const rejectCompanyAdmin = createServerFn({ method: "POST" })
 
 export const updateExhibitionImage = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ id: z.string().uuid(), caption: nullableText }).parse(i))
+  .inputValidator((i) =>
+    z.object({ id: z.string().uuid(), caption: nullableText, caption_en: nullableText }).parse(i),
+  )
   .handler(async ({ data, context }) => {
     const sql = getDb();
     const [img] = await sql<
@@ -307,7 +321,9 @@ export const updateExhibitionImage = createServerFn({ method: "POST" })
     >`SELECT company_id FROM exhibition_images WHERE id = ${data.id}`;
     if (!img) throw new Error("NOT_FOUND");
     await assertCanEditCompany(sql, context, img.company_id);
-    await sql`UPDATE exhibition_images SET caption = ${data.caption ?? null} WHERE id = ${data.id}`;
+    const patch = { caption: data.caption, caption_en: data.caption_en };
+    const cols = Object.keys(patch).filter((key) => patch[key as keyof typeof patch] !== undefined);
+    if (cols.length) await sql`UPDATE exhibition_images SET ${sql(patch as any, ...cols)} WHERE id = ${data.id}`;
     return { ok: true };
   });
 

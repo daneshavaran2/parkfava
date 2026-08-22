@@ -25,6 +25,7 @@ import { Route as AdminParksRouteImport } from './routes/admin.parks'
 import { Route as AdminKahkeshanRouteImport } from './routes/admin.kahkeshan'
 import { Route as AdminExhibitionRouteImport } from './routes/admin.exhibition'
 import { Route as AdminAttachmentsRouteImport } from './routes/admin.attachments'
+import { Route as AdminAiRouteImport } from './routes/admin.ai'
 import { Route as AdminAboutRouteImport } from './routes/admin.about'
 import { Route as CompanyIdIndexRouteImport } from './routes/company.$id.index'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
@@ -113,6 +114,11 @@ const AdminAttachmentsRoute = AdminAttachmentsRouteImport.update({
   path: '/admin/attachments',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminAiRoute = AdminAiRouteImport.update({
+  id: '/admin/ai',
+  path: '/admin/ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminAboutRoute = AdminAboutRouteImport.update({
   id: '/admin/about',
   path: '/admin/about',
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/perf': typeof PerfRoute
   '/register-company': typeof RegisterCompanyRoute
   '/admin/about': typeof AdminAboutRoute
+  '/admin/ai': typeof AdminAiRoute
   '/admin/attachments': typeof AdminAttachmentsRoute
   '/admin/exhibition': typeof AdminExhibitionRoute
   '/admin/kahkeshan': typeof AdminKahkeshanRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/perf': typeof PerfRoute
   '/register-company': typeof RegisterCompanyRoute
   '/admin/about': typeof AdminAboutRoute
+  '/admin/ai': typeof AdminAiRoute
   '/admin/attachments': typeof AdminAttachmentsRoute
   '/admin/exhibition': typeof AdminExhibitionRoute
   '/admin/kahkeshan': typeof AdminKahkeshanRoute
@@ -211,6 +219,7 @@ export interface FileRoutesById {
   '/perf': typeof PerfRoute
   '/register-company': typeof RegisterCompanyRoute
   '/admin/about': typeof AdminAboutRoute
+  '/admin/ai': typeof AdminAiRoute
   '/admin/attachments': typeof AdminAttachmentsRoute
   '/admin/exhibition': typeof AdminExhibitionRoute
   '/admin/kahkeshan': typeof AdminKahkeshanRoute
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/perf'
     | '/register-company'
     | '/admin/about'
+    | '/admin/ai'
     | '/admin/attachments'
     | '/admin/exhibition'
     | '/admin/kahkeshan'
@@ -263,6 +273,7 @@ export interface FileRouteTypes {
     | '/perf'
     | '/register-company'
     | '/admin/about'
+    | '/admin/ai'
     | '/admin/attachments'
     | '/admin/exhibition'
     | '/admin/kahkeshan'
@@ -288,6 +299,7 @@ export interface FileRouteTypes {
     | '/perf'
     | '/register-company'
     | '/admin/about'
+    | '/admin/ai'
     | '/admin/attachments'
     | '/admin/exhibition'
     | '/admin/kahkeshan'
@@ -314,6 +326,7 @@ export interface RootRouteChildren {
   PerfRoute: typeof PerfRoute
   RegisterCompanyRoute: typeof RegisterCompanyRoute
   AdminAboutRoute: typeof AdminAboutRoute
+  AdminAiRoute: typeof AdminAiRoute
   AdminAttachmentsRoute: typeof AdminAttachmentsRoute
   AdminExhibitionRoute: typeof AdminExhibitionRoute
   AdminKahkeshanRoute: typeof AdminKahkeshanRoute
@@ -443,6 +456,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAttachmentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/ai': {
+      id: '/admin/ai'
+      path: '/admin/ai'
+      fullPath: '/admin/ai'
+      preLoaderRoute: typeof AdminAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/about': {
       id: '/admin/about'
       path: '/admin/about'
@@ -506,6 +526,7 @@ const rootRouteChildren: RootRouteChildren = {
   PerfRoute: PerfRoute,
   RegisterCompanyRoute: RegisterCompanyRoute,
   AdminAboutRoute: AdminAboutRoute,
+  AdminAiRoute: AdminAiRoute,
   AdminAttachmentsRoute: AdminAttachmentsRoute,
   AdminExhibitionRoute: AdminExhibitionRoute,
   AdminKahkeshanRoute: AdminKahkeshanRoute,
