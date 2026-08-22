@@ -129,14 +129,21 @@ async function main() {
     try {
       await sql`
         UPDATE exhibition_companies SET
+          name_en = COALESCE(${atlas.name_en || null}, name_en),
           description = ${atlas.intro || null},
+          description_en = ${atlas.intro_en || null},
           intro = ${atlas.intro || null},
+          intro_en = ${atlas.intro_en || null},
           tagline = COALESCE(${atlas.activity_domain || null}, tagline),
+          tagline_en = COALESCE(${atlas.activity_domain_en || null}, tagline_en),
           founders = ${atlas.founders || null},
+          founders_en = ${atlas.founders_en || null},
           headcount_full_time = ${atlas.headcount_full_time},
           headcount_part_time = ${atlas.headcount_part_time},
           knowledge_products_intro = ${atlas.flagship_product || null},
+          knowledge_products_intro_en = ${atlas.flagship_product_en || null},
           export_potential = ${atlas.export_potential || null},
+          export_potential_en = ${atlas.export_potential_en || null},
           website = COALESCE(${atlas.website || null}, website),
           email = COALESCE(${atlas.email || null}, email),
           phone = COALESCE(${atlas.phone || null}, phone),
@@ -151,9 +158,9 @@ async function main() {
           SELECT id FROM exhibition_products WHERE company_id = ${company.company_id} AND name = ${p.name}
         `;
         if (existing.length) {
-          await sql`UPDATE exhibition_products SET description = ${p.description}, updated_at = now() WHERE id = ${existing[0].id}`;
+          await sql`UPDATE exhibition_products SET name_en = ${p.name_en || null}, description = ${p.description}, description_en = ${p.description_en || null}, updated_at = now() WHERE id = ${existing[0].id}`;
         } else {
-          await sql`INSERT INTO exhibition_products (company_id, name, description) VALUES (${company.company_id}, ${p.name}, ${p.description})`;
+          await sql`INSERT INTO exhibition_products (company_id, name, name_en, description, description_en) VALUES (${company.company_id}, ${p.name}, ${p.name_en || null}, ${p.description}, ${p.description_en || null})`;
         }
         productsUpserted++;
       }

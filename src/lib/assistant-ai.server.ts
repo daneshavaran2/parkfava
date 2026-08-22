@@ -1,3 +1,5 @@
+import { getAssistantRuntimeConfig } from "./app-settings.server";
+
 // Server-only. Calls OpenRouter's chat-completions API to power the smart
 // assistant, configured via env vars:
 //   OPENROUTER_API_KEY=<openrouter.ai api key>
@@ -13,9 +15,8 @@ export async function askOpenRouter(
   history: ChatTurn[],
   question: string,
 ): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const { apiKey, model } = await getAssistantRuntimeConfig();
   if (!apiKey) throw new Error("AI_NOT_CONFIGURED");
-  const model = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
 
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
