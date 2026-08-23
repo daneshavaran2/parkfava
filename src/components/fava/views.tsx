@@ -2157,22 +2157,18 @@ const PARK_PROVINCE = {
   semnan: "IR-12",
   mazand: "IR-21",
   tehran: "IR-07",
+  alborz: "IR-32",
   isfahan: "IR-04",
-  fars: "IR-14",
-  eaz: "IR-01",
   yazd: "IR-25",
-  khz: "IR-10",
 };
 const LABEL_POS = {
   mazand: "top",
   tehran: "left",
   semnan: "right",
   razavi: "right",
+  alborz: "bottom",
   isfahan: "left",
   yazd: "right",
-  fars: "bottom",
-  eaz: "left",
-  khz: "left",
 };
 const LABEL_TF = {
   top: "translate(-50%,-275%)",

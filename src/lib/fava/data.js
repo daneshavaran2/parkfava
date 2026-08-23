@@ -40,10 +40,7 @@ window.FAVA = (function () {
     { id: 'tehran',  name: 'پارک فناوری اطلاعات و ارتباطات (فاوا)', name_en: 'ICT PARK Technology Park',            province: 'تهران', province_en: 'Tehran', city: 'تهران', city_en: 'Tehran', companies: 48, jobs: 2200, area: 40, color: 'red', mx: 50, my: 36 },
     { id: 'alborz',  name: 'پارک علم و فناوری البرز',        name_en: 'Alborz Science and Technology Park',          province: 'البرز', province_en: 'Alborz',       city: 'کرج', city_en: 'Karaj',   companies: 62,  jobs: 1750,  area: 18, color: 'gold',  mx: 46, my: 33 },
     { id: 'isfahan', name: 'شهرک علمی و تحقیقاتی اصفهان',    name_en: 'Isfahan Science and Technology Town',         province: 'اصفهان', province_en: 'Isfahan',      city: 'اصفهان', city_en: 'Isfahan', companies: 410, jobs: 14200, area: 55, color: 'blue',  mx: 47, my: 52 },
-    { id: 'fars',    name: 'پارک علم و فناوری فارس',         name_en: 'Fars Science and Technology Park',            province: 'فارس', province_en: 'Fars',        city: 'شیراز', city_en: 'Shiraz',  companies: 176, jobs: 5100,  area: 30, color: 'green', mx: 49, my: 70 },
-    { id: 'eaz',     name: 'پارک علم و فناوری آذربایجان',    name_en: 'Azerbaijan Science and Technology Park',      province: 'آذربایجان شرقی', province_en: 'East Azerbaijan', city: 'تبریز', city_en: 'Tabriz', companies: 198, jobs: 6300, area: 33, color: 'gold',  mx: 30, my: 22 },
     { id: 'yazd',    name: 'پارک علم و فناوری یزد',          name_en: 'Yazd Science and Technology Park',            province: 'یزد', province_en: 'Yazd',         city: 'یزد', city_en: 'Yazd',    companies: 88,  jobs: 2050,  area: 19, color: 'red',   mx: 58, my: 58 },
-    { id: 'khz',     name: 'پارک علم و فناوری خوزستان',      name_en: 'Khuzestan Science and Technology Park',       province: 'خوزستان', province_en: 'Khuzestan',     city: 'اهواز', city_en: 'Ahvaz',  companies: 74,  jobs: 1900,  area: 17, color: 'blue',  mx: 33, my: 64 },
   ];
 
   // ---- Companies (virtual exhibition) ----
