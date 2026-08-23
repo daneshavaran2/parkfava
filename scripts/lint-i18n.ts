@@ -45,6 +45,13 @@ const SKIP_SUBSTRINGS = [
   "scripts/seed-dev-data.ts",
   "scripts/seed-attachments.ts",
   "scripts/reset-dev-data.ts",
+  // Exhibition content migrations: generated from scripts/atlas-data.json,
+  // and Persian here is the companies' own copy being loaded as row values.
+  "db/migrations/0007_exhibition_english_content",
+  "db/migrations/0012_booklet_authoritative_content",
+  // Reads the booklet Word forms, so it has to carry the Persian field
+  // labels it matches on ("نام شرکت", "شرح کوتاهی از محصول", …).
+  "scripts/extract-booklet-docs.ts",
 ];
 
 const EXTENSIONS = new Set([".ts", ".tsx", ".js", ".mjs", ".sql"]);

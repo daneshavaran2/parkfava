@@ -106,6 +106,13 @@ export const askAssistant = createServerFn({ method: "POST" })
     const companyMatches = searchCompanies(data.question, companies, productsByCompany);
     const parkMatches = companyMatches.length ? [] : searchParks(data.question, parks);
 
+    // Both languages go into the context, because the companies wrote their
+    // own English on the booklet form (0012) and it says things the Persian
+    // does not. Handing the model only the Persian would make every English
+    // answer a fresh translation of it, discarding the company's own wording.
+    const bilingual = (fa: string | null | undefined, en: string | null | undefined) =>
+      [fa, en && en !== fa ? `[EN] ${en}` : null].filter(Boolean).join(" / ") || "-";
+
     const contextLines: string[] = [];
     companyMatches.forEach(({ c, matchedProducts }) => {
       const headcount = [c.headcount_full_time, c.headcount_part_time].filter((n) => n != null)
@@ -117,25 +124,29 @@ export const askAssistant = createServerFn({ method: "POST" })
       const productsList =
         (matchedProducts.length ? matchedProducts : allProducts)
           .map((p) =>
-            [p.name, p.description, p.link_url ? `لینک: ${p.link_url}` : null]
+            [
+              bilingual(p.name, p.name_en),
+              bilingual(p.description, p.description_en),
+              p.link_url ? `لینک: ${p.link_url}` : null,
+            ]
               .filter(Boolean)
               .join(" — "),
           )
           .join("، ") || "-";
       contextLines.push(
         [
-          `شرکت: ${c.name}${c.name_en ? " / " + c.name_en : ""}`,
-          `شعار: ${c.tagline ?? "-"}`,
-          `شهر: ${c.city ?? "-"}`,
+          `شرکت: ${bilingual(c.name, c.name_en)}`,
+          `شعار: ${bilingual(c.tagline, c.tagline_en)}`,
+          `شهر: ${bilingual(c.city, c.city_en)}`,
           `پارک فناوری: ${park ? `${park.name}${park.province ? " — " + park.province : ""}` : "-"}`,
           `حوزه: ${c.category ?? "-"}`,
-          `معرفی کوتاه: ${c.description ?? "-"}`,
-          `معرفی کامل: ${c.intro ?? "-"}`,
-          `بنیان‌گذاران: ${c.founders ?? "-"}`,
+          `معرفی کوتاه: ${bilingual(c.description, c.description_en)}`,
+          `معرفی کامل: ${bilingual(c.intro, c.intro_en)}`,
+          `بنیان‌گذاران: ${bilingual(c.founders, c.founders_en)}`,
           `سال تاسیس: ${c.founded_at ?? "-"}`,
           `نیروی انسانی: ${headcount}`,
-          `پتانسیل صادراتی: ${c.export_potential ?? "-"}`,
-          `محصولات دانش‌بنیان: ${c.knowledge_products_intro ?? "-"}`,
+          `پتانسیل صادراتی: ${bilingual(c.export_potential, c.export_potential_en)}`,
+          `محصولات دانش‌بنیان: ${bilingual(c.knowledge_products_intro, c.knowledge_products_intro_en)}`,
           `محصولات: ${productsList}`,
           `تلفن: ${c.phone ?? "-"}`,
           `ایمیل: ${c.email ?? "-"}`,

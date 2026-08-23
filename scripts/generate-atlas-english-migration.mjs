@@ -1,34 +1,187 @@
+/**
+ * Generates the SQL that pushes scripts/atlas-data.json into an existing
+ * database, in both languages.
+ *
+ * The earlier version of this script wrote only the `*_en` columns, because
+ * the Persian text in the database and the Persian text in atlas-data.json
+ * were the same scraped-from-PDF strings. They no longer are: the booklet
+ * forms (see scripts/extract-booklet-docs.ts) replaced both languages with
+ * what each company actually wrote, so both are now written out.
+ *
+ * db/migrations/0007_exhibition_english_content.sql is the historical
+ * English-only output and is left alone — it has already been applied.
+ *
+ * Run: node scripts/generate-atlas-english-migration.mjs
+ */
 import { readFileSync, writeFileSync } from "node:fs";
 
 const data = JSON.parse(readFileSync(new URL("./atlas-data.json", import.meta.url), "utf8"));
-const sqlString = (value) => value == null || value === "" ? "NULL" : `'${String(value).replaceAll("'", "''")}'`;
 
-const companyRows = data.map((c) => `  (${[
-  c.name, c.website, c.email, c.name_en, c.activity_domain_en, c.intro_en,
-  c.founders_en, c.flagship_product_en, c.export_potential_en,
-].map(sqlString).join(", ")})`).join(",\n");
+const lit = (value) =>
+  value == null || value === "" ? "NULL" : `'${String(value).replaceAll("'", "''")}'`;
 
-const productRows = data.flatMap((c) => (c.products || []).map((p) => `  (${[
-  c.name, c.website, c.email, p.name, p.name_en, p.description_en,
-].map(sqlString).join(", ")})`)).join(",\n");
+/**
+ * Postgres cannot infer a column's type in a VALUES list whose entries are
+ * all NULL, and the joins below compare these columns against real ones. An
+ * explicit cast on the first row fixes the type for the whole list.
+ *
+ * Rows arrive as arrays of already-quoted cells: the values contain spaces
+ * and commas of their own, so they can only be joined once, at the end.
+ */
+const renderRows = (rows, casts) =>
+  rows
+    .map(
+      (cells, i) =>
+        `  (${cells.map((cell, col) => (i === 0 ? `${cell}::${casts[col]}` : cell)).join(", ")})`,
+    )
+    .join(",\n");
 
-const output = `-- Generated from scripts/atlas-data.json. Do not hand-edit translation rows.\n` +
-`WITH translations(company_name, website, email, name_en, tagline_en, intro_en, founders_en, knowledge_en, export_en) AS (\nVALUES\n${companyRows}\n)\n` +
-`UPDATE exhibition_companies AS c SET\n` +
-`  name_en = COALESCE(t.name_en, c.name_en), tagline_en = t.tagline_en,\n` +
-`  description_en = t.intro_en, intro_en = t.intro_en, founders_en = t.founders_en,\n` +
-`  knowledge_products_intro_en = t.knowledge_en, export_potential_en = t.export_en\n` +
-`FROM translations AS t\nWHERE c.name = t.company_name\n` +
-`   OR (t.email IS NOT NULL AND lower(c.email) = lower(t.email))\n` +
-`   OR (t.website IS NOT NULL AND lower(regexp_replace(c.website, '^https?://(www\\.)?', '')) = lower(regexp_replace(t.website, '^https?://(www\\.)?', '')));\n\n` +
-`WITH translations(company_name, website, email, product_name, name_en, description_en) AS (\nVALUES\n${productRows}\n), matched AS (\n` +
-`  SELECT c.company_id, t.product_name, t.name_en, t.description_en\n` +
-`  FROM exhibition_companies c JOIN translations t ON c.name = t.company_name\n` +
-`    OR (t.email IS NOT NULL AND lower(c.email) = lower(t.email))\n` +
-`    OR (t.website IS NOT NULL AND lower(regexp_replace(c.website, '^https?://(www\\.)?', '')) = lower(regexp_replace(t.website, '^https?://(www\\.)?', '')))\n` +
-`)\nUPDATE exhibition_products p SET name_en = m.name_en, description_en = m.description_en\n` +
-`FROM matched m WHERE p.company_id = m.company_id AND p.name = m.product_name;\n`;
+/* ---------- companies ---------- */
 
-writeFileSync(new URL("../db/migrations/0007_exhibition_english_content.sql", import.meta.url), output, "utf8");
-writeFileSync(new URL("../supabase/migrations/20260821001000_exhibition_english_content.sql", import.meta.url), output, "utf8");
-console.log(`Generated translations for ${data.length} companies and ${data.reduce((n, c) => n + c.products.length, 0)} products.`);
+const COMPANY_CASTS = [
+  "text", "text", "text", "text", "text", "text", "text",
+  "text", "text", "text", "text", "text", "text", "text", "int", "int",
+];
+
+const companyRows = renderRows(
+  data.map((c) => [
+    lit(c.name),
+    lit(c.website),
+    lit(c.email),
+    lit(c.name_en),
+    lit(c.activity_domain),
+    lit(c.activity_domain_en),
+    lit(c.intro),
+    lit(c.intro_en),
+    lit(c.founders),
+    lit(c.founders_en),
+    lit(c.flagship_product),
+    lit(c.flagship_product_en),
+    lit(c.export_potential),
+    lit(c.export_potential_en),
+    c.headcount_full_time == null ? "NULL" : String(c.headcount_full_time),
+    c.headcount_part_time == null ? "NULL" : String(c.headcount_part_time),
+  ]),
+  COMPANY_CASTS,
+);
+
+/* ---------- products ---------- */
+
+const PRODUCT_CASTS = ["text", "text", "text", "text", "text", "text", "text", "text"];
+
+const productRows = renderRows(
+  data.flatMap((c) =>
+    (c.products || []).map((p) => [
+      lit(c.name),
+      lit(c.website),
+      lit(c.email),
+      lit(p.name),
+      lit(p.legacy_name),
+      lit(p.name_en),
+      lit(p.description),
+      lit(p.description_en),
+    ]),
+  ),
+  PRODUCT_CASTS,
+);
+
+/* ---------- SQL ---------- */
+
+// The same three-way company match the import scripts use: a shared domain is
+// proof, and the name is the fallback for companies with neither.
+const MATCH_COMPANY = `c.name = t.company_name
+    OR (t.email IS NOT NULL AND lower(c.email) = lower(t.email))
+    OR (t.website IS NOT NULL AND lower(regexp_replace(c.website, '^https?://(www\\.)?', '')) = lower(regexp_replace(t.website, '^https?://(www\\.)?', '')))`;
+
+const PRODUCT_SOURCE = `WITH src(company_name, website, email, product_name, legacy_name, name_en, description, description_en) AS (
+VALUES
+${productRows}
+), matched AS (
+  SELECT c.company_id, t.product_name, t.legacy_name, t.name_en, t.description, t.description_en
+  FROM exhibition_companies c JOIN src t ON ${MATCH_COMPANY}
+)`;
+
+const output = `-- Generated by scripts/generate-atlas-english-migration.mjs from
+-- scripts/atlas-data.json. Do not hand-edit the VALUES rows.
+--
+-- Content comes from the booklet forms each company filled in, which replace
+-- two layers of damage: Persian text whose word order was scrambled when it
+-- was scraped out of the atlas PDF, and English that was a machine
+-- translation of that scrambled text.
+
+WITH src(
+  company_name, website, email, name_en,
+  tagline, tagline_en, intro, intro_en, founders, founders_en,
+  knowledge, knowledge_en, export_potential, export_potential_en,
+  headcount_full_time, headcount_part_time
+) AS (
+VALUES
+${companyRows}
+)
+UPDATE exhibition_companies AS c SET
+  name_en = COALESCE(t.name_en, c.name_en),
+  tagline = COALESCE(t.tagline, c.tagline),
+  tagline_en = COALESCE(t.tagline_en, c.tagline_en),
+  description = COALESCE(t.intro, c.description),
+  description_en = COALESCE(t.intro_en, c.description_en),
+  intro = COALESCE(t.intro, c.intro),
+  intro_en = COALESCE(t.intro_en, c.intro_en),
+  founders = COALESCE(t.founders, c.founders),
+  founders_en = COALESCE(t.founders_en, c.founders_en),
+  knowledge_products_intro = COALESCE(t.knowledge, c.knowledge_products_intro),
+  knowledge_products_intro_en = COALESCE(t.knowledge_en, c.knowledge_products_intro_en),
+  export_potential = COALESCE(t.export_potential, c.export_potential),
+  export_potential_en = COALESCE(t.export_potential_en, c.export_potential_en),
+  headcount_full_time = COALESCE(t.headcount_full_time, c.headcount_full_time),
+  headcount_part_time = COALESCE(t.headcount_part_time, c.headcount_part_time),
+  updated_at = now()
+FROM src AS t
+WHERE ${MATCH_COMPANY};
+
+-- Existing products first, matched on either the current name or the name the
+-- product had before a booklet form renamed it. Renaming in place rather than
+-- inserting a new row is what keeps each product's image_url attached.
+${PRODUCT_SOURCE}
+UPDATE exhibition_products p SET
+  name = m.product_name,
+  name_en = COALESCE(m.name_en, p.name_en),
+  description = COALESCE(m.description, p.description),
+  description_en = COALESCE(m.description_en, p.description_en),
+  updated_at = now()
+FROM matched m
+WHERE p.company_id = m.company_id
+  AND (p.name = m.product_name OR (m.legacy_name IS NOT NULL AND p.name = m.legacy_name));
+
+-- Then the products the booklet lists that the database has never had. This
+-- runs after the rename above, so a product that was just renamed is found by
+-- its new name and is not inserted a second time.
+${PRODUCT_SOURCE}
+INSERT INTO exhibition_products (company_id, name, name_en, description, description_en)
+SELECT m.company_id, m.product_name, m.name_en, m.description, m.description_en
+FROM matched m
+WHERE NOT EXISTS (
+  SELECT 1 FROM exhibition_products p
+  WHERE p.company_id = m.company_id AND p.name = m.product_name
+);
+`;
+
+writeFileSync(
+  new URL("../db/migrations/0012_booklet_authoritative_content.sql", import.meta.url),
+  output,
+  "utf8",
+);
+writeFileSync(
+  new URL("../supabase/migrations/20260822000000_booklet_authoritative_content.sql", import.meta.url),
+  output,
+  "utf8",
+);
+
+const products = data.reduce((n, c) => n + (c.products?.length ?? 0), 0);
+const renamed = data.reduce(
+  (n, c) => n + (c.products || []).filter((p) => p.legacy_name).length,
+  0,
+);
+console.log(
+  `Generated bilingual content for ${data.length} companies and ${products} products ` +
+    `(${renamed} of them renamed from the atlas wording).`,
+);

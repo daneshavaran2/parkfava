@@ -16,6 +16,8 @@ import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import postgres from "postgres";
+import { findMatch } from "./lib/company-match";
+import type { AtlasCompany } from "./lib/atlas-data";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) {
@@ -25,24 +27,6 @@ if (!DATABASE_URL) {
 const sql = postgres(DATABASE_URL, {
   ssl: DATABASE_URL.includes("sslmode=require") ? "require" : false,
 });
-
-type AtlasProduct = { name: string; description: string };
-type AtlasCompany = {
-  name: string;
-  founded_year: number | null;
-  activity_domain: string | null;
-  intro: string;
-  website: string | null;
-  email: string | null;
-  phone: string | null;
-  name_en: string | null;
-  founders: string | null;
-  headcount_full_time: number | null;
-  headcount_part_time: number | null;
-  flagship_product: string | null;
-  export_potential: string | null;
-  products: AtlasProduct[];
-};
 
 type DbCompany = {
   company_id: string;
@@ -54,57 +38,6 @@ type DbCompany = {
 
 const dataPath = join(dirname(fileURLToPath(import.meta.url)), "atlas-data.json");
 const atlasCompanies: AtlasCompany[] = JSON.parse(readFileSync(dataPath, "utf8"));
-
-function normDomain(s: string | null | undefined): string | null {
-  if (!s) return null;
-  return s
-    .toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/^www\./, "")
-    .replace(/\/.*$/, "")
-    .trim();
-}
-
-function normName(s: string | null | undefined): string {
-  return (s || "")
-    .replace(/[‌\s]/g, "")
-    .replace(/ي/g, "ی")
-    .replace(/ك/g, "ک")
-    .replace(/[()«»"'.,،]/g, "")
-    .toLowerCase()
-    .trim();
-}
-
-function findMatch(
-  atlas: AtlasCompany,
-  dbCompanies: DbCompany[],
-): { company: DbCompany; method: string } | null {
-  const atlasDomain = normDomain(atlas.website);
-  if (atlasDomain) {
-    const byWebsite = dbCompanies.find((d) => normDomain(d.website) === atlasDomain);
-    if (byWebsite) return { company: byWebsite, method: "website" };
-  }
-  const atlasEmailDomain = atlas.email ? atlas.email.split("@")[1]?.toLowerCase() : null;
-  if (atlasEmailDomain) {
-    const byEmail = dbCompanies.find(
-      (d) => d.email && d.email.split("@")[1]?.toLowerCase() === atlasEmailDomain,
-    );
-    if (byEmail) return { company: byEmail, method: "email" };
-  }
-  const atlasNorm = normName(atlas.name);
-  const byName = dbCompanies.find((d) => normName(d.name) === atlasNorm);
-  if (byName) return { company: byName, method: "name" };
-  const bySubstring = dbCompanies.find(
-    (d) => normName(d.name).includes(atlasNorm) || atlasNorm.includes(normName(d.name)),
-  );
-  if (bySubstring) return { company: bySubstring, method: "name-substring" };
-  if (atlas.name_en) {
-    const enNorm = normName(atlas.name_en);
-    const byNameEn = dbCompanies.find((d) => d.name_en && normName(d.name_en) === enNorm);
-    if (byNameEn) return { company: byNameEn, method: "name_en" };
-  }
-  return null;
-}
 
 async function main() {
   const dbCompanies = await sql<
