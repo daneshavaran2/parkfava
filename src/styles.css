@@ -1151,17 +1151,73 @@ body[data-theme='light'] .asst-panel { box-shadow: var(--shadow-lg); }
   top: 50%; transform: translateY(-50%);
 }
 
-.lang-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  height: 42px; padding: 0 12px; flex-shrink: 0; margin-inline-end: 6px;
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--accent) 12%, transparent);
-  border: 1px solid color-mix(in oklab, var(--accent) 45%, var(--stroke));
-  color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px;
-  transition: background .18s, border-color .18s, color .18s;
+/* ---- language selector (header) ----
+   Colors come entirely from the shared --panel/--stroke/--ink/--accent
+   tokens, which body[data-theme='light'] already redefines to a white/
+   light palette — so this looks right in both themes without a single
+   theme-specific override here. */
+.lang-select-trigger {
+  display: inline-flex; align-items: center; gap: 10px;
+  height: 44px; padding: 4px 14px 4px 6px; flex-shrink: 0; margin-inline-end: 6px;
+  border-radius: 9999px;
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  color: var(--ink); cursor: pointer; font-family: inherit;
+  box-shadow: 0 6px 18px -12px rgba(0,0,0,0.45);
+  transition: background .2s, border-color .2s, box-shadow .2s;
+  direction: ltr; /* flag, name, chevron stay in that order even on RTL pages */
 }
-.lang-btn:hover { background: color-mix(in oklab, var(--accent) 22%, transparent); border-color: var(--accent); color: var(--accent); }
-body[data-theme='light'] .lang-btn { color: var(--ink); }
+.lang-select-trigger:hover {
+  background: color-mix(in oklab, var(--accent) 10%, var(--panel));
+  border-color: color-mix(in oklab, var(--accent) 35%, var(--stroke));
+  box-shadow: 0 10px 24px -12px rgba(0,0,0,0.55);
+}
+.lang-select-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.lang-select-flag {
+  width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  display: grid; place-items: center;
+  box-shadow: 0 0 0 1px var(--stroke);
+}
+.lang-select-flag--sm { width: 28px; height: 28px; }
+.lang-select-flag svg { display: block; width: 100%; height: 100%; }
+
+.lang-select-label { font-size: 14px; font-weight: 600; white-space: nowrap; }
+.lang-select-chevron {
+  display: inline-flex; color: var(--ink-soft); flex-shrink: 0;
+  transition: transform .2s ease;
+}
+.lang-select-trigger[data-state="open"] .lang-select-chevron { transform: rotate(180deg); }
+
+.lang-select-content {
+  min-width: var(--radix-popover-trigger-width, 200px);
+  background: var(--panel-solid);
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  padding: 8px;
+  box-shadow: 0 24px 60px -20px rgba(0,0,0,0.55);
+  direction: ltr;
+  z-index: 60;
+}
+.lang-select-content[data-state="open"] { animation: lang-select-in .2s ease-out; }
+.lang-select-content[data-state="closed"] { animation: lang-select-out .16s ease-in; }
+@keyframes lang-select-in { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes lang-select-out { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-6px) scale(.98); } }
+
+.lang-select-item {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  height: 48px; padding: 0 10px; border-radius: 12px;
+  background: transparent; border: 0; cursor: pointer;
+  color: var(--ink); font-family: inherit; font-size: 14px; font-weight: 500;
+  text-align: start; direction: ltr;
+  transition: background .15s;
+}
+.lang-select-item:hover, .lang-select-item:focus-visible {
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+  outline: none;
+}
+.lang-select-item + .lang-select-item { margin-top: 2px; }
+.lang-select-item-check { margin-inline-start: auto; color: var(--accent); flex-shrink: 0; }
 
 .directions-panel {
   scroll-margin-top: 96px;

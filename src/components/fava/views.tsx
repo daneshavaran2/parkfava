@@ -4,7 +4,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { LanguageSelector } from "@/components/language-selector";
 import logoSpin from "@/assets/logo-spin.webp";
 
 import {
@@ -248,7 +248,7 @@ export function Nav({ view, query, setQuery, theme, toggleTheme }) {
               aria-label={t("common.search")}
             />
           </div>
-          <LanguageSwitcher />
+          <LanguageSelector />
           <label
             className="theme-switch"
             title={theme === "dark" ? t("common.theme_day") : t("common.theme_night")}
