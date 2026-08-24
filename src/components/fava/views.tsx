@@ -447,30 +447,25 @@ function Portal({ p }) {
   );
 }
 
-/* ===================== EXHIBITION ===================== */
-export function Exhibition({ query, setQuery, sort, initialCat, park }) {
-  const favaReady = useFavaReady();
-  const fava = favaReady ? F() : null;
-  const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
-  const [cat, setCat] = useState(initialCat || "all");
-  useEffect(() => {
-    setCat(initialCat || "all");
-  }, [initialCat]);
-  const STATIC_COMPANIES = fava?.COMPANIES || [];
-  const CATEGORIES = fava?.CATEGORIES || [];
-  const PARKS = fava?.PARKS || [];
-  const parkObj = park ? PARKS.find((p) => p.id === park) : null;
-
+/**
+ * Merges the FAVA vendor bundle's static company list with the live
+ * exhibition_companies table, DB data winning per field. Every public view
+ * that lists companies (the exhibition grid, the park galaxy roster) must
+ * use this instead of the static list alone — a company added after the
+ * vendor bundle was built (the common case now that content comes from the
+ * booklet/directory imports) exists only in the DB and would otherwise
+ * silently vanish from that view.
+ */
+function useMergedCompanies(staticCompanies) {
   const { data: cloudCompanies = [] } = useQuery({
     queryKey: ["exh-public"],
     queryFn: fetchExhibitionCompanies,
     staleTime: 30_000,
   });
 
-  const COMPANIES = useMemo(() => {
+  return useMemo(() => {
     const map = new Map();
-    for (const c of STATIC_COMPANIES) map.set(c.id, c);
+    for (const c of staticCompanies) map.set(c.id, c);
     for (const cc of cloudCompanies) {
       if (cc.is_active === false) {
         map.delete(cc.company_id);
@@ -512,7 +507,25 @@ export function Exhibition({ query, setQuery, sort, initialCat, park }) {
       });
     }
     return Array.from(map.values());
-  }, [STATIC_COMPANIES, cloudCompanies]);
+  }, [staticCompanies, cloudCompanies]);
+}
+
+/* ===================== EXHIBITION ===================== */
+export function Exhibition({ query, setQuery, sort, initialCat, park }) {
+  const favaReady = useFavaReady();
+  const fava = favaReady ? F() : null;
+  const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const [cat, setCat] = useState(initialCat || "all");
+  useEffect(() => {
+    setCat(initialCat || "all");
+  }, [initialCat]);
+  const STATIC_COMPANIES = fava?.COMPANIES || [];
+  const CATEGORIES = fava?.CATEGORIES || [];
+  const PARKS = fava?.PARKS || [];
+  const parkObj = park ? PARKS.find((p) => p.id === park) : null;
+
+  const COMPANIES = useMergedCompanies(STATIC_COMPANIES);
 
   const list = useMemo(() => {
     let arr = COMPANIES.filter((c) => {
@@ -2188,7 +2201,8 @@ export function ParksMap({ selectedId }) {
     if (selectedId) setSel(selectedId);
   }, [selectedId]);
   const PARKS = fava?.PARKS || [];
-  const COMPANIES = fava?.COMPANIES || [];
+  const STATIC_COMPANIES = fava?.COMPANIES || [];
+  const COMPANIES = useMergedCompanies(STATIC_COMPANIES);
   const park = PARKS.find((p) => p.id === sel);
   const parkCompanies = COMPANIES.filter((c) => c.parkId === sel);
   const provs = (typeof window !== "undefined" && window.IRAN_PROVINCES) || [];
