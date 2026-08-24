@@ -14,9 +14,10 @@ import {
 } from "@/lib/attachments-api";
 import { fetchExhibitionCompanies } from "@/lib/exhibition-api";
 import { AttachmentPreviewButton } from "@/components/admin/AttachmentPreview";
+import { tHead } from "@/i18n/head";
 
 export const Route = createFileRoute("/admin/attachments")({
-  head: () => ({ meta: [{ title: "داشبورد ضمیمه‌ها" }] }),
+  head: () => ({ meta: [{ title: tHead("meta.admin_attachments_title") }] }),
   component: AdminAttachmentsPage,
 });
 

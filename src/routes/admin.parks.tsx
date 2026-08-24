@@ -18,9 +18,10 @@ import { signOutFn } from "@/lib/auth.functions";
 import { fetchParks, upsertPark, type Park } from "@/lib/parks-api";
 import { AttachmentsManager } from "@/components/admin/AttachmentsManager";
 import { ZipImporter } from "@/components/admin/ZipImporter";
+import { tHead } from "@/i18n/head";
 
 export const Route = createFileRoute("/admin/parks")({
-  head: () => ({ meta: [{ title: "مدیریت پارک‌ها" }] }),
+  head: () => ({ meta: [{ title: tHead("meta.admin_parks_title") }] }),
   component: AdminParksPage,
 });
 

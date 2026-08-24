@@ -5,9 +5,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/use-auth";
 import { fetchParks, upsertPark, deletePark, type Park } from "@/lib/parks-api";
 import { signOutFn } from "@/lib/auth.functions";
+import { tHead } from "@/i18n/head";
 
 export const Route = createFileRoute("/admin/kahkeshan")({
-  head: () => ({ meta: [{ title: "مدیریت کهکشان فاوا" }] }),
+  head: () => ({ meta: [{ title: tHead("meta.admin_kahkeshan_title") }] }),
   component: AdminKahkeshanPage,
 });
 

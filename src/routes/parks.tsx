@@ -1,15 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ParksMap } from "@/components/fava/views";
+import { tHead } from "@/i18n/head";
 
 type Search = { id?: string };
 
 export const Route = createFileRoute("/parks")({
   head: () => ({
     meta: [
-      { title: "کهکشان فاوا — نقشه پارک‌های فناوری" },
-      { name: "description", content: "شبکه ملی پارک‌های علم و فناوری ایران روی نقشه." },
-      { property: "og:title", content: "کهکشان فاوا" },
-      { property: "og:description", content: "پارک‌های فناوری ایران." },
+      { title: tHead("meta.parks_title") },
+      { name: "description", content: tHead("meta.parks_desc") },
+      { property: "og:title", content: tHead("meta.parks_og_title") },
+      { property: "og:description", content: tHead("meta.parks_og_desc") },
     ],
   }),
   validateSearch: (s: Record<string, unknown>): Search => ({

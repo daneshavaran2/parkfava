@@ -31,9 +31,10 @@ import { fetchAttachmentsAdmin, uploadAttachment, deleteAttachment, type Company
 import { fetchParks } from "@/lib/parks-api";
 import { parseLatLng } from "@/lib/geo";
 import { useTranslation } from "react-i18next";
+import { tHead } from "@/i18n/head";
 
 export const Route = createFileRoute("/admin/exhibition")({
-  head: () => ({ meta: [{ title: "مدیریت نمایشگاه" }] }),
+  head: () => ({ meta: [{ title: tHead("meta.admin_exhibition_title") }] }),
   component: AdminExhibitionPage,
 });
 

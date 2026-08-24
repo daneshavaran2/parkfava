@@ -12,9 +12,10 @@ import {
   assignCompanyOwner,
 } from "@/lib/admin-users.functions";
 import { listAdminCompanies } from "@/lib/exhibition-api.functions";
+import { tHead } from "@/i18n/head";
 
 export const Route = createFileRoute("/admin/users")({
-  head: () => ({ meta: [{ title: "مدیریت کاربران — ادمین فاوا" }] }),
+  head: () => ({ meta: [{ title: tHead("meta.admin_users_title") }] }),
   component: AdminUsersPage,
 });
 

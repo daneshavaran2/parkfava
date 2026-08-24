@@ -1,16 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { Exhibition } from "@/components/fava/views";
+import { tHead } from "@/i18n/head";
 
 type Search = { q?: string; cat?: string; park?: string; sort?: string };
 
 export const Route = createFileRoute("/exhibition")({
   head: () => ({
     meta: [
-      { title: "نمایشگاه مجازی — شبکه فناوری فاوا" },
-      { name: "description", content: "مرور شرکت‌های دانش‌بنیان پارک فاوا و محصولات آن‌ها." },
-      { property: "og:title", content: "نمایشگاه مجازی فاوا" },
-      { property: "og:description", content: "شرکت‌ها، محصولات و راه‌های ارتباطی." },
+      { title: tHead("meta.exhibition_title") },
+      { name: "description", content: tHead("meta.exhibition_desc") },
+      { property: "og:title", content: tHead("meta.exhibition_og_title") },
+      { property: "og:description", content: tHead("meta.exhibition_og_desc") },
     ],
   }),
   validateSearch: (s: Record<string, unknown>): Search => ({

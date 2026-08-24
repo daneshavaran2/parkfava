@@ -9,6 +9,7 @@ import { getMfaStatus, setPhone as setPhoneFn, requestOtp, verifyOtp } from "@/l
 import { normalizePhone, maskPhone } from "@/lib/mfa/phone";
 import { getTheme, setTheme, subscribeTheme, type Theme } from "@/lib/theme";
 import logoSpin from "@/assets/logo-spin.webp";
+import { tHead } from "@/i18n/head";
 
 async function resolveDestination(fallback: string): Promise<string> {
   // Re-checked here rather than trusted from the route: validateSearch runs on
@@ -51,7 +52,7 @@ function safeNext(raw: unknown): string {
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({ next: safeNext(s.next) }),
-  head: () => ({ meta: [{ title: "ورود — شبکه فاوا" }] }),
+  head: () => ({ meta: [{ title: tHead("meta.auth_title") }] }),
   component: AuthPage,
 });
 

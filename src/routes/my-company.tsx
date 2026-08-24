@@ -21,9 +21,10 @@ import {
 } from "@/lib/exhibition-api.functions";
 import { parseLatLng } from "@/lib/geo";
 import { useTranslation } from "react-i18next";
+import { tHead } from "@/i18n/head";
 
 export const Route = createFileRoute("/my-company")({
-  head: () => ({ meta: [{ title: "شرکت من — نمایشگاه فاوا" }] }),
+  head: () => ({ meta: [{ title: tHead("meta.my_company_title") }] }),
   component: MyCompanyPage,
 });
 

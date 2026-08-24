@@ -11,9 +11,10 @@ import {
   type AboutSection,
 } from "@/lib/exhibition-api";
 import { signOutFn } from "@/lib/auth.functions";
+import { tHead } from "@/i18n/head";
 
 export const Route = createFileRoute("/admin/about")({
-  head: () => ({ meta: [{ title: "مدیریت درباره اطلس" }] }),
+  head: () => ({ meta: [{ title: tHead("meta.admin_about_title") }] }),
   component: AdminAboutPage,
 });
 

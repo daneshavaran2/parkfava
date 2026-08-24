@@ -3,14 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { fetchAboutSections, type AboutSection } from "@/lib/exhibition-api";
 import { useAssetUrl } from "@/lib/use-auth";
+import { tHead } from "@/i18n/head";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "درباره اطلس — شبکه فناوری فاوا" },
-      { name: "description", content: "معرفی اطلس، سکوی هوشمند شبکه ملی پارک‌های فناوری ایران، با میزبانی آواتار تعاملی مصطفی مافی." },
-      { property: "og:title", content: "درباره اطلس" },
-      { property: "og:description", content: "معرفی اطلس و آواتار تعاملی مصطفی مافی." },
+      { title: tHead("meta.about_title") },
+      { name: "description", content: tHead("meta.about_desc") },
+      { property: "og:title", content: tHead("meta.about_og_title") },
+      { property: "og:description", content: tHead("meta.about_og_desc") },
     ],
   }),
   component: AboutPage,

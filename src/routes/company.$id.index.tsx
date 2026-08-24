@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CompanyProfile } from "@/components/fava/views";
+import { tHead } from "@/i18n/head";
 
 export const Route = createFileRoute("/company/$id/")({
   head: ({ params }) => ({
     meta: [
-      { title: `پروفایل شرکت — ${params.id}` },
-      { name: "description", content: "پروفایل شرکت در نمایشگاه مجازی فاوا." },
-      { property: "og:title", content: "پروفایل شرکت — فاوا" },
-      { property: "og:description", content: "محصولات، آمار و راه‌های ارتباطی." },
+      { title: tHead("meta.company_title", { id: params.id }) },
+      { name: "description", content: tHead("meta.company_desc") },
+      { property: "og:title", content: tHead("meta.company_og_title") },
+      { property: "og:description", content: tHead("meta.company_og_desc") },
     ],
   }),
   component: CompanyPage,

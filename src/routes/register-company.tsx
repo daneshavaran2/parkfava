@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { tHead } from "@/i18n/head";
 
 export const Route = createFileRoute("/register-company")({
   head: () => ({
     meta: [
-      { title: "ثبت شرکت — نمایشگاه فاوا" },
-      { name: "description", content: "ثبت شرکت‌ها فقط توسط ادمین نمایشگاه انجام می‌شود." },
+      { title: tHead("meta.register_company_title") },
+      { name: "description", content: tHead("meta.register_company_desc") },
     ],
   }),
   component: RegisterCompanyPage,

@@ -18,6 +18,8 @@ import { ClientOnly } from "../components/fava/ClientOnly";
 import { LanguageProvider } from "../i18n/LanguageProvider";
 import { loadStoredTheme, setTheme as setThemeStore, subscribeTheme, THEME_STORAGE_KEY } from "../lib/theme";
 import { useTranslation } from "react-i18next";
+import { tHead } from "@/i18n/head";
+import { currentLang } from "@/i18n/LanguageProvider";
 
 // Kick off the FAVA vendor bundle as soon as the root module is evaluated on
 // the client, so the loading fallback is minimized on first paint.
@@ -62,15 +64,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "شبکه فناوری فاوا — ICT PARK Network" },
-      { name: "description", content: "نمایشگاه مجازی هوشمند پارک‌های علم و فناوری ایران؛ شرکت‌ها، محصولات، نقشه و دستیار هوشمند." },
+      { title: tHead("meta.site_title") },
+      { name: "description", content: tHead("meta.site_desc") },
       { name: "author", content: "ICT PARK" },
-      { property: "og:title", content: "شبکه فناوری فاوا — ICT PARK Network" },
-      { property: "og:description", content: "نمایشگاه مجازی هوشمند پارک‌های علم و فناوری ایران؛ شرکت‌ها، محصولات، نقشه و دستیار هوشمند." },
+      { property: "og:title", content: tHead("meta.site_title") },
+      { property: "og:description", content: tHead("meta.site_desc") },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "شبکه فناوری فاوا — ICT PARK Network" },
-      { name: "twitter:description", content: "نمایشگاه مجازی هوشمند پارک‌های علم و فناوری ایران؛ شرکت‌ها، محصولات، نقشه و دستیار هوشمند." },
+      { name: "twitter:title", content: tHead("meta.site_title") },
+      { name: "twitter:description", content: tHead("meta.site_desc") },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/eec1e678-a18d-40d2-9c4f-c675e090b12b" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/eec1e678-a18d-40d2-9c4f-c675e090b12b" },
     ],
@@ -97,8 +99,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  // Server-rendered from the request's own cookie. Hardcoding fa/rtl here
+  // served every English visitor a document declared Persian and laid out
+  // right-to-left until hydration ran and LangDomSync corrected it — a
+  // visible flip on each load, and the only value crawlers and no-JS
+  // clients ever saw.
+  const lang = currentLang();
   return (
-    <html lang="fa" dir="rtl" suppressHydrationWarning>
+    <html lang={lang} dir={lang === "en" ? "ltr" : "rtl"} suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>

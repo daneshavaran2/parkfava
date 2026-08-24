@@ -14,7 +14,7 @@ import { initI18n, getClientI18n, DEFAULT_LANG, LANG_COOKIE, type Lang, SUPPORTE
 // @tanstack/react-start/server's request-scoped getCookie) out of the
 // client bundle entirely — importing that module directly from a
 // client-rendered file is a build-time error in this framework.
-const readCookieLang = createIsomorphicFn()
+export const readCookieLang = createIsomorphicFn()
   .server((): Lang => {
     const v = getCookie(LANG_COOKIE);
     return v === "en" || v === "fa" ? v : DEFAULT_LANG;
@@ -24,14 +24,22 @@ const readCookieLang = createIsomorphicFn()
     return (m?.[1] as Lang | undefined) ?? DEFAULT_LANG;
   });
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  let initial: Lang = DEFAULT_LANG;
+/**
+ * The request's language, for code that runs outside React and so cannot use
+ * useTranslation() — route `head()` functions and the document shell. Falls
+ * back to DEFAULT_LANG rather than throwing, because a missing cookie is the
+ * normal case for a first-time visitor, not an error.
+ */
+export function currentLang(): Lang {
   try {
-    initial = readCookieLang();
+    return readCookieLang();
   } catch {
-    /* keep DEFAULT_LANG if cookie reading fails for any reason */
+    return DEFAULT_LANG;
   }
-  const i18n = initI18n(initial);
+}
+
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const i18n = initI18n(currentLang());
   return <I18nextProvider i18n={i18n}>{children}<LangDomSync /></I18nextProvider>;
 }
 
