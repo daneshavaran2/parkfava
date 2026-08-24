@@ -680,6 +680,7 @@ function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionPro
   const deleteExhibitionProductFn = useServerFn(deleteExhibitionProduct);
   const [form, setForm] = useState(p);
   const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
   useEffect(() => setForm(p), [p]);
   const img = useAssetUrl(form.image_url);
   const vid = useAssetUrl(form.video_url);
@@ -698,17 +699,28 @@ function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionPro
   }
 
   async function save() {
-    setBusy(true);
-    await upsertExhibitionProductFn({ data: form as any });
-    onChange(); setBusy(false);
+    setBusy(true); setMsg(null);
+    try {
+      await upsertExhibitionProductFn({ data: form as any });
+      onChange();
+      setMsg(t("common.saved"));
+    } catch (e: any) {
+      setMsg(`${t("common.error")}: ${e?.message ?? e}`);
+    }
+    setBusy(false);
   }
   async function upload(field: "image_url" | "video_url" | "catalog_url", file: File) {
-    setBusy(true);
-    const path = await uploadExhibitionAsset(companyId, file);
-    const next = { ...form, [field]: path };
-    setForm(next);
-    await upsertExhibitionProductFn({ data: next as any });
-    onChange(); setBusy(false);
+    setBusy(true); setMsg(null);
+    try {
+      const path = await uploadExhibitionAsset(companyId, file);
+      const next = { ...form, [field]: path };
+      setForm(next);
+      await upsertExhibitionProductFn({ data: next as any });
+      onChange();
+    } catch (e: any) {
+      setMsg(`${t("common.error")}: ${e?.message ?? e}`);
+    }
+    setBusy(false);
   }
   async function addGalleryImage(file: File) {
     setBusy(true);
@@ -731,7 +743,12 @@ function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionPro
   }
   async function remove() {
     if (!confirm(t("adminExhibition.confirm_delete_product"))) return;
-    await deleteExhibitionProductFn({ data: { id: p.id } }); onChange();
+    try {
+      await deleteExhibitionProductFn({ data: { id: p.id } });
+      onChange();
+    } catch (e: any) {
+      setMsg(`${t("common.error")}: ${e?.message ?? e}`);
+    }
   }
   const cat = useAssetUrl(form.catalog_url);
 
@@ -790,9 +807,10 @@ function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionPro
           )}
         </div>
 
-        <div style={{ display: "flex", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
           <button className="btn btn-primary" onClick={save} disabled={busy} style={{ fontSize: 12 }}>{t("adminExhibition.save")}</button>
           <button className="btn btn-ghost" onClick={remove} style={{ fontSize: 12 }}>{t("adminExhibition.delete_product")}</button>
+          {msg && <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{msg}</span>}
         </div>
       </div>
     </div>
