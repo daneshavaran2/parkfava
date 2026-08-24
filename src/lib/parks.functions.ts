@@ -19,23 +19,37 @@ const parkSchema = z.object({
   mx: z.number(),
   my: z.number(),
   color: z.string().trim().max(40),
-  companies_hint: z.number().int(),
   jobs: z.number().int(),
   area: z.number(),
   is_active: z.boolean().optional(),
   sort_order: z.number().int().optional(),
 });
 
+// Live count, not a stored column: a park's resident-company number must
+// never drift from exhibition_companies again the way the old companies_hint
+// column did (it was seeded once and never updated).
 export const getParks = createServerFn({ method: "GET" }).handler(async () => {
   if (!hasDb()) return [] as Park[];
   const sql = getDb();
-  return await sql<Park[]>`SELECT * FROM parks ORDER BY sort_order ASC`;
+  return await sql<Park[]>`
+    SELECT p.*,
+      (SELECT COUNT(*)::int FROM exhibition_companies ec
+         WHERE ec.park_id = p.park_id AND ec.status = 'approved' AND ec.is_active = true
+      ) AS companies_count
+    FROM parks p ORDER BY p.sort_order ASC
+  `;
 });
 
 export const getActiveParks = createServerFn({ method: "GET" }).handler(async () => {
   if (!hasDb()) return [] as Park[];
   const sql = getDb();
-  return await sql<Park[]>`SELECT * FROM parks WHERE is_active = true ORDER BY sort_order ASC`;
+  return await sql<Park[]>`
+    SELECT p.*,
+      (SELECT COUNT(*)::int FROM exhibition_companies ec
+         WHERE ec.park_id = p.park_id AND ec.status = 'approved' AND ec.is_active = true
+      ) AS companies_count
+    FROM parks p WHERE p.is_active = true ORDER BY p.sort_order ASC
+  `;
 });
 
 export const upsertParkAdmin = createServerFn({ method: "POST" })

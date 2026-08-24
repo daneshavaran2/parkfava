@@ -40,8 +40,8 @@ export function loadFavaVendor(): Promise<void> {
             province_en: r.province_en ?? prev.province_en ?? null,
             city: r.city ?? prev.city ?? "",
             city_en: r.city_en ?? prev.city_en ?? null,
-            // ?? not ||: an admin who sets a stat to 0 means 0.
-            companies: r.companies_hint ?? prev.companies ?? 0,
+            // ?? not ||: a park with 0 companies means 0.
+            companies: r.companies_count ?? prev.companies ?? 0,
             jobs: r.jobs ?? prev.jobs ?? 0,
             area: r.area ?? prev.area ?? 0,
             color: r.color || prev.color || "blue",

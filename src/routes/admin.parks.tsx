@@ -139,30 +139,45 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
     const file = e.target.files?.[0];
     if (!file) return;
     setBusy(true);
+    setMsg(null);
     try {
       const path = await uploadParkAsset(parkId, file);
       setForm((f) => ({ ...f, logo_url: path }));
-      await upsertParkContent({ ...form, logo_url: path });
-      qc.invalidateQueries({ queryKey: ["park-public", parkId] });
-      setMsg(t("adminParks.logo_uploaded"));
+      const { error } = await upsertParkContent({ ...form, logo_url: path });
+      if (error) {
+        console.error("[admin.parks] logo save failed", error);
+        setMsg(`${t("adminParks.upload_error")}: ${error.message ?? error}`);
+      } else {
+        qc.invalidateQueries({ queryKey: ["park-public", parkId] });
+        setMsg(t("adminParks.logo_uploaded"));
+      }
     } catch (e: any) {
+      console.error("[admin.parks] logo upload failed", e);
       setMsg(`${t("adminParks.upload_error")}: ${e.message ?? e}`);
     }
     setBusy(false);
+    e.target.value = "";
   }
 
   async function handleVideoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setBusy(true);
+    setMsg(null);
     try {
       const path = await uploadParkAsset(parkId, file);
       setForm((f) => ({ ...f, video_url: path }));
-      await upsertParkContent({ ...form, video_url: path });
-      qc.invalidateQueries({ queryKey: ["park-admin", parkId] });
-      qc.invalidateQueries({ queryKey: ["park-public", parkId] });
-      setMsg(t("adminParks.video_uploaded"));
+      const { error } = await upsertParkContent({ ...form, video_url: path });
+      if (error) {
+        console.error("[admin.parks] video save failed", error);
+        setMsg(`${t("adminParks.upload_error")}: ${error.message ?? error}`);
+      } else {
+        qc.invalidateQueries({ queryKey: ["park-admin", parkId] });
+        qc.invalidateQueries({ queryKey: ["park-public", parkId] });
+        setMsg(t("adminParks.video_uploaded"));
+      }
     } catch (e: any) {
+      console.error("[admin.parks] video upload failed", e);
       setMsg(`${t("adminParks.upload_error")}: ${e.message ?? e}`);
     }
     setBusy(false);
@@ -171,10 +186,16 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
 
   async function removeParkVideo() {
     setBusy(true);
+    setMsg(null);
     setForm((f) => ({ ...f, video_url: null }));
-    await upsertParkContent({ ...form, video_url: null });
-    qc.invalidateQueries({ queryKey: ["park-admin", parkId] });
-    qc.invalidateQueries({ queryKey: ["park-public", parkId] });
+    const { error } = await upsertParkContent({ ...form, video_url: null });
+    if (error) {
+      console.error("[admin.parks] video removal failed", error);
+      setMsg(`${t("common.error")}: ${error.message ?? error}`);
+    } else {
+      qc.invalidateQueries({ queryKey: ["park-admin", parkId] });
+      qc.invalidateQueries({ queryKey: ["park-public", parkId] });
+    }
     setBusy(false);
   }
 
@@ -182,12 +203,14 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
     const file = e.target.files?.[0];
     if (!file) return;
     setBusy(true);
+    setMsg(null);
     try {
       const path = await uploadParkAsset(parkId, file);
       await addParkImage(parkId, path, null);
       qc.invalidateQueries({ queryKey: ["park-admin", parkId] });
       qc.invalidateQueries({ queryKey: ["park-public", parkId] });
     } catch (e: any) {
+      console.error("[admin.parks] gallery image upload failed", e);
       setMsg(`${t("adminParks.upload_error")}: ${e.message ?? e}`);
     }
     setBusy(false);
@@ -198,6 +221,15 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {msg && (
+        <div style={{
+          position: "sticky", top: 8, zIndex: 5,
+          background: "var(--panel)", border: "1px solid var(--stroke)",
+          borderRadius: 8, padding: "10px 14px", fontSize: 13,
+        }}>
+          {msg}
+        </div>
+      )}
       <div className="panel" style={{ padding: 20 }}>
         <h3 style={{ marginBottom: 12 }}>{t("adminParks.main_info_title")} — {meta?.name}</h3>
         <div style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: 16, alignItems: "start" }}>
@@ -217,7 +249,6 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
               placeholder={t("adminParks.description_placeholder")} rows={6} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <button className="btn btn-primary" onClick={save} disabled={busy}>{t("adminParks.save")}</button>
-              {msg && <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>{msg}</span>}
             </div>
           </div>
         </div>
@@ -277,14 +308,13 @@ function ParkStatsEditor({ parkId }: { parkId: string }) {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ["parks-admin-rows"], queryFn: fetchParks });
   const row = useMemo(() => data?.find((p) => p.park_id === parkId), [data, parkId]);
-  const [stats, setStats] = useState({ companies_hint: 0, jobs: 0, area: 0, province: "", province_en: "", city: "", city_en: "" });
+  const [stats, setStats] = useState({ jobs: 0, area: 0, province: "", province_en: "", city: "", city_en: "" });
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (!row) return;
     setStats({
-      companies_hint: Number(row.companies_hint ?? 0),
       jobs: Number(row.jobs ?? 0),
       area: Number(row.area ?? 0),
       province: row.province ?? "",
@@ -317,7 +347,7 @@ function ParkStatsEditor({ parkId }: { parkId: string }) {
     );
   }
 
-  const numField = (key: "companies_hint" | "jobs" | "area", label: string) => (
+  const numField = (key: "jobs" | "area", label: string) => (
     <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       <span style={{ fontSize: 12, fontWeight: 700 }}>{label}</span>
       <input type="number" min={0} value={stats[key]} style={field}
@@ -338,7 +368,11 @@ function ParkStatsEditor({ parkId }: { parkId: string }) {
       <h3 style={{ marginBottom: 6 }}>{t("adminParks.stats_title")}</h3>
       <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 12 }}>{t("adminParks.stats_hint")}</div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 12 }}>
-        {numField("companies_hint", t("adminParks.stats_companies"))}
+        <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <span style={{ fontSize: 12, fontWeight: 700 }}>{t("adminParks.stats_companies")}</span>
+          <input type="number" value={row.companies_count} disabled style={{ ...field, opacity: 0.7, cursor: "not-allowed" }} />
+          <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>{t("adminParks.stats_companies_auto")}</span>
+        </label>
         {numField("jobs", t("adminParks.stats_jobs"))}
         {numField("area", t("adminParks.stats_area"))}
         {textField("province", t("adminParks.stats_province"))}
@@ -390,6 +424,7 @@ function NewsEditor({ parkId, news }: { parkId: string; news: ParkNews[] }) {
       setVideoUrl(path);
       setVideoName(file.name);
     } catch (e: any) {
+      console.error("[admin.parks] news video upload failed", e);
       setErr(`${t("adminParks.upload_error")}: ${e.message ?? e}`);
     }
     setUploading(false);

@@ -41,10 +41,10 @@ const sql = postgres(url, { ssl: url.includes("sslmode=require") ? "require" : f
 // company/park (primitives.tsx's pickName()) — shown on the public site
 // whenever the visitor switches the language to English.
 const parks = [
-  { park_id: "tehran",  name: "[SEED] پارک فناوری تهران",  name_en: "[SEED] Tehran Technology Park",   province: "تهران",       city: "تهران",  mx: 52, my: 45, color: "blue",  companies_hint: 120, jobs: 4500, area: 84, is_active: true, sort_order: 1 },
-  { park_id: "isfahan", name: "[SEED] پارک فناوری اصفهان", name_en: "[SEED] Isfahan Technology Park",  province: "اصفهان",      city: "اصفهان", mx: 46, my: 55, color: "green", companies_hint:  80, jobs: 2100, area: 45, is_active: true, sort_order: 2 },
-  { park_id: "mashhad", name: "[SEED] پارک فناوری خراسان", name_en: "[SEED] Khorasan Technology Park", province: "خراسان رضوی", city: "مشهد",   mx: 68, my: 30, color: "gold",  companies_hint:  60, jobs: 1400, area: 32, is_active: true, sort_order: 3 },
-  { park_id: "shiraz",  name: "[SEED] پارک فناوری فارس",   name_en: "[SEED] Fars Technology Park",     province: "فارس",        city: "شیراز",  mx: 44, my: 72, color: "red",   companies_hint:  40, jobs:  900, area: 20, is_active: true, sort_order: 4 },
+  { park_id: "tehran",  name: "[SEED] پارک فناوری تهران",  name_en: "[SEED] Tehran Technology Park",   province: "تهران",       city: "تهران",  mx: 52, my: 45, color: "blue",  jobs: 4500, area: 84, is_active: true, sort_order: 1 },
+  { park_id: "isfahan", name: "[SEED] پارک فناوری اصفهان", name_en: "[SEED] Isfahan Technology Park",  province: "اصفهان",      city: "اصفهان", mx: 46, my: 55, color: "green", jobs: 2100, area: 45, is_active: true, sort_order: 2 },
+  { park_id: "mashhad", name: "[SEED] پارک فناوری خراسان", name_en: "[SEED] Khorasan Technology Park", province: "خراسان رضوی", city: "مشهد",   mx: 68, my: 30, color: "gold",  jobs: 1400, area: 32, is_active: true, sort_order: 3 },
+  { park_id: "shiraz",  name: "[SEED] پارک فناوری فارس",   name_en: "[SEED] Fars Technology Park",     province: "فارس",        city: "شیراز",  mx: 44, my: 72, color: "red",   jobs:  900, area: 20, is_active: true, sort_order: 4 },
 ];
 
 // Coordinates are real city centres so the map, the "directions" buttons, and

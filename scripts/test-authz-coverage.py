@@ -266,7 +266,7 @@ if id_a and id_b:
 NIL_UUID = "00000000-0000-4000-8000-000000000000"
 
 PARK_ROW = {"park_id": "authz-probe", "name": "authz probe", "mx": 0.5, "my": 0.5,
-            "color": "#123456", "companies_hint": 1, "jobs": 1, "area": 1.0}
+            "color": "#123456", "jobs": 1, "area": 1.0}
 
 ADMIN_ONLY = [
     ("parks", "upsertParkAdmin", PARK_ROW),

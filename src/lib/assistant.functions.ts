@@ -160,7 +160,7 @@ export const askAssistant = createServerFn({ method: "POST" })
     });
     parkMatches.forEach((p) => {
       contextLines.push(
-        `پارک: ${p.name} | شهر: ${p.city ?? p.province ?? "-"} | تعداد شرکت‌ها: ${p.companies_hint ?? "-"}`,
+        `پارک: ${p.name} | شهر: ${p.city ?? p.province ?? "-"} | تعداد شرکت‌ها: ${p.companies_count ?? "-"}`,
       );
     });
 

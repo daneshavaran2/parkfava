@@ -348,6 +348,7 @@
     "stats_title": "Park statistics",
     "stats_hint": "These numbers appear on the map and the park dashboard.",
     "stats_companies": "Resident companies",
+    "stats_companies_auto": "Calculated automatically from this park's approved, active companies.",
     "stats_jobs": "Jobs",
     "stats_area": "Area (hectares)",
     "stats_province": "Province",

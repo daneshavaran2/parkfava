@@ -11,7 +11,8 @@ export type Park = {
   mx: number;
   my: number;
   color: string;
-  companies_hint: number;
+  /** Live COUNT of approved+active exhibition_companies for this park — not stored, computed per query. */
+  companies_count: number;
   jobs: number;
   area: number;
   is_active: boolean;
