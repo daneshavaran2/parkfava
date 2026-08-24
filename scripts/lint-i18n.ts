@@ -49,9 +49,17 @@ const SKIP_SUBSTRINGS = [
   // and Persian here is the companies' own copy being loaded as row values.
   "db/migrations/0007_exhibition_english_content",
   "db/migrations/0012_booklet_authoritative_content",
+  "db/migrations/0014_company_directory_2026_08",
+  "supabase/migrations/20260824000000_company_directory_2026_08",
   // Reads the booklet Word forms, so it has to carry the Persian field
   // labels it matches on ("نام شرکت", "شرح کوتاهی از محصول", …).
   "scripts/extract-booklet-docs.ts",
+  // Raw export of the intake spreadsheet — company names and descriptions as
+  // data, not UI copy.
+  "scripts/company-directory-2026-08.json",
+  // Classifies each row's free-text Persian category description into this
+  // app's fixed category set — the keyword regexes are necessarily Persian.
+  "scripts/generate-company-directory-migration.mjs",
 ];
 
 const EXTENSIONS = new Set([".ts", ".tsx", ".js", ".mjs", ".sql"]);

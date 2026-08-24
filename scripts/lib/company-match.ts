@@ -30,19 +30,29 @@ export function normDomain(s: string | null | undefined): string | null {
 
 /**
  * Persian names differ across sources by spacing, ZWNJ, Arabic vs Persian
- * yeh/kaf, and punctuation — none of which are meaningful differences. Strip
- * all of it, so a name written with a ZWNJ and the same name written with
- * a plain space compare equal.
+ * yeh/kaf, alef-madda vs plain alef, and punctuation — none of which are
+ * meaningful differences. Strip all of it, so a name written with a ZWNJ and
+ * the same name written with a plain space compare equal.
+ *
+ * The alef pass matters more than it looks: two equally-accepted spellings
+ * of the same word can differ *only* by alef-madda (U+0622) vs a plain alef
+ * (U+0627) — e.g. one source's "-tech" suffix written with the ligature form,
+ * another's written as a separate alef after a ZWNJ. Without folding
+ * U+0622 -> U+0627 those two spellings survive every other normalization
+ * step still unequal, and the company gets imported twice under two names —
+ * the ZWNJ/spacing rule alone does not catch it.
  */
 export function normName(s: string | null | undefined): string {
   return (s || "")
     .replace(/[‌\s]/g, "")
-    // Arabic yeh/kaf -> Persian yeh/kaf, then drop quotes, brackets and both
-    // comma forms. Escapes rather than literals so this stays inside the
-    // "no Persian outside the UI layer" rule (scripts/lint-i18n.ts).
-    .replace(/ي/g, "ی")
-    .replace(/ك/g, "ک")
-    .replace(/[()«»"'.,،]/g, "")
+    // Arabic yeh/kaf -> Persian yeh/kaf, alef-madda -> plain alef, then drop
+    // quotes, brackets and both comma forms. Escapes rather than literals so
+    // this stays inside the "no Persian outside the UI layer" rule
+    // (scripts/lint-i18n.ts).
+    .replace(/\u064A/g, "\u06CC")
+    .replace(/\u0643/g, "\u06A9")
+    .replace(/\u0622/g, "\u0627")
+    .replace(/[()\u00AB\u00BB"'.,\u060C]/g, "")
     .toLowerCase()
     .trim();
 }
