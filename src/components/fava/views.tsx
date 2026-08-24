@@ -2542,8 +2542,10 @@ export function Categories() {
   const favaReady = useFavaReady();
   const { t } = useTranslation();
   const fava = favaReady ? F() : null;
+  const STATIC_COMPANIES = fava?.COMPANIES || [];
+  const COMPANIES = useMergedCompanies(STATIC_COMPANIES);
   if (!fava) return <HomeFallback />;
-  const { CATEGORIES, COMPANIES } = fava;
+  const { CATEGORIES } = fava;
   return (
     <div className="view">
       <div className="shell">
