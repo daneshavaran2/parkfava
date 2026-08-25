@@ -2160,7 +2160,6 @@ const PARK_PROVINCE = {
   tehran: "IR-07",
   alborz: "IR-32",
   isfahan: "IR-04",
-  yazd: "IR-25",
 };
 const LABEL_POS = {
   mazand: "top",
@@ -2169,7 +2168,6 @@ const LABEL_POS = {
   razavi: "right",
   alborz: "bottom",
   isfahan: "left",
-  yazd: "right",
 };
 const LABEL_TF = {
   top: "translate(-50%,-275%)",

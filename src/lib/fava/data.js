@@ -40,7 +40,6 @@ window.FAVA = (function () {
     { id: 'tehran',  name: 'پارک فناوری اطلاعات و ارتباطات (فاوا)', name_en: 'ICT PARK Technology Park',            province: 'تهران', province_en: 'Tehran', city: 'تهران', city_en: 'Tehran', companies: 48, jobs: 2200, area: 40, color: 'red', mx: 50, my: 36 },
     { id: 'alborz',  name: 'پارک علم و فناوری البرز',        name_en: 'Alborz Science and Technology Park',          province: 'البرز', province_en: 'Alborz',       city: 'کرج', city_en: 'Karaj',   companies: 62,  jobs: 1750,  area: 18, color: 'gold',  mx: 46, my: 33 },
     { id: 'isfahan', name: 'شهرک علمی و تحقیقاتی اصفهان',    name_en: 'Isfahan Science and Technology Town',         province: 'اصفهان', province_en: 'Isfahan',      city: 'اصفهان', city_en: 'Isfahan', companies: 410, jobs: 14200, area: 55, color: 'blue',  mx: 47, my: 52 },
-    { id: 'yazd',    name: 'پارک علم و فناوری یزد',          name_en: 'Yazd Science and Technology Park',            province: 'یزد', province_en: 'Yazd',         city: 'یزد', city_en: 'Yazd',    companies: 88,  jobs: 2050,  area: 19, color: 'red',   mx: 58, my: 58 },
   ];
 
   // ---- Companies (virtual exhibition) ----
