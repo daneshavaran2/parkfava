@@ -53,10 +53,17 @@ function AboutPage() {
 }
 
 function SectionView({ s }: { s: AboutSection }) {
+  const { i18n } = useTranslation();
   const img = useAssetUrl(s.image_url);
   const vid = useAssetUrl(s.video_url);
   const vid2 = useAssetUrl(s.video_url_2);
   const hasMedia = !!(img || vid || vid2);
+  // English falls back to the Persian value when no translation has been
+  // entered yet, same convention as pickLocalized() in components/fava —
+  // so a section still shows something instead of going blank in English.
+  const isEn = i18n.language === "en";
+  const title = (isEn && s.title_en) || s.title;
+  const body = (isEn && s.body_en) || s.body;
   return (
     <div
       className="panel about-section"
@@ -70,10 +77,10 @@ function SectionView({ s }: { s: AboutSection }) {
       }}
     >
       <div>
-        {s.title && <h2 className="h2" style={{ marginTop: 0 }}>{s.title}</h2>}
-        {s.body && (
+        {title && <h2 className="h2" style={{ marginTop: 0 }}>{title}</h2>}
+        {body && (
           <div className="lead" style={{ marginTop: 12, whiteSpace: "pre-wrap", lineHeight: 1.9 }}>
-            {s.body}
+            {body}
           </div>
         )}
       </div>
@@ -91,7 +98,7 @@ function SectionView({ s }: { s: AboutSection }) {
             // uploaded file's own dimensions — otherwise a portrait photo
             // next to a wide one made each section a different height.
             <div style={{ aspectRatio: "16 / 9", borderRadius: 12, overflow: "hidden", background: "var(--panel-2)" }}>
-              <img src={img} alt={s.title ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <img src={img} alt={title ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
             </div>
           )}
         </div>

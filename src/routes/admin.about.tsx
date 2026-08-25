@@ -165,6 +165,11 @@ function SectionEditor({ section }: { section: AboutSection }) {
           <textarea value={form.body ?? ""} onChange={(e) => setForm({ ...form, body: e.target.value })}
             placeholder={t("adminAbout.body_placeholder")} rows={8}
             style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
+          <input value={form.title_en ?? ""} onChange={(e) => setForm({ ...form, title_en: e.target.value })}
+            placeholder={t("adminAbout.section_title_en_placeholder")} style={{ ...field, direction: "ltr", textAlign: "left" }} />
+          <textarea value={form.body_en ?? ""} onChange={(e) => setForm({ ...form, body_en: e.target.value })}
+            placeholder={t("adminAbout.body_en_placeholder")} rows={8}
+            style={{ ...field, resize: "vertical", fontFamily: "inherit", direction: "ltr", textAlign: "left" }} />
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <button className="btn btn-primary" onClick={save} disabled={busy}>{t("adminAbout.save")}</button>
             {msg && <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>{msg}</span>}

@@ -127,7 +127,9 @@ export type AboutSection = {
   id: string;
   section_key: string;
   title: string | null;
+  title_en: string | null;
   body: string | null;
+  body_en: string | null;
   image_url: string | null;
   video_url: string | null;
   video_url_2: string | null;

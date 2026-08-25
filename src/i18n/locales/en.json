@@ -453,6 +453,8 @@
     "section_key_placeholder": "Section key (English)",
     "section_title_placeholder": "Section title",
     "body_placeholder": "Full text…",
+    "section_title_en_placeholder": "Section title (English)",
+    "body_en_placeholder": "Full text (English)…",
     "save": "Save",
     "section_image": "Section image",
     "no_image": "No image",

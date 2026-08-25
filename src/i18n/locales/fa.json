@@ -453,6 +453,8 @@
     "section_key_placeholder": "کلید بخش (انگلیسی)",
     "section_title_placeholder": "عنوان بخش",
     "body_placeholder": "متن کامل…",
+    "section_title_en_placeholder": "عنوان بخش (انگلیسی)",
+    "body_en_placeholder": "متن کامل (انگلیسی)…",
     "save": "ذخیره",
     "section_image": "تصویر بخش",
     "no_image": "بدون تصویر",
