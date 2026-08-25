@@ -2573,11 +2573,8 @@ function CatCard({ c, real }) {
       <h3>{catTitle(c, i18n.language)}</h3>
       <p>{catDesc(c, i18n.language)}</p>
       <div className="count">
-        <b className="num">{toFa(c.companies)}</b>
-        <span>
-          {t("categories.active_companies")}
-          {real ? ` · ${t("categories.in_exhibition", { count: real })}` : ""}
-        </span>
+        <b className="num">{toFa(real)}</b>
+        <span>{t("categories.active_companies")}</span>
       </div>
     </Link>
   );

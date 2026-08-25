@@ -16,11 +16,18 @@ const parkSchema = z.object({
   province_en: z.string().trim().max(120).nullable().optional(),
   city: z.string().trim().max(120).nullable().optional(),
   city_en: z.string().trim().max(120).nullable().optional(),
-  mx: z.number(),
-  my: z.number(),
+  // Postgres `numeric` columns (mx, my) come back from the `postgres` client
+  // as strings, not numbers — z.number() rejected them outright, so any save
+  // that carries mx/my through unchanged (e.g. ParkStatsEditor, which only
+  // edits jobs/area/province/city and spreads the rest of the row as-is)
+  // failed validation on every single request. z.coerce.number() accepts
+  // either shape; applied to all four numeric fields defensively, not just
+  // the two that are actually string-typed today.
+  mx: z.coerce.number(),
+  my: z.coerce.number(),
   color: z.string().trim().max(40),
-  jobs: z.number().int(),
-  area: z.number(),
+  jobs: z.coerce.number().int(),
+  area: z.coerce.number(),
   is_active: z.boolean().optional(),
   sort_order: z.number().int().optional(),
 });
