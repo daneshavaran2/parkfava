@@ -1,6 +1,6 @@
 // @ts-nocheck
 /* FAVA primitives ported from the original components.jsx (Babel-in-browser). */
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Logo3D } from "@/components/hero/Logo3D";
 import { AnimatedChipRow } from "@/components/fava/AnimatedChip";
@@ -229,15 +229,29 @@ export function RobotFace({ size = 40, talking = false, eye = "#46e6ff" }) {
 
 /* ---------- AI command bar ---------- */
 export function AICommandBar({ onAsk }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [v, setV] = useState("");
-  const sugg = [
-    { q: "هوش مصنوعی", l: t("home.ai_sugg_ai"), color: "#3B82F6" },
-    { q: "مشهد", l: t("home.ai_sugg_mashhad"), color: "#22C55E" },
-    { q: "IoT", l: t("home.ai_sugg_iot"), color: "#F59E0B" },
-    { q: "فین‌تک", l: t("home.ai_sugg_fintech"), color: "#EC4899" },
-  ];
   const fire = (q) => { if (q && q.trim()) onAsk(q.trim()); };
+  // A larger pool than what's ever shown at once — AnimatedChipRow rotates
+  // each visible slot through it over time, so the row doesn't just flicker
+  // the same fixed 4 phrases forever. Memoized on language (not rebuilt on
+  // every keystroke in the input below) because AnimatedChipRow's rotation
+  // effect depends on this array by reference — a fresh array every render
+  // would restart the chip timers on every keystroke.
+  const suggPool = useMemo(
+    () => [
+      { text: t("home.ai_sugg_ai"), color: "#3B82F6", onClick: () => fire("هوش مصنوعی") },
+      { text: t("home.ai_sugg_mashhad"), color: "#22C55E", onClick: () => fire("مشهد") },
+      { text: t("home.ai_sugg_iot"), color: "#F59E0B", onClick: () => fire("IoT") },
+      { text: t("home.ai_sugg_fintech"), color: "#EC4899", onClick: () => fire("فین‌تک") },
+      { text: t("home.ai_sugg_security"), color: "#8B5CF6", onClick: () => fire("امنیت سایبری") },
+      { text: t("home.ai_sugg_cloud"), color: "#06B6D4", onClick: () => fire("خدمات ابری") },
+      { text: t("home.ai_sugg_isfahan"), color: "#EF4444", onClick: () => fire("اصفهان") },
+      { text: t("home.ai_sugg_health"), color: "#14B8A6", onClick: () => fire("سلامت الکترونیک") },
+      { text: t("home.ai_sugg_telecom"), color: "#F97316", onClick: () => fire("تجهیزات مخابراتی") },
+    ],
+    [i18n.language],
+  );
   return (
     <div className="ai-block">
       <div className="ai-bar">
@@ -253,7 +267,7 @@ export function AICommandBar({ onAsk }) {
       </div>
       <div className="ai-sugg">
         <span className="ai-sugg-lbl mono">AI</span>
-        <AnimatedChipRow chips={sugg.map((s) => ({ text: s.l, color: s.color, onClick: () => fire(s.q) }))} />
+        <AnimatedChipRow pool={suggPool} visibleCount={4} />
       </div>
     </div>
   );

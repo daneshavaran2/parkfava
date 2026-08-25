@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 const CHAR_MS = 90;
@@ -33,43 +33,70 @@ function segmentGraphemes(text: string): string[] {
 type ChipDef = { text: string; color: string; onClick: () => void };
 type Phase = "holding" | "clearing" | "typing";
 
-// Coordinates all chips as one carousel: only the active chip types/clears,
-// the rest sit at their full, normally-shaped text. This replaces four
-// independent per-chip loops (which used to run all at once) with a single
-// shared turn-taking state machine.
-function useChipCarousel(charsList: string[][], reduced: boolean) {
+// Picks a pool entry that isn't already showing in any visible slot (and
+// isn't the one being replaced) — otherwise the same phrase could appear
+// twice at once, or a slot could "rotate" back into its own old text.
+function pickFresh(pool: ChipDef[], exclude: ChipDef[]): ChipDef {
+  const candidates = pool.filter((p) => !exclude.includes(p));
+  const from = candidates.length ? candidates : pool;
+  return from[Math.floor(Math.random() * from.length)];
+}
+
+function initialSlots(pool: ChipDef[], visibleCount: number): ChipDef[] {
+  const picked: ChipDef[] = [];
+  for (let i = 0; i < visibleCount && i < pool.length; i++) picked.push(pickFresh(pool, picked));
+  return picked;
+}
+
+// Coordinates a fixed number of visible chip slots as one carousel, drawing
+// each slot's content from a larger candidate pool (see AICommandBar's
+// suggPool). Only the active slot types/clears; the rest sit at their full,
+// static text. When the active slot finishes clearing, it hands off to the
+// next slot AND swaps its own content for a freshly-picked pool entry — so
+// by the time it reappears (as a non-active, fully-shown chip again), it's
+// showing a different phrase than before, instead of the same fixed word
+// forever.
+function useChipCarousel(pool: ChipDef[], visibleCount: number, reduced: boolean) {
+  const [slots, setSlots] = useState<ChipDef[]>(() => initialSlots(pool, visibleCount));
   const [activeIndex, setActiveIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("holding");
-  const [visibleCount, setVisibleCount] = useState(charsList[0]?.length ?? 0);
+  const [visibleChars, setVisibleChars] = useState(
+    () => segmentGraphemes(slots[0]?.text ?? "").length,
+  );
 
   useEffect(() => {
-    if (reduced || charsList.length === 0) return;
-    const total = charsList[activeIndex]?.length ?? 0;
+    if (reduced || slots.length === 0) return;
+    const total = segmentGraphemes(slots[activeIndex]?.text ?? "").length;
     let timer: ReturnType<typeof setTimeout>;
 
     if (phase === "holding") {
       timer = setTimeout(() => setPhase("clearing"), HOLD_MS);
     } else if (phase === "clearing") {
-      if (visibleCount > 0) {
-        timer = setTimeout(() => setVisibleCount((c) => Math.max(0, c - 1)), CLEAR_MS);
+      if (visibleChars > 0) {
+        timer = setTimeout(() => setVisibleChars((c) => Math.max(0, c - 1)), CLEAR_MS);
       } else {
         timer = setTimeout(() => {
-          setActiveIndex((i) => (i + 1) % charsList.length);
+          setSlots((prev) => {
+            const next = [...prev];
+            next[activeIndex] = pickFresh(pool, prev);
+            return next;
+          });
+          setActiveIndex((i) => (i + 1) % slots.length);
           setPhase("typing");
         }, HANDOFF_MS);
       }
     } else {
-      if (visibleCount < total) {
-        timer = setTimeout(() => setVisibleCount((c) => c + 1), CHAR_MS);
+      if (visibleChars < total) {
+        timer = setTimeout(() => setVisibleChars((c) => c + 1), CHAR_MS);
       } else {
         timer = setTimeout(() => setPhase("holding"), 0);
       }
     }
 
     return () => clearTimeout(timer);
-  }, [phase, visibleCount, activeIndex, reduced, charsList]);
+  }, [phase, visibleChars, activeIndex, reduced, slots, pool]);
 
-  return { activeIndex, phase, visibleCount };
+  return { slots, activeIndex, phase, visibleChars };
 }
 
 function ChipButton({
@@ -142,11 +169,10 @@ function ChipButton({
   );
 }
 
-export function AnimatedChipRow({ chips }: { chips: ChipDef[] }) {
+export function AnimatedChipRow({ pool, visibleCount }: { pool: ChipDef[]; visibleCount: number }) {
   const reducedMotion = useReducedMotion();
   const reduced = !!reducedMotion;
-  const charsList = useMemo(() => chips.map((c) => segmentGraphemes(c.text)), [chips]);
-  const { activeIndex, phase, visibleCount } = useChipCarousel(charsList, reduced);
+  const { slots, activeIndex, phase, visibleChars } = useChipCarousel(pool, visibleCount, reduced);
   const [shimmerKey, setShimmerKey] = useState(0);
 
   useEffect(() => {
@@ -155,9 +181,11 @@ export function AnimatedChipRow({ chips }: { chips: ChipDef[] }) {
 
   return (
     <>
-      {chips.map((chip, i) => {
+      {slots.map((chip, i) => {
         const active = i === activeIndex && !reduced;
-        const shown = active ? charsList[i].slice(0, visibleCount).join("") : chip.text;
+        const shown = active
+          ? segmentGraphemes(chip.text).slice(0, visibleChars).join("")
+          : chip.text;
         return (
           <ChipButton
             key={i}

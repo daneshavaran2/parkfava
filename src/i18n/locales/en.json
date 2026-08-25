@@ -48,7 +48,12 @@
     "ai_sugg_ai": "AI companies",
     "ai_sugg_mashhad": "Mashhad tech firms",
     "ai_sugg_iot": "IoT products",
-    "ai_sugg_fintech": "Fintech"
+    "ai_sugg_fintech": "Fintech",
+    "ai_sugg_security": "Cybersecurity companies",
+    "ai_sugg_cloud": "Cloud & hosting services",
+    "ai_sugg_isfahan": "Isfahan companies",
+    "ai_sugg_health": "Digital health",
+    "ai_sugg_telecom": "Telecom equipment"
   },
   "exhibition": {
     "eyebrow": "Virtual Exhibition",

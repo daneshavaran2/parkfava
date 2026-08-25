@@ -48,7 +48,12 @@
     "ai_sugg_ai": "شرکت‌های هوش مصنوعی",
     "ai_sugg_mashhad": "فناوران مشهد",
     "ai_sugg_iot": "محصولات اینترنت اشیا",
-    "ai_sugg_fintech": "فین‌تک"
+    "ai_sugg_fintech": "فین‌تک",
+    "ai_sugg_security": "شرکت‌های امنیت سایبری",
+    "ai_sugg_cloud": "میزبانی و خدمات ابری",
+    "ai_sugg_isfahan": "شرکت‌های اصفهان",
+    "ai_sugg_health": "سلامت الکترونیک",
+    "ai_sugg_telecom": "تجهیزات مخابراتی"
   },
   "exhibition": {
     "eyebrow": "نمایشگاه مجازی",
