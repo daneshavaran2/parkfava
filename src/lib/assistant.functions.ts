@@ -77,6 +77,25 @@ async function findCandidateCompanies(question: string): Promise<ExhibitionCompa
   `;
 }
 
+/**
+ * A small, varied sample of real companies to offer as alternatives when a
+ * question about a specific company matched nothing — e.g. a name typo'd or
+ * spelled differently than how it's stored. Ordered by random() rather than
+ * sort_order (unlike findCandidateCompanies): there's no query relevance to
+ * rank by here, and sort_order would always surface the same handful of
+ * earliest-seeded companies as "suggestions" every single time.
+ */
+async function suggestedCompanies(): Promise<ExhibitionCompany[]> {
+  if (!hasDb()) return [];
+  const sql = getDb();
+  return await sql<ExhibitionCompany[]>`
+    SELECT * FROM exhibition_companies
+    WHERE status = 'approved' AND is_active = true
+    ORDER BY random()
+    LIMIT 5
+  `;
+}
+
 export const askAssistant = createServerFn({ method: "POST" })
   .inputValidator((i) => askSchema.parse(i))
   .handler(async ({ data }) => {
@@ -118,6 +137,14 @@ export const askAssistant = createServerFn({ method: "POST" })
     // scoring as before, just over ~20 rows instead of the entire table.
     const companyMatches = searchCompanies(data.question, companies, productsByCompany);
     const parkMatches = companyMatches.length ? [] : searchParks(data.question, parks);
+
+    // A company-name question that matched nothing (typo, different
+    // spelling, or a company that genuinely isn't in the exhibition) used to
+    // just dead-end with "no info available". Give the model a handful of
+    // real alternatives it can offer instead — it decides whether they're
+    // worth mentioning (see the system prompt below), so an unrelated
+    // general-knowledge question doesn't get companies awkwardly tacked on.
+    const suggestions = companyMatches.length ? [] : await suggestedCompanies().catch(() => []);
 
     // Both languages go into the context, because the companies wrote their
     // own English on the booklet form (0012) and it says things the Persian
@@ -177,6 +204,11 @@ export const askAssistant = createServerFn({ method: "POST" })
       );
     });
 
+    const suggestionLines = suggestions.map(
+      (c) =>
+        `شرکت: ${bilingual(c.name, c.name_en)} | شهر: ${bilingual(c.city, c.city_en)} | حوزه: ${c.category ?? "-"} | شعار: ${bilingual(c.tagline, c.tagline_en)}`,
+    );
+
     const systemPrompt = [
       "شما دستیار هوشمند «پارک فاوا» هستید؛ پلتفرم نمایشگاهی شرکت‌های دانش‌بنیان و پارک‌های علم و فناوری ایران.",
       "به همان زبانی که کاربر پیام می‌دهد (فارسی یا انگلیسی) پاسخ بده؛ کوتاه، دوستانه و دقیق باش. برای تاکید روی نام شرکت‌ها/پارک‌ها از **دو ستاره** دور کلمه استفاده کن.",
@@ -185,7 +217,13 @@ export const askAssistant = createServerFn({ method: "POST" })
         ? "داده‌های زنده مرتبط با سوال کاربر:\n" + contextLines.join("\n")
         : "برای این سوال داده‌ی زنده‌ی مرتبطی در نمایشگاه پیدا نشد.",
       "اگر داده‌ی مرتبطی بالا وجود ندارد یا سوال کاربر عمومی‌تر/کلی‌تر از دیتای نمایشگاه است، از دانش عمومی خودت برای کمک به کاربر استفاده کن؛ فقط درباره‌ی خود شرکت‌ها/پارک‌های این نمایشگاه چیزی که در داده نیامده اختراع نکن.",
-    ].join("\n\n");
+      suggestionLines.length
+        ? "هیچ شرکتی دقیقاً با این سوال تطبیق نداشت. اگر سوال کاربر درباره‌ی یک شرکت خاص یا موضوعی مرتبط با نمایشگاه بود (نه یک سوال کلی/نامرتبط)، ضمن گفتن اینکه اطلاعاتی دقیقاً درباره‌ی همان مورد در دسترس نیست، چند نمونه از این «شرکت‌های پیشنهادی واقعی» را هم به‌عنوان پیشنهاد معرفی کن (فقط از همین لیست، چیزی اختراع نکن):\n" +
+          suggestionLines.join("\n")
+        : null,
+    ]
+      .filter(Boolean)
+      .join("\n\n");
 
     const history = (data.history ?? []).map((h) => ({ role: h.role, content: h.content }));
     const answer = await askOpenRouter(systemPrompt, history, data.question);
