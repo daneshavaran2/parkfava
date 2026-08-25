@@ -36,6 +36,29 @@ export function pickName(o, lang) { return (lang === "en" && o?.name_en) ? o.nam
 export function pickLocalized(o, field, lang) {
   return (lang === "en" && o?.[`${field}_en`]) ? o[`${field}_en`] : o?.[field];
 }
+// Founding year, calendar-correct per UI language: Shamsi (Jalali) for fa,
+// Gregorian for en. `founded_at` is the DB's ISO date string
+// (exhibition_companies.founded_at); `founded` is the legacy static-bundle
+// bare Shamsi year number (src/lib/fava/data.js — no month/day, authored
+// pre-migration). The en-US-u-ca-persian + formatToParts trick gets the
+// Jalali *year number* with Latin digits (fa-IR would bake in Persian
+// glyphs toFa() can't strip back out for the English UI). The +621
+// approximation for the legacy fallback matches the same offset already
+// used by scripts/generate-company-directory-migration.mjs's foundedAt().
+export function pickFoundedYear(c, lang) {
+  if (c?.founded_at) {
+    if (lang === "en") return String(new Date(c.founded_at).getFullYear());
+    return toFa(
+      new Intl.DateTimeFormat("en-US-u-ca-persian", { year: "numeric" })
+        .formatToParts(new Date(c.founded_at))
+        .find((p) => p.type === "year")?.value ?? "",
+    );
+  }
+  if (c?.founded) {
+    return lang === "en" ? String(c.founded + 621) : toFa(c.founded);
+  }
+  return "—";
+}
 // Localized string arrays (tags, products): use the *_en list only when it
 // lines up with the Persian one, otherwise fall back to the Persian list.
 export function pickList(o, field, lang) {

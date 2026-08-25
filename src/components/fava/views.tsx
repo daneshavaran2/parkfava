@@ -26,6 +26,7 @@ import {
   pickLocalized,
   pickList,
   pickInitials,
+  pickFoundedYear,
 } from "./primitives";
 import { ClientOnly, useFavaReady } from "./ClientOnly";
 import { fetchParkContent } from "@/lib/park-content-api";
@@ -496,6 +497,7 @@ function useMergedCompanies(staticCompanies) {
         headcount_full_time: cc.headcount_full_time ?? null,
         headcount_part_time: cc.headcount_part_time ?? null,
         founded: cc.founded_at ? new Date(cc.founded_at).getFullYear() : base.founded,
+        founded_at: cc.founded_at ?? base.founded_at ?? null,
         contact: {
           ...(base.contact || {}),
           website: cc.website || base.contact?.website,
@@ -684,7 +686,7 @@ export function CompanyCard({ c }) {
           <span>{t("company.part_time")}</span>
         </div>
         <div className="m">
-          <b className="num">{c.founded ? toFa(c.founded) : "—"}</b>
+          <b className="num">{pickFoundedYear(c, i18n.language)}</b>
           <span>{t("company.founded")}</span>
         </div>
       </div>
@@ -907,6 +909,7 @@ export function CompanyProfile({ id }) {
     products_en: staticC?.products_en || null,
     workers: staticC?.workers,
     founded: staticC?.founded,
+    founded_at: cc_data?.founded_at ?? null,
     description: cc_data?.description ?? staticC?.description ?? "",
     description_en: cc_data?.description_en ?? staticC?.description_en ?? null,
     contact: {
@@ -1076,23 +1079,8 @@ export function CompanyProfile({ id }) {
                   )}
                 </div>
                 <div className="kpi">
-                  <b className="num">
-                    {cc_data?.founded_at
-                      ? toFa(
-                          // en-US-u-ca-persian: the Jalali *calendar* (correct
-                          // year number) with Latin digits and formatToParts
-                          // to drop the "AP" era suffix — fa-IR bakes in
-                          // Persian-numeral glyphs that toFa() can only add,
-                          // never strip back out for the English UI.
-                          new Intl.DateTimeFormat("en-US-u-ca-persian", { year: "numeric" })
-                            .formatToParts(new Date(cc_data.founded_at))
-                            .find((p) => p.type === "year")?.value ?? "",
-                        )
-                      : c.founded
-                        ? toFa(c.founded)
-                        : "—"}
-                  </b>
-                  <span>{t("company.founded_shamsi")}</span>
+                  <b className="num">{pickFoundedYear(c, i18n.language)}</b>
+                  <span>{t("company.founded")}</span>
                 </div>
                 <div className="kpi">
                   <b style={{ fontSize: 15, lineHeight: 1.4 }}>
