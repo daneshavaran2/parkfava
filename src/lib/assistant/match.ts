@@ -10,10 +10,30 @@ function norm(s: unknown) {
     .toLowerCase();
 }
 
+// Generic connector/filler words that add no distinguishing signal against
+// exhibition_companies' search_text — "شرکت‌های هوش مصنوعی مشهد" (the exact
+// wording of the site's own example query) tokenizes to five words, two of
+// which ("شرکت", "های") are just Persian for "companies of" and match
+// virtually every row, drowning out the two words that actually mean
+// something (هوش, مصنوعی).
+const STOPWORDS = new Set([
+  "شرکت", "شرکتهای", "های", "در", "و", "با", "از", "به", "این", "آن", "که",
+  "برای", "یک", "تا", "است", "می", "را",
+  "the", "a", "an", "of", "in", "for", "and", "or",
+]);
+
 function terms(q: string) {
   return norm(q)
     .split(/[\s،,]+/)
-    .filter((t) => t.length > 1);
+    .filter((t) => {
+      if (STOPWORDS.has(t)) return false;
+      // A short Latin acronym (AI, IT, IoT) is unlikely to appear as an
+      // accidental substring inside unrelated text, but a short Persian
+      // fragment very much is — "تک" (from "فین‌تک" split on its ZWNJ) is a
+      // substring of "تکنولوژی" and dozens of unrelated words, so a 2-char
+      // Persian term does more harm than good as a broad substring match.
+      return /^[a-z0-9]+$/i.test(t) ? t.length >= 2 : t.length >= 3;
+    });
 }
 
 // Only ever answers from what's actually live in the exhibition database

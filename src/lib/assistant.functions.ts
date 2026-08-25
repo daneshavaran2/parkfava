@@ -45,6 +45,19 @@ async function findCandidateCompanies(question: string): Promise<ExhibitionCompa
       .map((term) => sql`${column} LIKE ${"%" + term + "%"}`)
       .reduce((acc, clause) => sql`${acc} OR ${clause}`);
 
+  // How many of the query's terms this company's own text matches — used to
+  // rank candidates before LIMIT cuts the list. Previously this ordered by
+  // sort_order (arbitrary insertion order) instead: since Tehran companies
+  // were seeded first, virtually every question returned the same ~20
+  // lowest-sort_order Tehran companies as "candidates" regardless of what
+  // was actually asked, silently discarding the genuinely relevant company
+  // if it didn't happen to be among the first 20 by that unrelated order.
+  // This only runs CASE WHEN over the already-narrowed result set below, not
+  // the whole table, so it doesn't need (and can't use) the trigram index.
+  const matchScore = t
+    .map((term) => sql`CASE WHEN c.search_text LIKE ${"%" + term + "%"} THEN 1 ELSE 0 END`)
+    .reduce((acc, clause) => sql`${acc} + ${clause}`);
+
   // The two sources are UNIONed rather than OR'd together in one WHERE.
   // Written as `company_text_matches OR EXISTS (product subquery)`, Postgres
   // cannot use a bitmap scan for the company side and falls back to filtering
@@ -59,7 +72,7 @@ async function findCandidateCompanies(question: string): Promise<ExhibitionCompa
         UNION
         SELECT company_id FROM exhibition_products  WHERE ${anyTermMatches(sql`search_text`)}
       )
-    ORDER BY c.sort_order ASC
+    ORDER BY (${matchScore}) DESC, c.sort_order ASC
     LIMIT ${MAX_CANDIDATES}
   `;
 }
