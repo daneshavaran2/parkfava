@@ -10,11 +10,11 @@ import type { Lang } from "@/i18n";
  *
  * Path data is adapted from the circle-flags project (HatScripts/circle-flags,
  * MIT licensed) rather than hand-drawn, so Iran's flag carries its actual
- * emblem and the correct proportions instead of a plain tricolor, and the US
- * flag has real stars instead of placeholder dots. Each flag gets its own
- * useId()-derived mask id — the source SVGs share the literal id "a", which
- * would collide if two flags (e.g. the trigger's + a dropdown row's) render
- * on the page at once and one silently loses its circular clip.
+ * emblem and correct proportions and the UK flag is a proper Union Jack.
+ * Each flag gets its own useId()-derived mask id — the source SVGs share
+ * the literal id "a", which would collide if two flags (e.g. the trigger's
+ * + a dropdown row's) render on the page at once and one silently loses
+ * its circular clip.
  */
 
 function IrFlag({ size }: { size: number }) {
@@ -39,7 +39,7 @@ function IrFlag({ size }: { size: number }) {
   );
 }
 
-function UsFlag({ size }: { size: number }) {
+function GbFlag({ size }: { size: number }) {
   const maskId = useId();
   return (
     <svg viewBox="0 0 512 512" width={size} height={size} aria-hidden="true">
@@ -49,13 +49,15 @@ function UsFlag({ size }: { size: number }) {
       <g mask={`url(#${maskId})`}>
         <path
           fill="#eee"
-          d="M256 0h256v64l-32 32 32 32v64l-32 32 32 32v64l-32 32 32 32v64l-256 32L0 448v-64l32-32-32-32v-64z"
+          d="m0 0 8 22-8 23v23l32 54-32 54v32l32 48-32 48v32l32 54-32 54v68l22-8 23 8h23l54-32 54 32h32l48-32 48 32h32l54-32 54 32h68l-8-22 8-23v-23l-32-54 32-54v-32l-32-48 32-48v-32l-32-54 32-54V0l-22 8-23-8h-23l-54 32-54-32h-32l-48 32-48-32h-32l-54 32L68 0H0z"
         />
-        <path fill="#d80027" d="M224 64h288v64H224Zm0 128h288v64H256ZM0 320h512v64H0Zm0 128h512v64H0Z" />
-        <path fill="#0052b4" d="M0 0h256v256H0Z" />
         <path
-          fill="#eee"
-          d="m187 243 57-41h-70l57 41-22-67zm-81 0 57-41H93l57 41-22-67zm-81 0 57-41H12l57 41-22-67zm162-81 57-41h-70l57 41-22-67zm-81 0 57-41H93l57 41-22-67zm-81 0 57-41H12l57 41-22-67Zm162-82 57-41h-70l57 41-22-67Zm-81 0 57-41H93l57 41-22-67zm-81 0 57-41H12l57 41-22-67Z"
+          fill="#0052b4"
+          d="M336 0v108L444 0Zm176 68L404 176h108zM0 176h108L0 68ZM68 0l108 108V0Zm108 512V404L68 512ZM0 444l108-108H0Zm512-108H404l108 108Zm-68 176L336 404v108z"
+        />
+        <path
+          fill="#d80027"
+          d="M0 0v45l131 131h45L0 0zm208 0v208H0v96h208v208h96V304h208v-96H304V0h-96zm259 0L336 131v45L512 0h-45zM176 336 0 512h45l131-131v-45zm160 0 176 176v-45L381 336h-45z"
         />
       </g>
     </svg>
@@ -64,7 +66,7 @@ function UsFlag({ size }: { size: number }) {
 
 const FLAGS: Record<Lang, ComponentType<{ size: number }>> = {
   fa: IrFlag,
-  en: UsFlag,
+  en: GbFlag,
 };
 
 export function LanguageFlag({ lang, size = 44 }: { lang: Lang; size?: number }) {
