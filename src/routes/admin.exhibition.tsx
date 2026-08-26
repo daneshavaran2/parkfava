@@ -5,9 +5,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth, useAssetUrl } from "@/lib/use-auth";
 import {
   fetchExhibitionCompany,
+  fetchCompanyChangeRequests,
   uploadExhibitionAsset,
   type ExhibitionCompany,
   type ExhibitionProduct,
+  type ExhibitionChangeRequest,
 } from "@/lib/exhibition-api";
 import {
   listAdminCompanies,
@@ -16,6 +18,8 @@ import {
   reorderExhibitionCompaniesAdmin,
   approveCompanyAdmin,
   rejectCompanyAdmin,
+  approveChangeRequestAdmin,
+  rejectChangeRequestAdmin,
   addExhibitionImage,
   deleteExhibitionImage,
   updateExhibitionImage,
@@ -272,6 +276,10 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
     queryKey: ["admin-exh-company", companyId],
     queryFn: () => fetchExhibitionCompany(companyId),
   });
+  const { data: pendingChanges = [] } = useQuery({
+    queryKey: ["admin-exh-company-pending", companyId],
+    queryFn: () => fetchCompanyChangeRequests(companyId),
+  });
 
   const { t } = useTranslation();
   const [form, setForm] = useState<ExhibitionCompany>(emptyCompany(companyId));
@@ -318,6 +326,7 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
   function invalidate() {
     qc.invalidateQueries({ queryKey: ["admin-exh-companies"] });
     qc.invalidateQueries({ queryKey: ["admin-exh-company", companyId] });
+    qc.invalidateQueries({ queryKey: ["admin-exh-company-pending", companyId] });
     qc.invalidateQueries({ queryKey: ["exh-public"] });
     qc.invalidateQueries({ queryKey: ["exh-public-company", companyId] });
   }
@@ -569,6 +578,17 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
         </div>
       </div>
 
+      {/* Owner-submitted edits awaiting review (see db/migrations/0019) */}
+      {pendingChanges.some((cr) => cr.status === "pending") && (
+        <PendingChangesPanel
+          changes={pendingChanges.filter((cr) => cr.status === "pending")}
+          company={data?.company ?? null}
+          products={data?.products ?? []}
+          images={data?.images ?? []}
+          onChanged={invalidate}
+        />
+      )}
+
       {/* ZIP Template Importer */}
       <ZipImporter ownerType="exhibition" ownerId={companyId} existingCompany={form} />
 
@@ -633,6 +653,111 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
 
       {/* Attachments (catalogs, forms, free documents) */}
       <AttachmentsManager ownerType="exhibition" ownerId={companyId} />
+    </div>
+  );
+}
+
+const ENTITY_LABEL_KEY = { company: "changeEntityCompany", product: "changeEntityProduct", image: "changeEntityImage" } as const;
+const ACTION_LABEL_KEY = { create: "changeActionCreate", update: "changeActionUpdate", delete: "changeActionDelete" } as const;
+
+// This panel is admin-only (unlike my-company.tsx's owner-facing form), so a
+// raw technical field name is an acceptable label — no i18n needed per field.
+const FIELD_LABELS: Record<string, string> = {
+  name: "name", name_en: "name_en", tagline: "tagline", tagline_en: "tagline_en",
+  category: "category", city: "city", city_en: "city_en", description: "description",
+  description_en: "description_en", logo_url: "logo_url", website: "website", phone: "phone",
+  email: "email", address: "address", video_url: "video_url", catalog_url: "catalog_url",
+  latitude: "latitude", longitude: "longitude", image_url: "image_url", link_url: "link_url",
+  caption: "caption", caption_en: "caption_en",
+};
+
+function PendingChangesPanel({ changes, company, products, images, onChanged }: {
+  changes: ExhibitionChangeRequest[];
+  company: ExhibitionCompany | null;
+  products: ExhibitionProduct[];
+  images: Array<{ id: string; image_url: string }>;
+  onChanged: () => void;
+}) {
+  const { t } = useTranslation();
+  const approveChangeRequestAdminFn = useServerFn(approveChangeRequestAdmin);
+  const rejectChangeRequestAdminFn = useServerFn(rejectChangeRequestAdmin);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  async function approve(id: string) {
+    setBusyId(id);
+    try {
+      await approveChangeRequestAdminFn({ data: { id } });
+      onChanged();
+    } catch (e: any) {
+      alert(`${t("common.error")}: ${e?.message ?? e}`);
+    }
+    setBusyId(null);
+  }
+
+  async function reject(id: string) {
+    const note = prompt(t("adminExhibition.changeRejectPrompt"), "");
+    if (note === null) return;
+    setBusyId(id);
+    try {
+      await rejectChangeRequestAdminFn({ data: { id, note } });
+      onChanged();
+    } catch (e: any) {
+      alert(`${t("common.error")}: ${e?.message ?? e}`);
+    }
+    setBusyId(null);
+  }
+
+  function liveEntity(cr: ExhibitionChangeRequest): Record<string, unknown> | null {
+    // Company-level updates have no entity_id (there's only ever one
+    // company here) — check that case first, before the "no entity_id"
+    // guard that's only meant for product/image lookups.
+    if (cr.entity_type === "company") return (company as any) ?? null;
+    if (!cr.entity_id) return null;
+    if (cr.entity_type === "product") return (products.find((p) => p.id === cr.entity_id) as any) ?? null;
+    return (images.find((im) => im.id === cr.entity_id) as any) ?? null;
+  }
+
+  return (
+    <div className="panel" style={{ padding: 20, border: "1px solid rgba(255,196,0,.4)", background: "rgba(255,196,0,.06)" }}>
+      <h3 style={{ marginBottom: 12 }}>{t("adminExhibition.pendingChangesTitle")} ({changes.length})</h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {changes.map((cr) => {
+          const live = liveEntity(cr);
+          return (
+            <div key={cr.id} style={{ padding: 12, background: "var(--panel-2)", borderRadius: 10, border: "1px solid var(--stroke)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>
+                  {t(`adminExhibition.${ENTITY_LABEL_KEY[cr.entity_type]}`)} — {t(`adminExhibition.${ACTION_LABEL_KEY[cr.action]}`)}
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button className="btn btn-primary" style={{ fontSize: 12 }} disabled={busyId === cr.id} onClick={() => approve(cr.id)}>{t("adminExhibition.changeApprove")}</button>
+                  <button className="btn btn-ghost" style={{ fontSize: 12 }} disabled={busyId === cr.id} onClick={() => reject(cr.id)}>{t("adminExhibition.changeReject")}</button>
+                </div>
+              </div>
+              {cr.action === "delete" ? (
+                <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>
+                  {(live as any)?.name || (live as any)?.image_url || cr.entity_id}
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {Object.entries(cr.payload).map(([key, value]) => {
+                    const oldValue = live ? (live as any)[key] : undefined;
+                    return (
+                      <div key={key} style={{ fontSize: 12, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        <b style={{ color: "var(--ink-soft)" }}>{FIELD_LABELS[key] ?? key}:</b>
+                        {cr.action === "update" && oldValue !== undefined && (
+                          <span style={{ textDecoration: "line-through", color: "var(--ink-soft)" }}>{String(oldValue ?? "—")}</span>
+                        )}
+                        <span>{String(value ?? "—")}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

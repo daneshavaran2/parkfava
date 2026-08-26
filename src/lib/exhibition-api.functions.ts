@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getDb, hasDb } from "../../db/connection";
 import { requireAuth, requireMfaVerified } from "./auth/middleware";
 import { parseLatLngValue } from "@/lib/geo";
-import type { ExhibitionCompany, ExhibitionImage, ExhibitionProduct } from "@/lib/exhibition-api";
+import type { ExhibitionCompany, ExhibitionImage, ExhibitionProduct, ExhibitionChangeRequest } from "@/lib/exhibition-api";
 
 const nullableText = z.string().trim().max(4000).nullable().optional();
 const nullableUrlText = z.string().trim().max(1000).nullable().optional();
@@ -64,19 +64,38 @@ function assertIsAdmin(context: AuthedContext) {
   if (!isAdmin(context)) throw new Error("FORBIDDEN");
 }
 
-// Shared by every mutation below: admins can edit any company, owners only
-// their own.
+type EditMode = "admin" | "direct" | "propose";
+
+// Shared by every mutation below: admins can always write directly. An
+// owner editing their own company writes directly too, UNLESS the company
+// has already been approved once — at that point it's live on the public
+// exhibition, so further owner edits are staged in
+// exhibition_change_requests instead of touching the live row (see
+// db/migrations/0019_exhibition_change_requests.sql) until an admin
+// re-approves them. A company that's never been approved yet isn't public,
+// so there's nothing to protect and edits stay direct.
+async function resolveEditMode(
+  sql: ReturnType<typeof getDb>,
+  context: AuthedContext,
+  company_id: string,
+): Promise<EditMode> {
+  if (isAdmin(context)) return "admin";
+  const [company] = await sql<{ owner_user_id: string | null; status: string }[]>`
+    SELECT owner_user_id, status FROM exhibition_companies WHERE company_id = ${company_id}
+  `;
+  if (!company || company.owner_user_id !== context.user.id) throw new Error("FORBIDDEN");
+  return company.status === "approved" ? "propose" : "direct";
+}
+
+// Thin wrapper for call sites that only need the permission check, not the
+// direct-vs-propose decision (reorder/caption editing have no owner-facing
+// UI today).
 async function assertCanEditCompany(
   sql: ReturnType<typeof getDb>,
   context: AuthedContext,
   company_id: string,
 ) {
-  if (isAdmin(context)) return;
-  const [company] = await sql<{ owner_user_id: string | null }[]>`
-    SELECT owner_user_id FROM exhibition_companies WHERE company_id = ${company_id}
-  `;
-  if (company?.owner_user_id === context.user.id) return;
-  throw new Error("FORBIDDEN");
+  await resolveEditMode(sql, context, company_id);
 }
 
 function normalizeLatLng(patch: Record<string, unknown>) {
@@ -133,6 +152,11 @@ export const saveOwnedCompany = createServerFn({ method: "POST" })
       owner_user_id,
       reviewed_at,
       reviewed_by,
+      // rejection_note/submitted_at are also owner-admin fields: harmless to
+      // strip under direct writes, but under the propose path below a stale
+      // echoed value could overwrite something an admin set in the meantime.
+      rejection_note,
+      submitted_at,
       company_id: _ignored,
       ...safe
     } = data.patch as any;
@@ -143,14 +167,40 @@ export const saveOwnedCompany = createServerFn({ method: "POST" })
     if (cols.length === 0) return { ok: true };
 
     const sql = getDb();
-    // Ownership is enforced via the WHERE clause itself (matches the
-    // pre-migration RLS behavior): a non-owner's update simply matches zero
-    // rows instead of throwing.
-    await sql`
-      UPDATE exhibition_companies SET ${sql(patch as any, ...cols)}
+    const [company] = await sql<{ status: string }[]>`
+      SELECT status FROM exhibition_companies
       WHERE company_id = ${data.company_id} AND owner_user_id = ${context.user.id}
     `;
-    return { ok: true };
+    if (!company) return { ok: true }; // not this user's company — silent no-op, same as before
+
+    if (company.status !== "approved") {
+      await sql`
+        UPDATE exhibition_companies SET ${sql(patch as any, ...cols)}
+        WHERE company_id = ${data.company_id} AND owner_user_id = ${context.user.id}
+      `;
+      return { ok: true };
+    }
+
+    // Approved company: changes need review. Diff against the current live
+    // row (not the client's possibly-stale cache) so the change request only
+    // carries fields the owner actually changed.
+    const [live] = await sql<Record<string, unknown>[]>`
+      SELECT * FROM exhibition_companies WHERE company_id = ${data.company_id}
+    `;
+    const diffed: Record<string, unknown> = {};
+    for (const k of cols) {
+      if (JSON.stringify(patch[k] ?? null) !== JSON.stringify((live as any)?.[k] ?? null)) diffed[k] = patch[k];
+    }
+    if (Object.keys(diffed).length === 0) return { ok: true };
+
+    const [row] = await sql`
+      INSERT INTO exhibition_change_requests (company_id, entity_type, entity_id, action, payload, created_by)
+      VALUES (${data.company_id}, 'company', NULL, 'update', ${sql.json(diffed as any)}, ${context.user.id})
+      ON CONFLICT (company_id) WHERE status = 'pending' AND entity_type = 'company'
+      DO UPDATE SET payload = EXCLUDED.payload, submitted_at = now(), updated_at = now(), created_by = EXCLUDED.created_by
+      RETURNING id
+    `;
+    return { ok: true, pending: true, changeRequestId: row.id };
   });
 
 export const submitCompanyForReview = createServerFn({ method: "POST" })
@@ -180,12 +230,28 @@ export const addExhibitionImage = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const sql = getDb();
-    await assertCanEditCompany(sql, context, data.company_id);
-    await sql`
-      INSERT INTO exhibition_images (company_id, image_url, caption, caption_en, sort_order)
-      VALUES (${data.company_id}, ${data.image_url}, ${data.caption ?? null}, ${data.caption_en ?? null}, 0)
+    const mode = await resolveEditMode(sql, context, data.company_id);
+    const payload = {
+      image_url: data.image_url,
+      caption: data.caption ?? null,
+      caption_en: data.caption_en ?? null,
+      sort_order: 0,
+    };
+
+    if (mode !== "propose") {
+      await sql`
+        INSERT INTO exhibition_images (company_id, image_url, caption, caption_en, sort_order)
+        VALUES (${data.company_id}, ${payload.image_url}, ${payload.caption}, ${payload.caption_en}, 0)
+      `;
+      return { ok: true };
+    }
+
+    const [row] = await sql`
+      INSERT INTO exhibition_change_requests (company_id, entity_type, entity_id, action, payload, created_by)
+      VALUES (${data.company_id}, 'image', NULL, 'create', ${sql.json(payload)}, ${context.user.id})
+      RETURNING id
     `;
-    return { ok: true };
+    return { ok: true, pending: true, changeRequestId: row.id };
   });
 
 export const deleteExhibitionImage = createServerFn({ method: "POST" })
@@ -197,13 +263,29 @@ export const deleteExhibitionImage = createServerFn({ method: "POST" })
       { company_id: string }[]
     >`SELECT company_id FROM exhibition_images WHERE id = ${data.id}`;
     if (!img) throw new Error("NOT_FOUND");
-    await assertCanEditCompany(sql, context, img.company_id);
-    await sql`DELETE FROM exhibition_images WHERE id = ${data.id}`;
-    return { ok: true };
+    const mode = await resolveEditMode(sql, context, img.company_id);
+
+    if (mode !== "propose") {
+      await sql`DELETE FROM exhibition_images WHERE id = ${data.id}`;
+      return { ok: true };
+    }
+
+    const [row] = await sql`
+      INSERT INTO exhibition_change_requests (company_id, entity_type, entity_id, action, payload, created_by)
+      VALUES (${img.company_id}, 'image', ${data.id}, 'delete', '{}'::jsonb, ${context.user.id})
+      ON CONFLICT (entity_type, entity_id) WHERE status = 'pending' AND entity_id IS NOT NULL
+      DO UPDATE SET action = 'delete', payload = '{}'::jsonb, submitted_at = now(), updated_at = now(), created_by = EXCLUDED.created_by
+      RETURNING id
+    `;
+    return { ok: true, pending: true, changeRequestId: row.id };
   });
 
 const productWriteSchema = z.object({
   id: z.string().uuid().optional(),
+  // id of an existing, still-pending 'create' change request — set when the
+  // owner keeps editing a not-yet-approved new product draft, so the save
+  // updates that same pending row instead of creating another proposal.
+  change_request_id: z.string().uuid().optional(),
   company_id: z.string().trim().min(1).max(120),
   name: z.string().trim().min(1).max(255),
   name_en: z.string().trim().max(255).nullable().optional(),
@@ -221,15 +303,60 @@ export const upsertExhibitionProduct = createServerFn({ method: "POST" })
   .inputValidator((i) => productWriteSchema.parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
-    await assertCanEditCompany(sql, context, data.company_id);
-    const { id, ...rest } = data;
-    const cols = Object.keys(rest);
-    if (id) {
-      await sql`UPDATE exhibition_products SET ${sql(rest as any, ...cols)} WHERE id = ${id}`;
-    } else {
-      await sql`INSERT INTO exhibition_products ${sql(rest as any, ...cols)}`;
+    const mode = await resolveEditMode(sql, context, data.company_id);
+    const { id, change_request_id, company_id, ...payload } = data;
+
+    if (mode !== "propose") {
+      const cols = Object.keys(payload);
+      if (id) {
+        await sql`UPDATE exhibition_products SET ${sql(payload as any, ...cols)} WHERE id = ${id}`;
+      } else {
+        await sql`INSERT INTO exhibition_products ${sql({ ...payload, company_id } as any, "company_id", ...cols)}`;
+      }
+      return { ok: true };
     }
-    return { ok: true };
+
+    // Continuing to edit an already-proposed (still pending) new product.
+    if (change_request_id) {
+      const [updated] = await sql`
+        UPDATE exhibition_change_requests
+        SET payload = ${sql.json(payload)}, submitted_at = now(), updated_at = now()
+        WHERE id = ${change_request_id} AND company_id = ${company_id}
+          AND entity_type = 'product' AND action = 'create' AND status = 'pending'
+        RETURNING id
+      `;
+      if (!updated) throw new Error("NOT_FOUND");
+      return { ok: true, pending: true, changeRequestId: change_request_id };
+    }
+
+    // Editing an existing live product — diff against it.
+    if (id) {
+      const [live] = await sql<Record<string, unknown>[]>`SELECT * FROM exhibition_products WHERE id = ${id}`;
+      if (!live) throw new Error("NOT_FOUND");
+      const diffed: Record<string, unknown> = {};
+      for (const k of Object.keys(payload)) {
+        if (JSON.stringify((payload as any)[k] ?? null) !== JSON.stringify((live as any)[k] ?? null)) {
+          diffed[k] = (payload as any)[k];
+        }
+      }
+      if (Object.keys(diffed).length === 0) return { ok: true };
+      const [row] = await sql`
+        INSERT INTO exhibition_change_requests (company_id, entity_type, entity_id, action, payload, created_by)
+        VALUES (${company_id}, 'product', ${id}, 'update', ${sql.json(diffed as any)}, ${context.user.id})
+        ON CONFLICT (entity_type, entity_id) WHERE status = 'pending' AND entity_id IS NOT NULL
+        DO UPDATE SET action = 'update', payload = EXCLUDED.payload, submitted_at = now(), updated_at = now(), created_by = EXCLUDED.created_by
+        RETURNING id
+      `;
+      return { ok: true, pending: true, changeRequestId: row.id };
+    }
+
+    // Brand-new product proposal.
+    const [row] = await sql`
+      INSERT INTO exhibition_change_requests (company_id, entity_type, entity_id, action, payload, created_by)
+      VALUES (${company_id}, 'product', NULL, 'create', ${sql.json(payload)}, ${context.user.id})
+      RETURNING id
+    `;
+    return { ok: true, pending: true, changeRequestId: row.id };
   });
 
 export const deleteExhibitionProduct = createServerFn({ method: "POST" })
@@ -241,9 +368,21 @@ export const deleteExhibitionProduct = createServerFn({ method: "POST" })
       { company_id: string }[]
     >`SELECT company_id FROM exhibition_products WHERE id = ${data.id}`;
     if (!prod) throw new Error("NOT_FOUND");
-    await assertCanEditCompany(sql, context, prod.company_id);
-    await sql`DELETE FROM exhibition_products WHERE id = ${data.id}`;
-    return { ok: true };
+    const mode = await resolveEditMode(sql, context, prod.company_id);
+
+    if (mode !== "propose") {
+      await sql`DELETE FROM exhibition_products WHERE id = ${data.id}`;
+      return { ok: true };
+    }
+
+    const [row] = await sql`
+      INSERT INTO exhibition_change_requests (company_id, entity_type, entity_id, action, payload, created_by)
+      VALUES (${prod.company_id}, 'product', ${data.id}, 'delete', '{}'::jsonb, ${context.user.id})
+      ON CONFLICT (entity_type, entity_id) WHERE status = 'pending' AND entity_id IS NOT NULL
+      DO UPDATE SET action = 'delete', payload = '{}'::jsonb, submitted_at = now(), updated_at = now(), created_by = EXCLUDED.created_by
+      RETURNING id
+    `;
+    return { ok: true, pending: true, changeRequestId: row.id };
   });
 
 export const deleteExhibitionCompanyAdmin = createServerFn({ method: "POST" })
@@ -300,12 +439,111 @@ export const rejectCompanyAdmin = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
-    await sql`
-      UPDATE exhibition_companies SET
-        status = 'rejected',
-        reviewed_at = now(), reviewed_by = ${context.user.id}, rejection_note = ${data.note}
-      WHERE company_id = ${data.company_id}
+    await sql.begin(async (tx) => {
+      await tx`
+        UPDATE exhibition_companies SET
+          status = 'rejected',
+          reviewed_at = now(), reviewed_by = ${context.user.id}, rejection_note = ${data.note}
+        WHERE company_id = ${data.company_id}
+      `;
+      // The company is coming off the public exhibition, so any edits still
+      // awaiting review are moot — re-review starts fresh once it's
+      // re-approved.
+      await tx`
+        UPDATE exhibition_change_requests SET
+          status = 'rejected', reviewed_at = now(), reviewed_by = ${context.user.id},
+          rejection_note = 'Auto-rejected: the company was unpublished.'
+        WHERE company_id = ${data.company_id} AND status = 'pending'
+      `;
+    });
+    return { ok: true };
+  });
+
+export const approveChangeRequestAdmin = createServerFn({ method: "POST" })
+  .middleware([requireMfaVerified])
+  .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    assertIsAdmin(context);
+    const sql = getDb();
+    const [cr] = await sql<
+      {
+        id: string;
+        company_id: string;
+        entity_type: "company" | "product" | "image";
+        entity_id: string | null;
+        action: "update" | "create" | "delete";
+        payload: Record<string, unknown>;
+        status: string;
+      }[]
+    >`SELECT * FROM exhibition_change_requests WHERE id = ${data.id}`;
+    if (!cr) throw new Error("NOT_FOUND");
+    if (cr.status !== "pending") throw new Error("NOT_PENDING");
+
+    let notFoundTarget = false;
+
+    await sql.begin(async (tx) => {
+      const payload = cr.payload as Record<string, unknown>;
+      const cols = Object.keys(payload);
+
+      if (cr.entity_type === "company") {
+        if (cols.length) {
+          await tx`UPDATE exhibition_companies SET ${tx(payload as any, ...cols)} WHERE company_id = ${cr.company_id}`;
+        }
+      } else if (cr.entity_type === "product") {
+        if (cr.action === "create") {
+          await tx`INSERT INTO exhibition_products ${tx({ ...payload, company_id: cr.company_id } as any, "company_id", ...cols)}`;
+        } else if (cr.action === "update") {
+          if (cols.length) {
+            const [updated] = await tx`UPDATE exhibition_products SET ${tx(payload as any, ...cols)} WHERE id = ${cr.entity_id} RETURNING id`;
+            if (!updated) notFoundTarget = true;
+          }
+        } else {
+          const [deleted] = await tx`DELETE FROM exhibition_products WHERE id = ${cr.entity_id} RETURNING id`;
+          if (!deleted) notFoundTarget = true;
+        }
+      } else {
+        if (cr.action === "create") {
+          await tx`INSERT INTO exhibition_images ${tx({ ...payload, company_id: cr.company_id } as any, "company_id", ...cols)}`;
+        } else {
+          const [deleted] = await tx`DELETE FROM exhibition_images WHERE id = ${cr.entity_id} RETURNING id`;
+          if (!deleted) notFoundTarget = true;
+        }
+      }
+
+      // Defensive: the target row was deleted directly by an admin while
+      // this request sat pending. Don't mark it "approved" when nothing was
+      // actually applied — auto-reject with an explanatory note instead.
+      const [updatedCr] = notFoundTarget
+        ? await tx`
+            UPDATE exhibition_change_requests
+            SET status = 'rejected', reviewed_at = now(), reviewed_by = ${context.user.id},
+                rejection_note = 'Auto-rejected: the product/image this change referred to no longer exists.'
+            WHERE id = ${data.id} AND status = 'pending'
+            RETURNING id
+          `
+        : await tx`
+            UPDATE exhibition_change_requests SET status = 'approved', reviewed_at = now(), reviewed_by = ${context.user.id}
+            WHERE id = ${data.id} AND status = 'pending'
+            RETURNING id
+          `;
+      if (!updatedCr) throw new Error("ALREADY_REVIEWED");
+    });
+
+    return { ok: true, autoRejected: notFoundTarget };
+  });
+
+export const rejectChangeRequestAdmin = createServerFn({ method: "POST" })
+  .middleware([requireMfaVerified])
+  .inputValidator((i) => z.object({ id: z.string().uuid(), note: z.string().trim().max(2000) }).parse(i))
+  .handler(async ({ data, context }) => {
+    assertIsAdmin(context);
+    const sql = getDb();
+    const [updated] = await sql`
+      UPDATE exhibition_change_requests SET status = 'rejected', reviewed_at = now(), reviewed_by = ${context.user.id}, rejection_note = ${data.note}
+      WHERE id = ${data.id} AND status = 'pending'
+      RETURNING id
     `;
+    if (!updated) throw new Error("NOT_FOUND_OR_ALREADY_REVIEWED");
     return { ok: true };
   });
 
@@ -445,6 +683,52 @@ export const getMyCompany = createServerFn({ method: "GET" })
       LIMIT 1
     `;
     return company ?? null;
+  });
+
+// Owner withdraws or dismisses a proposal they made — a pending edit
+// reverts to the live value, a pending/rejected new product/image draft is
+// discarded, and a pending deletion is called off. Rejected requests are
+// included (not just pending) so the owner has a way to clear a rejected
+// draft from their view instead of it sitting there forever — nothing live
+// is affected either way, since a rejected request never touched the live
+// tables. Deliberately owner-only (no admin bypass): an admin reviews via
+// approve/reject, not cancel.
+export const cancelOwnPendingChange = createServerFn({ method: "POST" })
+  .middleware([requireMfaVerified])
+  .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    const sql = getDb();
+    const [cr] = await sql<{ created_by: string; status: string }[]>`
+      SELECT created_by, status FROM exhibition_change_requests WHERE id = ${data.id}
+    `;
+    if (!cr) throw new Error("NOT_FOUND");
+    if (cr.created_by !== context.user.id) throw new Error("FORBIDDEN");
+    if (cr.status !== "pending" && cr.status !== "rejected") throw new Error("NOT_CANCELABLE");
+    await sql`DELETE FROM exhibition_change_requests WHERE id = ${data.id} AND status IN ('pending', 'rejected')`;
+    return { ok: true };
+  });
+
+// Pending/rejected change requests for one company — approved rows are
+// omitted since the live data already reflects them, nothing more to show.
+// Kept separate from getExhibitionCompanyDetail (the public, high-traffic
+// read for the exhibition page) so that path never pays for a session
+// lookup or an extra query it doesn't need.
+export const getCompanyChangeRequests = createServerFn({ method: "GET" })
+  .middleware([requireAuth])
+  .inputValidator((i) => z.object({ company_id: z.string().trim().min(1).max(120) }).parse(i))
+  .handler(async ({ data, context }) => {
+    const sql = getDb();
+    if (!isAdmin(context)) {
+      const [company] = await sql<{ owner_user_id: string | null }[]>`
+        SELECT owner_user_id FROM exhibition_companies WHERE company_id = ${data.company_id}
+      `;
+      if (!company || company.owner_user_id !== context.user.id) throw new Error("FORBIDDEN");
+    }
+    return await sql<ExhibitionChangeRequest[]>`
+      SELECT * FROM exhibition_change_requests
+      WHERE company_id = ${data.company_id} AND status IN ('pending', 'rejected')
+      ORDER BY submitted_at DESC
+    `;
   });
 
 /* ============ UPLOADS (local disk storage — see src/lib/storage) ============ */

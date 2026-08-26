@@ -3,6 +3,7 @@ import {
   getPublicExhibitionProducts,
   getExhibitionCompanyDetail,
   getMyCompany,
+  getCompanyChangeRequests,
   uploadExhibitionAssetFn,
 } from "./exhibition-api.functions";
 import {
@@ -81,11 +82,32 @@ export type ExhibitionProduct = {
   sort_order: number;
 };
 
+export type ExhibitionChangeRequest = {
+  id: string;
+  company_id: string;
+  entity_type: "company" | "product" | "image";
+  entity_id: string | null;
+  action: "update" | "create" | "delete";
+  payload: Record<string, any>;
+  status: "pending" | "approved" | "rejected";
+  submitted_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  rejection_note: string | null;
+  created_by: string;
+};
+
 /* ============ OWNERSHIP / APPROVAL ============ */
 
 export async function fetchMyCompany() {
   const company = await getMyCompany();
   return (company ?? null) as ExhibitionCompany | null;
+}
+
+/** Pending/rejected change requests for one company (approved ones already reflect in the live data). */
+export async function fetchCompanyChangeRequests(companyId: string) {
+  const data = await getCompanyChangeRequests({ data: { company_id: companyId } });
+  return (data ?? []) as ExhibitionChangeRequest[];
 }
 
 /* ============ READS ============ */

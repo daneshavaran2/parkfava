@@ -321,7 +321,17 @@
     "delete_product": "حذف محصول",
     "caption_placeholder": "کپشن",
     "no_park": "— بدون پارک —",
-    "inactive_suffix": " (غیرفعال)"
+    "inactive_suffix": " (غیرفعال)",
+    "pendingChangesTitle": "ویرایش‌های در انتظار بررسی",
+    "changeApprove": "تایید این ویرایش",
+    "changeReject": "رد این ویرایش…",
+    "changeRejectPrompt": "دلیل رد (به صاحب شرکت نمایش داده می‌شود):",
+    "changeActionCreate": "پیشنهاد جدید",
+    "changeActionUpdate": "ویرایش",
+    "changeActionDelete": "درخواست حذف",
+    "changeEntityCompany": "اطلاعات شرکت",
+    "changeEntityProduct": "محصول",
+    "changeEntityImage": "تصویر گالری"
   },
   "adminUsers": {
     "generic_error": "خطا",
@@ -544,7 +554,7 @@
     "status_pending_label": "در انتظار تایید",
     "status_pending_text": "ارسال شد. تا زمان تایید ادمین در نمایشگاه دیده نمی‌شوید.",
     "status_approved_label": "تاییدشده و منتشرشده",
-    "status_approved_text": "شرکت شما در نمایشگاه دیده می‌شود. ویرایش نیازمند بازبینی مجدد نیست.",
+    "status_approved_text": "شرکت شما در نمایشگاه دیده می‌شود. تغییرات جدید تا تایید ادمین منتشر نمی‌شوند.",
     "status_rejected_label": "رد شده",
     "status_rejected_text": "درخواست شما رد شد. پس از اصلاح، دوباره ارسال کنید.",
     "admin_note": "یادداشت ادمین",
@@ -572,7 +582,15 @@
     "product_name_en_placeholder": "نام محصول (انگلیسی)",
     "product_desc_en_placeholder": "توضیحات محصول (انگلیسی)",
     "product_link_placeholder": "لینک محصول/سایت (با https)",
-    "save": "ذخیره"
+    "save": "ذخیره",
+    "change_pending_msg": "ذخیره شد. برای بررسی ادمین ارسال شد.",
+    "pending_change_badge": "⏳ در انتظار بررسی",
+    "rejected_change_badge": "رد شد",
+    "pending_change_banner_text": "شما یک ویرایش در انتظار بررسی ادمین دارید.",
+    "cancel_pending_change": "لغو این ویرایش",
+    "confirm_cancel_pending_change": "این ویرایش لغو شود و نسخه منتشرشده باقی بماند؟",
+    "pending_new_product_badge": "⏳ محصول جدید — در انتظار بررسی",
+    "pending_delete_badge": "⏳ در انتظار حذف"
   },
   "registerCompany": {
     "eyebrow": "ثبت شرکت",

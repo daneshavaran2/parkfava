@@ -321,7 +321,17 @@
     "delete_product": "Delete product",
     "caption_placeholder": "Caption",
     "no_park": "— No park —",
-    "inactive_suffix": " (inactive)"
+    "inactive_suffix": " (inactive)",
+    "pendingChangesTitle": "Pending edits awaiting review",
+    "changeApprove": "Approve this edit",
+    "changeReject": "Reject this edit…",
+    "changeRejectPrompt": "Reason for rejection (shown to the company owner):",
+    "changeActionCreate": "New proposal",
+    "changeActionUpdate": "Edit",
+    "changeActionDelete": "Deletion request",
+    "changeEntityCompany": "Company info",
+    "changeEntityProduct": "Product",
+    "changeEntityImage": "Gallery image"
   },
   "adminUsers": {
     "generic_error": "Error",
@@ -544,7 +554,7 @@
     "status_pending_label": "Awaiting approval",
     "status_pending_text": "Submitted. You won't appear in the exhibition until the admin approves it.",
     "status_approved_label": "Approved and published",
-    "status_approved_text": "Your company is visible in the exhibition. Edits don't require re-review.",
+    "status_approved_text": "Your company is live in the exhibition. New edits are reviewed by an admin before they go public.",
     "status_rejected_label": "Rejected",
     "status_rejected_text": "Your submission was rejected. Please resubmit after making corrections.",
     "admin_note": "Admin note",
@@ -572,7 +582,15 @@
     "product_name_en_placeholder": "Product name (English)",
     "product_desc_en_placeholder": "Product description (English)",
     "product_link_placeholder": "Product/site link (with https)",
-    "save": "Save"
+    "save": "Save",
+    "change_pending_msg": "Saved. Submitted for admin review.",
+    "pending_change_badge": "⏳ Pending review",
+    "rejected_change_badge": "Rejected",
+    "pending_change_banner_text": "You have an edit awaiting admin review.",
+    "cancel_pending_change": "Cancel this edit",
+    "confirm_cancel_pending_change": "Cancel this edit and keep the published version?",
+    "pending_new_product_badge": "⏳ New product — pending review",
+    "pending_delete_badge": "⏳ Pending deletion"
   },
   "registerCompany": {
     "eyebrow": "Register company",
