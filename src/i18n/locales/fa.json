@@ -559,7 +559,20 @@
     "submit": "ثبت",
     "cancel": "انصراف",
     "no_products_yet": "هنوز محصولی اضافه نشده.",
-    "confirm_delete_product": "حذف این محصول؟"
+    "confirm_delete_product": "حذف این محصول؟",
+    "upload_video": "آپلود ویدئو",
+    "replace_video": "تعویض ویدئو",
+    "video_uploaded": "ویدئو بارگذاری شد ✓",
+    "teaser_video_not_uploaded": "ویدئویی بارگذاری نشده.",
+    "product_main_image": "عکس اصلی",
+    "product_video": "ویدئو",
+    "product_catalog": "کاتالوگ/PDF",
+    "replace_catalog": "تعویض کاتالوگ",
+    "view_catalog_short": "مشاهدهٔ کاتالوگ",
+    "product_name_en_placeholder": "نام محصول (انگلیسی)",
+    "product_desc_en_placeholder": "توضیحات محصول (انگلیسی)",
+    "product_link_placeholder": "لینک محصول/سایت (با https)",
+    "save": "ذخیره"
   },
   "registerCompany": {
     "eyebrow": "ثبت شرکت",

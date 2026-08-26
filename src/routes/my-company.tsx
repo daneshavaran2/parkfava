@@ -180,6 +180,7 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
   const status = data?.company?.status ?? "draft";
   const canEdit = status === "draft" || status === "rejected" || status === "pending";
   const logoUrl = useAssetUrl(form.logo_url ?? null);
+  const videoUrl = useAssetUrl(form.video_url ?? null);
 
   function invalidate() {
     qc.invalidateQueries({ queryKey: ["my-company", companyId] });
@@ -218,6 +219,29 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
       setForm(next);
       await saveOwnedCompanyFn({ data: { company_id: companyId, patch: { logo_url: path } } });
       invalidate(); setMsg(t("myCompany.logo_uploaded"));
+    } catch (e: any) { setMsg(`${t("common.error")}: ${e.message ?? e}`); }
+    setBusy(false);
+  }
+
+  async function uploadVideo(file: File) {
+    setBusy(true);
+    try {
+      const path = await uploadExhibitionAsset(companyId, file);
+      const next = { ...form, video_url: path };
+      setForm(next);
+      await saveOwnedCompanyFn({ data: { company_id: companyId, patch: { video_url: path } } });
+      invalidate(); setMsg(t("myCompany.video_uploaded"));
+    } catch (e: any) { setMsg(`${t("common.error")}: ${e.message ?? e}`); }
+    setBusy(false);
+  }
+
+  async function removeVideo() {
+    setBusy(true);
+    try {
+      const next = { ...form, video_url: "" };
+      setForm(next);
+      await saveOwnedCompanyFn({ data: { company_id: companyId, patch: { video_url: "" } } });
+      invalidate();
     } catch (e: any) { setMsg(`${t("common.error")}: ${e.message ?? e}`); }
     setBusy(false);
   }
@@ -322,6 +346,24 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
           </div>
         </div>
 
+        <div className="panel" style={{ padding: 20, marginTop: 16 }}>
+          <h3 style={{ margin: "0 0 10px" }}>{t("company.intro_video")}</h3>
+          {videoUrl ? (
+            <video src={videoUrl} controls style={{ width: "100%", maxWidth: 480, borderRadius: 10, background: "#000" }} />
+          ) : (
+            <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("myCompany.teaser_video_not_uploaded")}</div>
+          )}
+          {canEdit && (
+            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              <label className="btn btn-ghost" style={{ fontSize: 12, cursor: "pointer" }}>
+                {form.video_url ? t("myCompany.replace_video") : t("myCompany.upload_video")}
+                <input type="file" accept="video/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadVideo(f); e.target.value = ""; }} />
+              </label>
+              {form.video_url && <button className="btn btn-ghost" onClick={removeVideo} disabled={busy} style={{ fontSize: 12 }}>{t("myCompany.delete")}</button>}
+            </div>
+          )}
+        </div>
+
         <ImagesPanel images={data?.images ?? []} canEdit={canEdit} onAdd={onAddImage} onRemove={removeImage} />
         <ProductsPanel companyId={companyId} products={data?.products ?? []} canEdit={canEdit} onChanged={invalidate} />
       </div>
@@ -399,7 +441,6 @@ function ProductsPanel({ companyId, products, canEdit, onChanged }: {
 }) {
   const { t } = useTranslation();
   const upsertExhibitionProductFn = useServerFn(upsertExhibitionProduct);
-  const deleteExhibitionProductFn = useServerFn(deleteExhibitionProduct);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
@@ -410,11 +451,6 @@ function ProductsPanel({ companyId, products, canEdit, onChanged }: {
     setBusy(true);
     await upsertExhibitionProductFn({ data: { company_id: companyId, name: name.trim(), description: desc || null, sort_order: products.length } });
     setBusy(false); setName(""); setDesc(""); setCreating(false); onChanged();
-  }
-
-  async function remove(id: string) {
-    if (!confirm(t("myCompany.confirm_delete_product"))) return;
-    await deleteExhibitionProductFn({ data: { id } }); onChanged();
   }
 
   return (
@@ -434,18 +470,114 @@ function ProductsPanel({ companyId, products, canEdit, onChanged }: {
       {products.length === 0 ? (
         <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("myCompany.no_products_yet")}</div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {products.map((p) => (
-            <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: 10, background: "var(--panel-2)", borderRadius: 8 }}>
-              <div>
-                <div style={{ fontWeight: 700 }}>{p.name}</div>
-                {p.description && <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>{p.description}</div>}
-              </div>
-              {canEdit && <button className="btn btn-ghost" onClick={() => remove(p.id)} style={{ fontSize: 12, color: "#c33" }}>{t("myCompany.delete")}</button>}
-            </div>
+            <OwnedProductRow key={p.id} p={p} companyId={companyId} canEdit={canEdit} onChange={onChanged} />
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function OwnedProductRow({ p, companyId, canEdit, onChange }: {
+  p: ExhibitionProduct;
+  companyId: string;
+  canEdit: boolean;
+  onChange: () => void;
+}) {
+  const { t } = useTranslation();
+  const upsertExhibitionProductFn = useServerFn(upsertExhibitionProduct);
+  const deleteExhibitionProductFn = useServerFn(deleteExhibitionProduct);
+  const [form, setForm] = useState(p);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  useEffect(() => setForm(p), [p]);
+  const img = useAssetUrl(form.image_url);
+  const vid = useAssetUrl(form.video_url);
+  const cat = useAssetUrl(form.catalog_url);
+
+  async function save() {
+    setBusy(true); setMsg(null);
+    try {
+      await upsertExhibitionProductFn({ data: form as any });
+      onChange();
+      setMsg(t("common.saved"));
+    } catch (e: any) {
+      setMsg(`${t("common.error")}: ${e?.message ?? e}`);
+    }
+    setBusy(false);
+  }
+
+  async function upload(field: "image_url" | "video_url" | "catalog_url", file: File) {
+    setBusy(true); setMsg(null);
+    try {
+      const path = await uploadExhibitionAsset(companyId, file);
+      const next = { ...form, [field]: path };
+      setForm(next);
+      await upsertExhibitionProductFn({ data: next as any });
+      onChange();
+    } catch (e: any) {
+      setMsg(`${t("common.error")}: ${e?.message ?? e}`);
+    }
+    setBusy(false);
+  }
+
+  async function remove() {
+    if (!confirm(t("myCompany.confirm_delete_product"))) return;
+    try {
+      await deleteExhibitionProductFn({ data: { id: p.id } });
+      onChange();
+    } catch (e: any) {
+      setMsg(`${t("common.error")}: ${e?.message ?? e}`);
+    }
+  }
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", gap: 12, padding: 10, background: "var(--panel-2)", borderRadius: 8 }}>
+      <div>
+        <div style={{ width: 140, height: 105, background: "var(--panel)", borderRadius: 8, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 6, border: "1px solid var(--stroke)" }}>
+          {img ? <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>{t("myCompany.product_main_image")}</span>}
+        </div>
+        {canEdit && (
+          <label className="btn btn-ghost" style={{ width: 140, fontSize: 11, padding: "4px 6px", cursor: "pointer", display: "flex", justifyContent: "center", marginBottom: 4 }}>
+            {t("myCompany.product_main_image")}
+            <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) upload("image_url", f); e.target.value = ""; }} />
+          </label>
+        )}
+        {vid && <video src={vid} controls style={{ width: 140, borderRadius: 6, marginBottom: 4 }} />}
+        {canEdit && (
+          <label className="btn btn-ghost" style={{ width: 140, fontSize: 11, padding: "4px 6px", cursor: "pointer", display: "flex", justifyContent: "center", marginBottom: 4 }}>
+            {form.video_url ? t("myCompany.replace_video") : t("myCompany.product_video")}
+            <input type="file" accept="video/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) upload("video_url", f); e.target.value = ""; }} />
+          </label>
+        )}
+        {cat && (
+          <a href={cat} target="_blank" rel="noopener" className="btn btn-ghost" style={{ width: 140, fontSize: 11, padding: "4px 6px", display: "flex", justifyContent: "center", marginBottom: 4 }}>
+            {t("myCompany.view_catalog_short")}
+          </a>
+        )}
+        {canEdit && (
+          <label className="btn btn-ghost" style={{ width: 140, fontSize: 11, padding: "4px 6px", cursor: "pointer", display: "flex", justifyContent: "center" }}>
+            {form.catalog_url ? t("myCompany.replace_catalog") : t("myCompany.product_catalog")}
+            <input type="file" accept=".pdf,application/pdf,.doc,.docx" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) upload("catalog_url", f); e.target.value = ""; }} />
+          </label>
+        )}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <input disabled={!canEdit} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t("myCompany.product_name_placeholder")} style={inp} />
+        <input disabled={!canEdit} value={form.name_en ?? ""} onChange={(e) => setForm({ ...form, name_en: e.target.value })} placeholder={t("myCompany.product_name_en_placeholder")} style={{ ...inp, direction: "ltr", textAlign: "left" }} />
+        <textarea disabled={!canEdit} value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={t("myCompany.product_desc_placeholder")} rows={3} style={{ ...inp, resize: "vertical" }} />
+        <textarea disabled={!canEdit} value={form.description_en ?? ""} onChange={(e) => setForm({ ...form, description_en: e.target.value })} placeholder={t("myCompany.product_desc_en_placeholder")} rows={3} style={{ ...inp, resize: "vertical", direction: "ltr", textAlign: "left" }} />
+        <input disabled={!canEdit} value={form.link_url ?? ""} onChange={(e) => setForm({ ...form, link_url: e.target.value })} placeholder={t("myCompany.product_link_placeholder")} style={inp} />
+        {canEdit && (
+          <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+            <button className="btn btn-primary" onClick={save} disabled={busy} style={{ fontSize: 12 }}>{t("myCompany.save")}</button>
+            <button className="btn btn-ghost" onClick={remove} style={{ fontSize: 12, color: "#c33" }}>{t("myCompany.delete")}</button>
+            {msg && <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{msg}</span>}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

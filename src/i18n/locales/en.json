@@ -559,7 +559,20 @@
     "submit": "Submit",
     "cancel": "Cancel",
     "no_products_yet": "No products added yet.",
-    "confirm_delete_product": "Delete this product?"
+    "confirm_delete_product": "Delete this product?",
+    "upload_video": "Upload video",
+    "replace_video": "Replace video",
+    "video_uploaded": "Video uploaded ✓",
+    "teaser_video_not_uploaded": "No video uploaded.",
+    "product_main_image": "Main image",
+    "product_video": "Video",
+    "product_catalog": "Catalog/PDF",
+    "replace_catalog": "Replace catalog",
+    "view_catalog_short": "View catalog",
+    "product_name_en_placeholder": "Product name (English)",
+    "product_desc_en_placeholder": "Product description (English)",
+    "product_link_placeholder": "Product/site link (with https)",
+    "save": "Save"
   },
   "registerCompany": {
     "eyebrow": "Register company",
