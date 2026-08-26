@@ -46,6 +46,9 @@ async function askLovableAi(
       model: process.env.LOVABLE_AI_MODEL || LOVABLE_DEFAULT_MODEL,
       messages: buildMessages(systemPrompt, history, question),
       temperature: 0.4,
+      // Matches the OpenRouter path's cap (below) — whichever provider ends
+      // up handling a given request, answer length behaves the same way.
+      max_tokens: 1200,
     }),
   });
   if (!res.ok) {
@@ -78,7 +81,10 @@ async function askOpenRouterWith(
       model,
       messages: buildMessages(systemPrompt, history, question),
       temperature: 0.4,
-      max_tokens: 600,
+      // Was 600 — too tight for a structured, multi-company answer (a
+      // separate paragraph per match plus products/founders/contact easily
+      // exceeds that before the model finishes, cutting answers off mid-list).
+      max_tokens: 1200,
     }),
   });
   if (!res.ok) throw new Error(`OpenRouter request failed: ${res.status}`);
