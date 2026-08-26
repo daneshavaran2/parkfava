@@ -22,6 +22,7 @@
     "seed": "bun run scripts/seed-dev-data.ts",
     "reset:dev": "bun run scripts/reset-dev-data.ts",
     "db:migrate": "bun run db/migrate.ts",
+    "provision:company-owners": "bun run scripts/provision-company-owners.ts",
     "format": "prettier --write ."
   },
   "dependencies": {

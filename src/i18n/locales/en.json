@@ -507,6 +507,14 @@
     "download_file": "Download file"
   },
   "myCompany": {
+    "force_password_title": "You need to change your password",
+    "force_password_lead": "For security reasons, you need to set a new password for your account before continuing.",
+    "field_new_password": "New password",
+    "field_confirm_password": "Confirm new password",
+    "password_mismatch": "Passwords do not match.",
+    "password_too_short": "Password must be at least 8 characters.",
+    "submit_new_password": "Set new password",
+    "password_changed_success": "Password changed successfully.",
     "not_assigned_title": "Your account has not been assigned to a company yet",
     "not_assigned_lead": "To edit the company profile, the network admin needs to assign your account as a company's representative. Please contact the exhibition management team and send them the ID below:",
     "dashboard_eyebrow": "Company owner dashboard",

@@ -20,6 +20,9 @@ dist-ssr
 .env
 .env.local
 
+# Bulk-provisioning credential handouts — plaintext initial passwords, never commit
+scripts/output/
+
 # Local upload storage (UPLOAD_DIR default). In production this is a mounted
 # disk; locally it fills with uploaded logos/catalogs that must not be committed.
 data/

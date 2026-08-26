@@ -21,6 +21,7 @@ export type SessionUser = {
   phone: string | null;
   roles: string[];
   mfaVerified: boolean;
+  mustChangePassword: boolean;
 };
 
 export async function createSession(userId: string, remember = true): Promise<void> {
@@ -66,9 +67,16 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 
   const sql = getDb();
   const rows = await sql<
-    { id: string; email: string; phone: string | null; mfa_token_expires_at: Date | null; role: string | null }[]
+    {
+      id: string;
+      email: string;
+      phone: string | null;
+      mfa_token_expires_at: Date | null;
+      must_change_password: boolean;
+      role: string | null;
+    }[]
   >`
-    SELECT u.id, u.email, u.phone, u.mfa_token_expires_at, r.role
+    SELECT u.id, u.email, u.phone, u.mfa_token_expires_at, u.must_change_password, r.role
     FROM sessions s
     JOIN users u ON u.id = s.user_id
     LEFT JOIN user_roles r ON r.user_id = u.id
@@ -78,5 +86,12 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 
   const roles = rows.map((r) => r.role).filter((r): r is string => !!r);
   const mfaVerified = !!rows[0].mfa_token_expires_at && rows[0].mfa_token_expires_at > new Date();
-  return { id: rows[0].id, email: rows[0].email, phone: rows[0].phone, roles, mfaVerified };
+  return {
+    id: rows[0].id,
+    email: rows[0].email,
+    phone: rows[0].phone,
+    roles,
+    mfaVerified,
+    mustChangePassword: rows[0].must_change_password,
+  };
 }

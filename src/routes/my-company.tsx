@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCurrentUser, signOutFn } from "@/lib/auth.functions";
+import { getCurrentUser, signOutFn, changeMyPassword } from "@/lib/auth.functions";
 import { useAssetUrl } from "@/lib/use-auth";
 import {
   fetchMyCompany,
@@ -36,20 +36,34 @@ function MyCompanyPage() {
   const [companyId, setCompanyId] = useState<string | null>(null);
 
   const [notAssigned, setNotAssigned] = useState(false);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
+
+  async function loadCompany() {
+    const mine = await fetchMyCompany();
+    if (!mine) { setNotAssigned(true); setChecking(false); return; }
+    setCompanyId(mine.company_id);
+    setChecking(false);
+  }
 
   useEffect(() => {
     (async () => {
       const user = await getCurrentUser();
       if (!user) { navigate({ to: "/auth", search: { next: "/my-company" } as any }); return; }
-      const mine = await fetchMyCompany();
-      if (!mine) { setNotAssigned(true); setChecking(false); return; }
-      setCompanyId(mine.company_id);
-      setChecking(false);
+      if (user.mustChangePassword) { setMustChangePassword(true); setChecking(false); return; }
+      await loadCompany();
     })();
   }, [navigate]);
 
   if (checking) {
     return <div className="view"><div className="shell" style={{ padding: 40 }}>{t("common.loading")}</div></div>;
+  }
+  if (mustChangePassword) {
+    return (
+      <ForcePasswordChange
+        onDone={() => { setMustChangePassword(false); setChecking(true); loadCompany(); }}
+        onSignOut={async () => { await signOutFn(); navigate({ to: "/" }); }}
+      />
+    );
   }
   if (notAssigned) {
     return (
@@ -70,6 +84,56 @@ function MyCompanyPage() {
   if (!companyId) return null;
 
   return <OwnerEditor companyId={companyId} onSignOut={async () => { await signOutFn(); navigate({ to: "/" }); }} qc={qc} />;
+}
+
+// Shown instead of the company editor when the session's must_change_password
+// flag is set (see src/routes/my-company.tsx's MyCompanyPage effect) —
+// bulk-provisioned accounts (scripts/provision-company-owners.ts) start with
+// their contact mobile number as the password, which is only ever meant to
+// be a one-time bootstrap credential.
+function ForcePasswordChange({ onDone, onSignOut }: { onDone: () => void; onSignOut: () => void }) {
+  const { t } = useTranslation();
+  const changeMyPasswordFn = useServerFn(changeMyPassword);
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  async function submit() {
+    setMsg(null);
+    if (password.length < 8) { setMsg(t("myCompany.password_too_short")); return; }
+    if (password !== confirm) { setMsg(t("myCompany.password_mismatch")); return; }
+    setBusy(true);
+    try {
+      await changeMyPasswordFn({ data: { newPassword: password } });
+      onDone();
+    } catch (e: any) {
+      setMsg(`${t("common.error")}: ${e?.message ?? e}`);
+    }
+    setBusy(false);
+  }
+
+  return (
+    <div className="view">
+      <div className="shell" style={{ padding: 40, maxWidth: 480 }}>
+        <h2 className="h2">{t("myCompany.force_password_title")}</h2>
+        <p className="lead" style={{ marginTop: 8 }}>{t("myCompany.force_password_lead")}</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 20 }}>
+          <F label={t("myCompany.field_new_password")}>
+            <input type="password" style={inp} value={password} onChange={(e) => setPassword(e.target.value)} />
+          </F>
+          <F label={t("myCompany.field_confirm_password")}>
+            <input type="password" style={inp} value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+          </F>
+          {msg && <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{msg}</div>}
+          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+            <button className="btn btn-primary" onClick={submit} disabled={busy}>{t("myCompany.submit_new_password")}</button>
+            <button className="btn btn-ghost" onClick={onSignOut}>{t("common.logout")}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOut: () => void; qc: ReturnType<typeof useQueryClient> }) {

@@ -57,6 +57,20 @@ export function normName(s: string | null | undefined): string {
     .trim();
 }
 
+// Free/public email providers are shared by thousands of unrelated small
+// companies — a matching domain here is not evidence of being the same
+// company, unlike a company's own custom domain. Without this guard, two
+// completely different companies both using a @gmail.com address were
+// treated as the same company (found via scripts/provision-company-owners.ts:
+// ~10 distinct companies all "matched" to whichever one happened to be
+// first in the haystack), silently misassigning one company's data — and,
+// for that script, its login/ownership account — to an unrelated one.
+const GENERIC_DOMAINS = new Set([
+  "gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "live.com",
+  "ymail.com", "icloud.com", "aol.com", "mail.com", "chmail.ir", "mail.ir",
+  "yahoo.co.uk",
+]);
+
 /**
  * Strongest signal first: a shared web or email domain is proof, an exact
  * normalised name is near-proof, and substring overlap is the last resort
@@ -72,13 +86,13 @@ export function findMatch<T extends MatchableCompany>(
   { minSubstringLength = 6 }: { minSubstringLength?: number } = {},
 ): { company: T; method: string } | null {
   const domain = normDomain(needle.website);
-  if (domain) {
+  if (domain && !GENERIC_DOMAINS.has(domain)) {
     const byWebsite = haystack.find((d) => normDomain(d.website) === domain);
     if (byWebsite) return { company: byWebsite, method: "website" };
   }
 
   const emailDomain = needle.email ? needle.email.split("@")[1]?.toLowerCase() : null;
-  if (emailDomain) {
+  if (emailDomain && !GENERIC_DOMAINS.has(emailDomain)) {
     const byEmail = haystack.find(
       (d) => d.email && d.email.split("@")[1]?.toLowerCase() === emailDomain,
     );

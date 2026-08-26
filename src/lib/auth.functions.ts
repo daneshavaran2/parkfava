@@ -146,3 +146,24 @@ export const getCurrentUser = createServerFn({ method: "GET" }).handler(async ()
 export const whoAmI = createServerFn({ method: "GET" })
   .middleware([requireAuth])
   .handler(async ({ context }) => context.user);
+
+const changePasswordSchema = z.object({
+  newPassword: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+// requireAuth, not requireMfaVerified: this is the one action a
+// must_change_password account needs to reach before anything else, and
+// gating it behind the (unrelated, phone-OTP-based) MFA step would add
+// friction for no benefit.
+export const changeMyPassword = createServerFn({ method: "POST" })
+  .middleware([requireAuth])
+  .inputValidator((i) => changePasswordSchema.parse(i))
+  .handler(async ({ data, context }) => {
+    const sql = getDb();
+    const password_hash = await hashPassword(data.newPassword);
+    await sql`
+      UPDATE users SET password_hash = ${password_hash}, must_change_password = false
+      WHERE id = ${context.user.id}
+    `;
+    return { ok: true };
+  });
