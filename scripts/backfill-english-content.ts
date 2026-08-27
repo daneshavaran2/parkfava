@@ -52,6 +52,44 @@ import { fileURLToPath } from "node:url";
 import postgres from "postgres";
 import { askOpenRouter } from "../src/lib/assistant-ai.server";
 
+// Calls OpenAI directly when OPENAI_API_KEY is set, bypassing askOpenRouter's
+// OpenRouter/Lovable Gateway providers entirely — for a plain OpenAI key,
+// which neither of those accepts. Same chat-completions shape, so this is a
+// thin wrapper, not a fork of the request logic.
+async function askOpenAiDirect(
+  systemPrompt: string,
+  question: string,
+  maxTokens: number,
+): Promise<string> {
+  const apiKey = process.env.OPENAI_API_KEY!;
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: question },
+      ],
+      temperature: 0.4,
+      max_tokens: maxTokens,
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`OpenAI request failed: ${res.status} ${body.slice(0, 300)}`);
+  }
+  const json = await res.json();
+  const text = json?.choices?.[0]?.message?.content;
+  if (!text || typeof text !== "string") throw new Error("OpenAI returned no content");
+  return text;
+}
+
+async function askLlm(systemPrompt: string, question: string, maxTokens: number): Promise<string> {
+  if (process.env.OPENAI_API_KEY) return askOpenAiDirect(systemPrompt, question, maxTokens);
+  return askOpenRouter(systemPrompt, [], question, maxTokens);
+}
+
 const APPLY = process.argv.includes("--apply");
 const AUDIT_ONLY = process.argv.includes("--audit-only");
 const fromIdx = process.argv.indexOf("--from");
@@ -232,7 +270,7 @@ async function translateCompany(row: CompanyRow, products: ProductRow[]) {
     "اگر مقدار ورودی یک فیلد null بود، همان فیلد را در خروجی null برگردان. " +
     "فقط یک شیء JSON معتبر خروجی بده — بدون توضیح اضافه، بدون Markdown fence.";
 
-  const raw = await askOpenRouter(system, [], JSON.stringify(input, null, 2), 3000);
+  const raw = await askLlm(system, JSON.stringify(input, null, 2), 3000);
   const proposal = parseJsonResponse(raw) as FillProposal;
   proposal.description_en = proposal.intro_en ?? null;
   return proposal;
@@ -257,7 +295,7 @@ async function auditCompany(row: CompanyRow, products: ProductRow[]) {
     '"products": [{"id": "...", "name_en": "..."}]}. ' +
     "فقط یک شیء JSON معتبر خروجی بده — بدون توضیح اضافه، بدون Markdown fence.";
 
-  const raw = await askOpenRouter(system, [], JSON.stringify(input, null, 2), 800);
+  const raw = await askLlm(system, JSON.stringify(input, null, 2), 800);
   return parseJsonResponse(raw) as AuditProposal;
 }
 
