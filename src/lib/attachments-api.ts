@@ -7,6 +7,7 @@ import {
   reorderAttachmentsAdmin,
   uploadAttachmentFn,
 } from "./attachments.functions";
+import { shrinkImageForUpload } from "./image-shrink";
 
 export type AttachmentKind =
   | "logo"
@@ -55,7 +56,7 @@ export async function uploadAttachment(opts: {
 }) {
   const { file, ownerType, ownerId, kind, title, description } = opts;
   const form = new FormData();
-  form.set("file", file);
+  form.set("file", await shrinkImageForUpload(file));
   form.set("ownerType", ownerType);
   form.set("ownerId", ownerId);
   form.set("kind", kind);
