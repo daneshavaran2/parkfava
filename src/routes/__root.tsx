@@ -122,12 +122,6 @@ function RootComponent() {
   // and page shell would all sit on top of it.
   const isStandalone = path.startsWith("/hero") || path === "/auth";
   const isParksFull = path === "/parks" || path.startsWith("/parks/");
-  // The AI assistant is a data-entry aid for admins and company owners
-  // filling out their profile/products — it has no role on public pages
-  // (home, company profiles, exhibition, parks…), so it only mounts on the
-  // admin panel and the company self-service screens.
-  const showAssistant =
-    path.startsWith("/admin") || path.startsWith("/my-company") || path.startsWith("/register-company");
 
   const [query, setQuery] = useState("");
   const [theme, setTheme] = useState<"dark" | "light">("light");
@@ -174,7 +168,7 @@ function RootComponent() {
             <Outlet />
           </div>
           {!isParksFull && <Footer />}
-          {showAssistant && <ClientOnly><Assistant /></ClientOnly>}
+          <ClientOnly><Assistant /></ClientOnly>
         </>
       )}
       </LanguageProvider>
