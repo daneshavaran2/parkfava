@@ -12,6 +12,7 @@ import {
   deleteAboutSectionAdmin,
   uploadAboutAssetFn,
 } from "./about-sections.functions";
+import { shrinkImageForUpload } from "./image-shrink";
 
 export type ExhibitionCompany = {
   company_id: string;
@@ -137,7 +138,7 @@ export async function fetchExhibitionCompany(id: string) {
 
 export async function uploadExhibitionAsset(company_id: string, file: File) {
   const form = new FormData();
-  form.set("file", file);
+  form.set("file", await shrinkImageForUpload(file));
   form.set("company_id", company_id);
   const { path } = await uploadExhibitionAssetFn({ data: form });
   return path;
@@ -174,7 +175,7 @@ export async function deleteAboutSection(id: string) {
 
 export async function uploadAboutAsset(file: File) {
   const form = new FormData();
-  form.set("file", file);
+  form.set("file", await shrinkImageForUpload(file));
   const { path } = await uploadAboutAssetFn({ data: form });
   return path;
 }
