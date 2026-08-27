@@ -47,7 +47,6 @@ export function Assistant() {
   // the displayed chip label is translated.
   const quick = [
     { label: t("assistant.quick_ai"), q: "شرکت‌های هوش مصنوعی" },
-    { label: t("assistant.quick_mashhad"), q: "شرکت‌های مشهد" },
     { label: t("assistant.quick_parks"), q: "پارک‌های فعال" },
     { label: t("assistant.quick_iot"), q: "اینترنت اشیا" },
   ];
