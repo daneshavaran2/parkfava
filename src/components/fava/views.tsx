@@ -649,6 +649,8 @@ export function CompanyCard({ c }) {
             <img
               src={logoSrc}
               alt={pickName(c, i18n.language)}
+              loading="lazy"
+              decoding="async"
               style={{
                 width: "100%",
                 height: "100%",
@@ -670,6 +672,8 @@ export function CompanyCard({ c }) {
               src={logoSrc}
               alt=""
               aria-hidden
+              loading="lazy"
+              decoding="async"
               style={{
                 width: 22,
                 height: 22,
@@ -841,6 +845,8 @@ function GalleryFigure({ att }: { att: CompanyAttachment }) {
             <img
               src={url}
               alt={att.title || ""}
+              loading="lazy"
+              decoding="async"
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           )}
@@ -1538,6 +1544,8 @@ function ProductGalleryImage({ path, alt }: { path: string; alt: string }) {
     <img
       src={url}
       alt={alt}
+      loading="lazy"
+      decoding="async"
       style={{
         width: "100%",
         aspectRatio: "16/9",

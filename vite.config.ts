@@ -21,5 +21,20 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
-  nitro: { preset: nitroPreset },
+  // Nitro never compresses build output unless told to — without this, prod
+  // serves the JS/CSS bundles uncompressed (confirmed via curl against
+  // favapark.liara.run: no Content-Encoding despite a Vary: Accept-Encoding
+  // header). gzip+brotli sidecars are written at build time and served
+  // automatically by Nitro's static handler when the client accepts them.
+  //
+  // `compressPublicAssets` isn't in this wrapper's declared `nitro` type —
+  // its .d.ts only types preset/output/cloudflare "on purpose" (its own
+  // comment) — but the wrapper spreads this whole object straight through
+  // to nitro/vite's real nitro() call at runtime with no filtering
+  // (verified by reading node_modules/@lovable.dev/vite-tanstack-config/dist/index.js),
+  // and compressPublicAssets is a real, documented Nitro option
+  // (node_modules/nitro/dist/types/index.d.mts). Cast past the narrow type
+  // rather than lose the setting.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see comment above, the wrapper's type is narrower than what it actually forwards
+  nitro: { preset: nitroPreset, compressPublicAssets: { gzip: true, brotli: true } } as any,
 });

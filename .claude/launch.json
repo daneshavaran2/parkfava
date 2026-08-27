@@ -6,6 +6,12 @@
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev"],
       "port": 8080
+    },
+    {
+      "name": "favaparkjadaid-preview",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [".output/server/index.mjs"],
+      "port": 8081
     }
   ]
 }

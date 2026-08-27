@@ -3,11 +3,17 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Logo3D } from "@/components/hero/Logo3D";
-import { AnimatedChipRow } from "@/components/fava/AnimatedChip";
 import { getClientI18n } from "@/i18n";
 
 const LazyRobotFabLottie = lazy(() =>
   import("./RobotFabLottie").then((m) => ({ default: m.RobotFabLottie })),
+);
+// AnimatedChipRow pulls in framer-motion, and it's only ever rendered by
+// AICommandBar (home page only) — importing it statically here made
+// framer-motion part of the shared chunk every route loads. Lazy like
+// LazyRobotFabLottie above so it only downloads when the home page mounts.
+const LazyAnimatedChipRow = lazy(() =>
+  import("@/components/fava/AnimatedChip").then((m) => ({ default: m.AnimatedChipRow })),
 );
 
 /* ---------- utilities ---------- */
@@ -267,7 +273,9 @@ export function AICommandBar({ onAsk }) {
       </div>
       <div className="ai-sugg">
         <span className="ai-sugg-lbl mono">AI</span>
-        <AnimatedChipRow pool={suggPool} visibleCount={4} />
+        <Suspense fallback={null}>
+          <LazyAnimatedChipRow pool={suggPool} visibleCount={4} />
+        </Suspense>
       </div>
     </div>
   );

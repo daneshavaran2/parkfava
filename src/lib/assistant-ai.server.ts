@@ -34,6 +34,7 @@ async function askLovableAi(
   systemPrompt: string,
   history: ChatTurn[],
   question: string,
+  maxTokens: number,
 ): Promise<string> {
   const res = await fetch(LOVABLE_GATEWAY_URL, {
     method: "POST",
@@ -48,7 +49,7 @@ async function askLovableAi(
       temperature: 0.4,
       // Matches the OpenRouter path's cap (below) — whichever provider ends
       // up handling a given request, answer length behaves the same way.
-      max_tokens: 1200,
+      max_tokens: maxTokens,
     }),
   });
   if (!res.ok) {
@@ -68,6 +69,7 @@ async function askOpenRouterWith(
   systemPrompt: string,
   history: ChatTurn[],
   question: string,
+  maxTokens: number,
 ): Promise<string> {
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -84,18 +86,25 @@ async function askOpenRouterWith(
       // Was 600 — too tight for a structured, multi-company answer (a
       // separate paragraph per match plus products/founders/contact easily
       // exceeds that before the model finishes, cutting answers off mid-list).
-      max_tokens: 1200,
+      max_tokens: maxTokens,
     }),
   });
   if (!res.ok) throw new Error(`OpenRouter request failed: ${res.status}`);
   return pickContent(await res.json());
 }
 
-/** Kept as the single entry point used by src/lib/assistant.functions.ts. */
+/**
+ * Kept as the single entry point used by src/lib/assistant.functions.ts.
+ * `maxTokens` defaults to the assistant's own cap (1200, tuned for a chat
+ * answer) — pass a higher value for callers generating longer structured
+ * output, e.g. the translation-backfill script batching a whole company's
+ * fields into one response.
+ */
 export async function askOpenRouter(
   systemPrompt: string,
   history: ChatTurn[],
   question: string,
+  maxTokens = 1200,
 ): Promise<string> {
   // Operator-configured OpenRouter key wins when present; otherwise the
   // built-in Lovable AI Gateway answers, so the assistant works with no setup.
@@ -111,6 +120,7 @@ export async function askOpenRouter(
         systemPrompt,
         history,
         question,
+        maxTokens,
       );
     } catch (error) {
       console.error("[assistant] OpenRouter failed, falling back to Lovable AI", error);
@@ -119,5 +129,5 @@ export async function askOpenRouter(
 
   const lovableKey = process.env.LOVABLE_API_KEY;
   if (!lovableKey) throw new Error("AI_NOT_CONFIGURED");
-  return await askLovableAi(lovableKey, systemPrompt, history, question);
+  return await askLovableAi(lovableKey, systemPrompt, history, question, maxTokens);
 }
