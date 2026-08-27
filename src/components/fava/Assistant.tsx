@@ -11,6 +11,12 @@ const LazyRobotFabLottie = lazy(() =>
   import("./RobotFabLottie").then((m) => ({ default: m.RobotFabLottie })),
 );
 
+// Splits the difference between "one or two minutes" of no activity on the
+// open panel — long enough that reading a reply or typing slowly doesn't
+// get cut off, short enough that a forgotten-open panel doesn't just sit
+// there.
+const IDLE_CLOSE_MS = 90_000;
+
 function renderRich(text) {
   const lines = String(text).split(/\n/);
   return lines.map((line, li) => {
@@ -74,6 +80,15 @@ export function Assistant() {
   useEffect(() => {
     if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
   }, [msgs, busy, open]);
+
+  // Auto-close on inactivity: opening the panel, sending/receiving a
+  // message, or typing all push the deadline back; anything else — the
+  // panel just left open in a background tab — lets it elapse and close.
+  useEffect(() => {
+    if (!open) return;
+    const timer = setTimeout(() => setOpen(false), IDLE_CLOSE_MS);
+    return () => clearTimeout(timer);
+  }, [open, msgs, input]);
 
   async function ask(q) {
     if (!q || !q.trim() || busy) return;

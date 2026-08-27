@@ -22,12 +22,6 @@ import { useTranslation } from "react-i18next";
 import { tHead } from "@/i18n/head";
 import { currentLang } from "@/i18n/LanguageProvider";
 
-// Kick off the FAVA vendor bundle as soon as the root module is evaluated on
-// the client, so the loading fallback is minimized on first paint.
-if (typeof window !== "undefined") {
-  import("@/lib/fava/load").then((m) => m.loadFavaVendor()).catch(() => {});
-}
-
 function NotFoundComponent() {
   const { t } = useTranslation();
   return (
@@ -128,15 +122,25 @@ function RootComponent() {
   // and page shell would all sit on top of it.
   const isStandalone = path.startsWith("/hero") || path === "/auth";
   const isParksFull = path === "/parks" || path.startsWith("/parks/");
+  // The AI assistant is a data-entry aid for admins and company owners
+  // filling out their profile/products — it has no role on public pages
+  // (home, company profiles, exhibition, parks…), so it only mounts on the
+  // admin panel and the company self-service screens.
+  const showAssistant =
+    path.startsWith("/admin") || path.startsWith("/my-company") || path.startsWith("/register-company");
 
   const [query, setQuery] = useState("");
   const [theme, setTheme] = useState<"dark" | "light">("light");
 
   useEffect(() => {
     installRobotPointer();
-    // Vendor is also kicked off at module scope below — this awaits the same
-    // in-flight promise if it's still loading, and is a cheap no-op otherwise.
-    import("@/lib/fava/load").then((m) => m.loadFavaVendor()).catch(() => {});
+    // The FAVA vendor bundle (~160 KB + a parks fetch) is NOT kicked off
+    // here — every view that actually renders FAVA-backed content already
+    // calls useFavaReady() itself on mount (see ClientOnly.tsx), which loads
+    // it lazily. Loading it unconditionally for every route, including ones
+    // that never touch window.FAVA (admin, my-company, register-company),
+    // used to cost every visitor that fetch + bundle on first paint for
+    // nothing.
     setTheme(loadStoredTheme());
     // Pages outside this layout (the login scene) toggle the theme through the
     // shared store rather than through the nav.
@@ -170,7 +174,7 @@ function RootComponent() {
             <Outlet />
           </div>
           {!isParksFull && <Footer />}
-          <ClientOnly><Assistant /></ClientOnly>
+          {showAssistant && <ClientOnly><Assistant /></ClientOnly>}
         </>
       )}
       </LanguageProvider>
