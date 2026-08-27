@@ -79,7 +79,10 @@ function SectionView({ s }: { s: AboutSection }) {
       <div>
         {title && <h2 className="h2" style={{ marginTop: 0 }}>{title}</h2>}
         {body && (
-          <div className="lead" style={{ marginTop: 12, whiteSpace: "pre-wrap", lineHeight: 1.9 }}>
+          <div
+            className="lead"
+            style={{ marginTop: 12, whiteSpace: "pre-wrap", lineHeight: 1.9, textAlign: "justify" }}
+          >
             {body}
           </div>
         )}

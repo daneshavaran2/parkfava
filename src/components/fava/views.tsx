@@ -1010,6 +1010,7 @@ export function CompanyProfile({ id }) {
                   color: "var(--ink-soft)",
                   lineHeight: 1.8,
                   whiteSpace: "pre-wrap",
+                  textAlign: "justify",
                 }}
               >
                 {pickLocalized(c, "description", i18n.language)}
@@ -1132,6 +1133,7 @@ export function CompanyProfile({ id }) {
                           color: "var(--ink-soft)",
                           lineHeight: 1.8,
                           whiteSpace: "pre-wrap",
+                          textAlign: "justify",
                         }}
                       >
                         {pickLocalized(cc_data, "intro", i18n.language)}
@@ -1158,6 +1160,7 @@ export function CompanyProfile({ id }) {
                           color: "var(--ink-soft)",
                           lineHeight: 1.8,
                           whiteSpace: "pre-wrap",
+                          textAlign: "justify",
                         }}
                       >
                         {pickLocalized(cc_data, "export_potential", i18n.language)}
@@ -1174,6 +1177,7 @@ export function CompanyProfile({ id }) {
                           color: "var(--ink-soft)",
                           lineHeight: 1.8,
                           whiteSpace: "pre-wrap",
+                          textAlign: "justify",
                         }}
                       >
                         {pickLocalized(cc_data, "knowledge_products_intro", i18n.language)}
@@ -1968,6 +1972,7 @@ export function ProductPage({ id, pid }) {
                   fontSize: 15,
                   whiteSpace: "pre-wrap",
                   margin: 0,
+                  textAlign: "justify",
                 }}
               >
                 {desc}
