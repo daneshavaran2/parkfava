@@ -610,8 +610,17 @@ export const getExhibitionCompanies = createServerFn({ method: "GET" }).handler(
   // static dataset instead of crashing the page.
   if (!hasDb()) return [] as ExhibitionCompany[];
   const sql = getDb();
+  // This backs card-only listing views (useMergedCompanies in views.tsx,
+  // the assistant's chip lookup, the admin attachments company filter) —
+  // none render intro/founders/export_potential/knowledge_products_intro or
+  // any of the other long text columns, so SELECT * was pulling every
+  // company's full bilingual essay text just to render a name and a logo.
   return await sql<ExhibitionCompany[]>`
-    SELECT * FROM exhibition_companies
+    SELECT company_id, name, name_en, tagline, tagline_en, category, park_id,
+           city, city_en, description, description_en, logo_url, website,
+           phone, email, address, address_en, sort_order, is_active,
+           headcount_full_time, headcount_part_time, founded_at
+    FROM exhibition_companies
     WHERE status = 'approved' AND is_active = true
     ORDER BY sort_order ASC
   `;
