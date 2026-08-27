@@ -2386,7 +2386,11 @@ export function ParksMap({ selectedId }) {
                     zIndex: isSel ? 8 : 3,
                   }}
                 >
-                  {pickLocalized(p, "city", i18n.language)}
+                  {/* A park with no specific city (province-only, e.g. a
+                      loose "Alborz" bucket) rendered a blank pin button —
+                      fall back to the province name so the pin is never
+                      unlabeled. */}
+                  {pickLocalized(p, "city", i18n.language) || pickLocalized(p, "province", i18n.language)}
                 </button>
               );
             })}
