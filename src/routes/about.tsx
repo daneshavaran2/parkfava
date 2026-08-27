@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { fetchAboutSections, type AboutSection } from "@/lib/exhibition-api";
 import { useAssetUrl } from "@/lib/use-auth";
+import { renderRichText } from "@/components/fava/primitives";
 import { tHead } from "@/i18n/head";
 
 export const Route = createFileRoute("/about")({
@@ -83,7 +84,7 @@ function SectionView({ s }: { s: AboutSection }) {
             className="lead"
             style={{ marginTop: 12, whiteSpace: "pre-wrap", lineHeight: 1.9, textAlign: "justify" }}
           >
-            {body}
+            {renderRichText(body)}
           </div>
         )}
       </div>

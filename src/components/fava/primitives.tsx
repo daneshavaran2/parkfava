@@ -85,6 +85,29 @@ export function pickInitials(o, lang) {
   }
   return o?.initials;
 }
+/**
+ * Minimal rich-text rendering for admin-authored copy — `**bold**` and
+ * `*italic*`, Markdown-style, plus line breaks. Not a full Markdown parser
+ * on purpose: this only needs to support what the admin editors' Bold/
+ * Italic toolbar buttons actually produce (see admin.about.tsx's
+ * wrapSelection), not arbitrary user Markdown.
+ */
+export function renderRichText(text) {
+  const lines = String(text ?? "").split(/\n/);
+  return lines.map((line, li) => {
+    const parts = line.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).filter(Boolean);
+    return (
+      <span key={li}>
+        {parts.map((p, pi) => {
+          if (/^\*\*[^*]+\*\*$/.test(p)) return <strong key={pi}>{p.slice(2, -2)}</strong>;
+          if (/^\*[^*]+\*$/.test(p)) return <em key={pi}>{p.slice(1, -1)}</em>;
+          return <span key={pi}>{p}</span>;
+        })}
+        {li < lines.length - 1 && <br />}
+      </span>
+    );
+  });
+}
 export function faMoney(toman) {
   const en = isEnglishUi();
   if (toman >= 1e12) return toFa((toman / 1e12).toFixed(1).replace(/\.0$/, "")) + (en ? " trillion" : " هزار میلیارد");

@@ -3,7 +3,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Icon, RobotFace, colorVar, pickName } from "./primitives";
+import { Icon, RobotFace, colorVar, pickName, renderRichText } from "./primitives";
 import { fetchExhibitionCompanies } from "@/lib/exhibition-api";
 import { fetchAssistantAnswer } from "@/lib/assistant-api";
 
@@ -16,23 +16,6 @@ const LazyRobotFabLottie = lazy(() =>
 // get cut off, short enough that a forgotten-open panel doesn't just sit
 // there.
 const IDLE_CLOSE_MS = 90_000;
-
-function renderRich(text) {
-  const lines = String(text).split(/\n/);
-  return lines.map((line, li) => {
-    const parts = line.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).filter(Boolean);
-    return (
-      <span key={li}>
-        {parts.map((p, pi) => {
-          if (/^\*\*[^*]+\*\*$/.test(p)) return <strong key={pi}>{p.slice(2, -2)}</strong>;
-          if (/^\*[^*]+\*$/.test(p)) return <em key={pi}>{p.slice(1, -1)}</em>;
-          return <span key={pi}>{p}</span>;
-        })}
-        {li < lines.length - 1 && <br />}
-      </span>
-    );
-  });
-}
 
 export function Assistant() {
   const { t, i18n } = useTranslation();
@@ -171,7 +154,7 @@ export function Assistant() {
                 </span>
               )}
               <div className="asst-bubble">
-                {m.role === "bot" ? renderRich(m.text) : m.text}
+                {m.role === "bot" ? renderRichText(m.text) : m.text}
                 {m.chips && m.chips.length > 0 && (
                   <div className="asst-results">
                     {m.chips.map((ch) => (
