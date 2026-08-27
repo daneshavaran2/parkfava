@@ -3,7 +3,7 @@
  * Loads the FAVA vendor bundle on the client, then hydrates window.FAVA.PARKS
  * from the database so admins can add/remove/edit parks without a code change.
  */
-import { fetchActiveParks } from "@/lib/parks-api";
+import { fetchParks } from "@/lib/parks-api";
 
 let loaded = false;
 let loading: Promise<void> | null = null;
@@ -20,7 +20,13 @@ export function loadFavaVendor(): Promise<void> {
       import("./image-slot.js"),
     ]);
     try {
-      const rows = await fetchActiveParks();
+      // All parks, not just active ones — an inactive row still needs to
+      // reach this merge so its static fallback entry gets dropped below.
+      // Fetching only active rows (as this used to) meant a deactivated
+      // park's bundled defaults were never touched and kept showing with
+      // stale hardcoded numbers forever, since is_active=false made it
+      // silently vanish from the fetch instead of from the merged map.
+      const rows = await fetchParks();
       if (rows.length && (window as any).FAVA) {
         const fallback = (window as any).FAVA.PARKS ?? [];
         // Merge onto the bundled defaults rather than replacing the array
@@ -30,6 +36,12 @@ export function loadFavaVendor(): Promise<void> {
         // map the moment any DB row comes back.
         const byId = new Map(fallback.map((p: any) => [p.id, p]));
         rows.forEach((r) => {
+          if (r.is_active === false) {
+            // Explicitly deactivated — remove it outright, including any
+            // bundled static entry for the same id.
+            byId.delete(r.park_id);
+            return;
+          }
           const prev = byId.get(r.park_id) ?? {};
           byId.set(r.park_id, {
             ...prev,
