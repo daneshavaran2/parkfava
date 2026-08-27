@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Nav, Footer } from "../components/fava/views";
 import { Assistant } from "../components/fava/Assistant";
+import { KioskIdleGuard } from "../components/fava/KioskIdleGuard";
 import { CircuitCanvas, installRobotPointer } from "../components/fava/primitives";
 import { ClientOnly } from "../components/fava/ClientOnly";
 import { LanguageProvider } from "../i18n/LanguageProvider";
@@ -157,6 +158,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
+      <KioskIdleGuard />
       {isKiosk || isStandalone ? (
         <Outlet />
       ) : (

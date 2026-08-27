@@ -13,6 +13,7 @@ import { Route as RegisterCompanyRouteImport } from './routes/register-company'
 import { Route as PerfRouteImport } from './routes/perf'
 import { Route as ParksRouteImport } from './routes/parks'
 import { Route as MyCompanyRouteImport } from './routes/my-company'
+import { Route as KioskRouteImport } from './routes/kiosk'
 import { Route as ExhibitionRouteImport } from './routes/exhibition'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -52,6 +53,11 @@ const ParksRoute = ParksRouteImport.update({
 const MyCompanyRoute = MyCompanyRouteImport.update({
   id: '/my-company',
   path: '/my-company',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KioskRoute = KioskRouteImport.update({
+  id: '/kiosk',
+  path: '/kiosk',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExhibitionRoute = ExhibitionRouteImport.update({
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/exhibition': typeof ExhibitionRoute
+  '/kiosk': typeof KioskRoute
   '/my-company': typeof MyCompanyRoute
   '/parks': typeof ParksRoute
   '/perf': typeof PerfRoute
@@ -187,6 +194,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/exhibition': typeof ExhibitionRoute
+  '/kiosk': typeof KioskRoute
   '/my-company': typeof MyCompanyRoute
   '/parks': typeof ParksRoute
   '/perf': typeof PerfRoute
@@ -214,6 +222,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/exhibition': typeof ExhibitionRoute
+  '/kiosk': typeof KioskRoute
   '/my-company': typeof MyCompanyRoute
   '/parks': typeof ParksRoute
   '/perf': typeof PerfRoute
@@ -242,6 +251,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categories'
     | '/exhibition'
+    | '/kiosk'
     | '/my-company'
     | '/parks'
     | '/perf'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categories'
     | '/exhibition'
+    | '/kiosk'
     | '/my-company'
     | '/parks'
     | '/perf'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categories'
     | '/exhibition'
+    | '/kiosk'
     | '/my-company'
     | '/parks'
     | '/perf'
@@ -321,6 +333,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CategoriesRoute: typeof CategoriesRoute
   ExhibitionRoute: typeof ExhibitionRoute
+  KioskRoute: typeof KioskRoute
   MyCompanyRoute: typeof MyCompanyRoute
   ParksRoute: typeof ParksRoute
   PerfRoute: typeof PerfRoute
@@ -370,6 +383,13 @@ declare module '@tanstack/react-router' {
       path: '/my-company'
       fullPath: '/my-company'
       preLoaderRoute: typeof MyCompanyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kiosk': {
+      id: '/kiosk'
+      path: '/kiosk'
+      fullPath: '/kiosk'
+      preLoaderRoute: typeof KioskRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/exhibition': {
@@ -521,6 +541,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CategoriesRoute: CategoriesRoute,
   ExhibitionRoute: ExhibitionRoute,
+  KioskRoute: KioskRoute,
   MyCompanyRoute: MyCompanyRoute,
   ParksRoute: ParksRoute,
   PerfRoute: PerfRoute,
