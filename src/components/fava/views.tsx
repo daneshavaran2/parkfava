@@ -533,7 +533,13 @@ export function Exhibition({ query, setQuery, sort, initialCat, park }) {
     let arr = COMPANIES.filter((c) => {
       const okCat = cat === "all" || c.category === cat;
       const okPark = !park || c.parkId === park;
-      const q = (query || "").trim();
+      const q = (query || "").trim().toLowerCase();
+      // Companies that only exist in the live DB (not the old bundled
+      // static dataset) always have empty tags/products in useMergedCompanies
+      // — category/description are what actually carry their topic for a
+      // company like that, so a broad query (e.g. the homepage's "شرکت‌های
+      // هوش مصنوعی" suggestion chip) needs them in the searched text too, or
+      // it silently matches nothing for the vast majority of real companies.
       const okQ =
         !q ||
         (
@@ -543,12 +549,24 @@ export function Exhibition({ query, setQuery, sort, initialCat, park }) {
           " " +
           (c.tagline || "") +
           " " +
+          (c.tagline_en || "") +
+          " " +
+          (c.category || "") +
+          " " +
+          (c.description || "") +
+          " " +
+          (c.description_en || "") +
+          " " +
           (c.products || []).join(" ") +
           " " +
           (c.tags || []).join(" ") +
           " " +
-          (c.city || "")
-        ).includes(q);
+          (c.city || "") +
+          " " +
+          (c.city_en || "")
+        )
+          .toLowerCase()
+          .includes(q);
       return okCat && okPark && okQ;
     });
     if (sort === "sales") arr = [...arr].sort((a, b) => (b.workers || 0) - (a.workers || 0));
