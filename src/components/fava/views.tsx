@@ -5,6 +5,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/language-selector";
+import { norm, terms } from "@/lib/assistant/match";
 import logoSpin from "@/assets/logo-spin.webp";
 
 import {
@@ -530,10 +531,18 @@ export function Exhibition({ query, setQuery, sort, initialCat, park }) {
   const COMPANIES = useMergedCompanies(STATIC_COMPANIES);
 
   const list = useMemo(() => {
+    // Was a single whole-phrase substring check — matched only if the
+    // *entire* query appeared verbatim somewhere, so a natural sentence
+    // like the homepage's own example ("شرکت‌های هوش مصنوعی مشهد") almost
+    // never matched anything (no company's text literally contains that
+    // exact four-word run). terms()/norm() are the same tokenizing +
+    // stopword-stripping logic the AI assistant's own search already uses
+    // for this exact query (see src/lib/assistant/match.ts) — matching if
+    // *any* meaningful word hits is what actually finds results.
+    const qTerms = terms(query || "");
     let arr = COMPANIES.filter((c) => {
       const okCat = cat === "all" || c.category === cat;
       const okPark = !park || c.parkId === park;
-      const q = (query || "").trim().toLowerCase();
       // Companies that only exist in the live DB (not the old bundled
       // static dataset) always have empty tags/products in useMergedCompanies
       // — category/description are what actually carry their topic for a
@@ -541,32 +550,33 @@ export function Exhibition({ query, setQuery, sort, initialCat, park }) {
       // هوش مصنوعی" suggestion chip) needs them in the searched text too, or
       // it silently matches nothing for the vast majority of real companies.
       const okQ =
-        !q ||
-        (
-          c.name +
-          " " +
-          (c.name_en || "") +
-          " " +
-          (c.tagline || "") +
-          " " +
-          (c.tagline_en || "") +
-          " " +
-          (c.category || "") +
-          " " +
-          (c.description || "") +
-          " " +
-          (c.description_en || "") +
-          " " +
-          (c.products || []).join(" ") +
-          " " +
-          (c.tags || []).join(" ") +
-          " " +
-          (c.city || "") +
-          " " +
-          (c.city_en || "")
-        )
-          .toLowerCase()
-          .includes(q);
+        !qTerms.length ||
+        (() => {
+          const hay = norm(
+            c.name +
+              " " +
+              (c.name_en || "") +
+              " " +
+              (c.tagline || "") +
+              " " +
+              (c.tagline_en || "") +
+              " " +
+              (c.category || "") +
+              " " +
+              (c.description || "") +
+              " " +
+              (c.description_en || "") +
+              " " +
+              (c.products || []).join(" ") +
+              " " +
+              (c.tags || []).join(" ") +
+              " " +
+              (c.city || "") +
+              " " +
+              (c.city_en || ""),
+          );
+          return qTerms.some((t) => hay.includes(t));
+        })();
       return okCat && okPark && okQ;
     });
     if (sort === "sales") arr = [...arr].sort((a, b) => (b.workers || 0) - (a.workers || 0));
