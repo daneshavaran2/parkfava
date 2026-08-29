@@ -12,3 +12,9 @@ tests/visual/baseline
 tests/visual/current
 tests/smoke/screenshots
 *.log
+# Offline Windows build artifacts — local-only, never part of the deployed
+# web app (see electron/main.cjs's docstring). release/ alone was ~700MB
+# and blew past Liara's source-size limit on its own.
+release
+electron/vendor
+electron/seed
