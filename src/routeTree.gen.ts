@@ -23,6 +23,7 @@ import { Route as DevLogoRouteImport } from './routes/dev.logo'
 import { Route as AssetsSplatRouteImport } from './routes/assets.$'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminParksRouteImport } from './routes/admin.parks'
+import { Route as AdminOfflineSyncRouteImport } from './routes/admin.offline-sync'
 import { Route as AdminKahkeshanRouteImport } from './routes/admin.kahkeshan'
 import { Route as AdminExhibitionRouteImport } from './routes/admin.exhibition'
 import { Route as AdminAttachmentsRouteImport } from './routes/admin.attachments'
@@ -30,6 +31,7 @@ import { Route as AdminAiRouteImport } from './routes/admin.ai'
 import { Route as AdminAboutRouteImport } from './routes/admin.about'
 import { Route as CompanyIdIndexRouteImport } from './routes/company.$id.index'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as ApiPublicExportRouteImport } from './routes/api/public/export'
 import { Route as ApiPublicDebugEchoRouteImport } from './routes/api/public/debug-echo'
 import { Route as ApiPublicCspReportRouteImport } from './routes/api/public/csp-report'
 import { Route as ApiPublicAssetAuditRouteImport } from './routes/api/public/asset-audit'
@@ -105,6 +107,11 @@ const AdminParksRoute = AdminParksRouteImport.update({
   path: '/admin/parks',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminOfflineSyncRoute = AdminOfflineSyncRouteImport.update({
+  id: '/admin/offline-sync',
+  path: '/admin/offline-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminKahkeshanRoute = AdminKahkeshanRouteImport.update({
   id: '/admin/kahkeshan',
   path: '/admin/kahkeshan',
@@ -138,6 +145,11 @@ const CompanyIdIndexRoute = CompanyIdIndexRouteImport.update({
 const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   id: '/api/public/health',
   path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicExportRoute = ApiPublicExportRouteImport.update({
+  id: '/api/public/export',
+  path: '/api/public/export',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicDebugEchoRoute = ApiPublicDebugEchoRouteImport.update({
@@ -177,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/admin/attachments': typeof AdminAttachmentsRoute
   '/admin/exhibition': typeof AdminExhibitionRoute
   '/admin/kahkeshan': typeof AdminKahkeshanRoute
+  '/admin/offline-sync': typeof AdminOfflineSyncRoute
   '/admin/parks': typeof AdminParksRoute
   '/admin/users': typeof AdminUsersRoute
   '/assets/$': typeof AssetsSplatRoute
@@ -184,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/api/public/asset-audit': typeof ApiPublicAssetAuditRoute
   '/api/public/csp-report': typeof ApiPublicCspReportRoute
   '/api/public/debug-echo': typeof ApiPublicDebugEchoRoute
+  '/api/public/export': typeof ApiPublicExportRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/company/$id/': typeof CompanyIdIndexRoute
   '/company/$id/product/$pid': typeof CompanyIdProductPidRoute
@@ -204,6 +218,7 @@ export interface FileRoutesByTo {
   '/admin/attachments': typeof AdminAttachmentsRoute
   '/admin/exhibition': typeof AdminExhibitionRoute
   '/admin/kahkeshan': typeof AdminKahkeshanRoute
+  '/admin/offline-sync': typeof AdminOfflineSyncRoute
   '/admin/parks': typeof AdminParksRoute
   '/admin/users': typeof AdminUsersRoute
   '/assets/$': typeof AssetsSplatRoute
@@ -211,6 +226,7 @@ export interface FileRoutesByTo {
   '/api/public/asset-audit': typeof ApiPublicAssetAuditRoute
   '/api/public/csp-report': typeof ApiPublicCspReportRoute
   '/api/public/debug-echo': typeof ApiPublicDebugEchoRoute
+  '/api/public/export': typeof ApiPublicExportRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/company/$id': typeof CompanyIdIndexRoute
   '/company/$id/product/$pid': typeof CompanyIdProductPidRoute
@@ -232,6 +248,7 @@ export interface FileRoutesById {
   '/admin/attachments': typeof AdminAttachmentsRoute
   '/admin/exhibition': typeof AdminExhibitionRoute
   '/admin/kahkeshan': typeof AdminKahkeshanRoute
+  '/admin/offline-sync': typeof AdminOfflineSyncRoute
   '/admin/parks': typeof AdminParksRoute
   '/admin/users': typeof AdminUsersRoute
   '/assets/$': typeof AssetsSplatRoute
@@ -239,6 +256,7 @@ export interface FileRoutesById {
   '/api/public/asset-audit': typeof ApiPublicAssetAuditRoute
   '/api/public/csp-report': typeof ApiPublicCspReportRoute
   '/api/public/debug-echo': typeof ApiPublicDebugEchoRoute
+  '/api/public/export': typeof ApiPublicExportRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/company/$id/': typeof CompanyIdIndexRoute
   '/company/$id/product/$pid': typeof CompanyIdProductPidRoute
@@ -261,6 +279,7 @@ export interface FileRouteTypes {
     | '/admin/attachments'
     | '/admin/exhibition'
     | '/admin/kahkeshan'
+    | '/admin/offline-sync'
     | '/admin/parks'
     | '/admin/users'
     | '/assets/$'
@@ -268,6 +287,7 @@ export interface FileRouteTypes {
     | '/api/public/asset-audit'
     | '/api/public/csp-report'
     | '/api/public/debug-echo'
+    | '/api/public/export'
     | '/api/public/health'
     | '/company/$id/'
     | '/company/$id/product/$pid'
@@ -288,6 +308,7 @@ export interface FileRouteTypes {
     | '/admin/attachments'
     | '/admin/exhibition'
     | '/admin/kahkeshan'
+    | '/admin/offline-sync'
     | '/admin/parks'
     | '/admin/users'
     | '/assets/$'
@@ -295,6 +316,7 @@ export interface FileRouteTypes {
     | '/api/public/asset-audit'
     | '/api/public/csp-report'
     | '/api/public/debug-echo'
+    | '/api/public/export'
     | '/api/public/health'
     | '/company/$id'
     | '/company/$id/product/$pid'
@@ -315,6 +337,7 @@ export interface FileRouteTypes {
     | '/admin/attachments'
     | '/admin/exhibition'
     | '/admin/kahkeshan'
+    | '/admin/offline-sync'
     | '/admin/parks'
     | '/admin/users'
     | '/assets/$'
@@ -322,6 +345,7 @@ export interface FileRouteTypes {
     | '/api/public/asset-audit'
     | '/api/public/csp-report'
     | '/api/public/debug-echo'
+    | '/api/public/export'
     | '/api/public/health'
     | '/company/$id/'
     | '/company/$id/product/$pid'
@@ -343,6 +367,7 @@ export interface RootRouteChildren {
   AdminAttachmentsRoute: typeof AdminAttachmentsRoute
   AdminExhibitionRoute: typeof AdminExhibitionRoute
   AdminKahkeshanRoute: typeof AdminKahkeshanRoute
+  AdminOfflineSyncRoute: typeof AdminOfflineSyncRoute
   AdminParksRoute: typeof AdminParksRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AssetsSplatRoute: typeof AssetsSplatRoute
@@ -350,6 +375,7 @@ export interface RootRouteChildren {
   ApiPublicAssetAuditRoute: typeof ApiPublicAssetAuditRoute
   ApiPublicCspReportRoute: typeof ApiPublicCspReportRoute
   ApiPublicDebugEchoRoute: typeof ApiPublicDebugEchoRoute
+  ApiPublicExportRoute: typeof ApiPublicExportRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   CompanyIdIndexRoute: typeof CompanyIdIndexRoute
   CompanyIdProductPidRoute: typeof CompanyIdProductPidRoute
@@ -455,6 +481,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminParksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/offline-sync': {
+      id: '/admin/offline-sync'
+      path: '/admin/offline-sync'
+      fullPath: '/admin/offline-sync'
+      preLoaderRoute: typeof AdminOfflineSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/kahkeshan': {
       id: '/admin/kahkeshan'
       path: '/admin/kahkeshan'
@@ -504,6 +537,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/export': {
+      id: '/api/public/export'
+      path: '/api/public/export'
+      fullPath: '/api/public/export'
+      preLoaderRoute: typeof ApiPublicExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/debug-echo': {
       id: '/api/public/debug-echo'
       path: '/api/public/debug-echo'
@@ -551,6 +591,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAttachmentsRoute: AdminAttachmentsRoute,
   AdminExhibitionRoute: AdminExhibitionRoute,
   AdminKahkeshanRoute: AdminKahkeshanRoute,
+  AdminOfflineSyncRoute: AdminOfflineSyncRoute,
   AdminParksRoute: AdminParksRoute,
   AdminUsersRoute: AdminUsersRoute,
   AssetsSplatRoute: AssetsSplatRoute,
@@ -558,6 +599,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAssetAuditRoute: ApiPublicAssetAuditRoute,
   ApiPublicCspReportRoute: ApiPublicCspReportRoute,
   ApiPublicDebugEchoRoute: ApiPublicDebugEchoRoute,
+  ApiPublicExportRoute: ApiPublicExportRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   CompanyIdIndexRoute: CompanyIdIndexRoute,
   CompanyIdProductPidRoute: CompanyIdProductPidRoute,

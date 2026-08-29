@@ -27,6 +27,12 @@ scripts/output/
 # disk; locally it fills with uploaded logos/catalogs that must not be committed.
 data/
 
+# Offline Windows build: generated seed content (scripts/build-offline-seed.ts's
+# output, bundled into the installer via extraResources) and electron-builder's
+# packaged output — both build artifacts, not source.
+electron/seed/
+release/
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
