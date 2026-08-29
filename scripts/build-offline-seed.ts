@@ -63,7 +63,17 @@ function collectAssetPaths(snapshot: Record<string, unknown>): Set<string> {
   return paths;
 }
 
-async function downloadAsset(relPath: string): Promise<"ok" | "missing" | "error"> {
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+// A run against the live site reliably hit a stretch of transient
+// connection failures partway through (started failing consistently around
+// item ~200/258, cleared up on a full re-run) — the same "sandbox outbound
+// network blip, not a real error" pattern already seen in this project's
+// other live-fetch scripts. A few retries with backoff absorbs that instead
+// of needing a manual re-run every time.
+async function downloadAssetOnce(relPath: string): Promise<"ok" | "missing" | "error"> {
   const dest = join(SEED_DIR, "assets", relPath);
   try {
     const res = await fetch(
@@ -78,6 +88,15 @@ async function downloadAsset(relPath: string): Promise<"ok" | "missing" | "error
   } catch {
     return "error";
   }
+}
+
+async function downloadAsset(relPath: string, retries = 3): Promise<"ok" | "missing" | "error"> {
+  for (let i = 0; i < retries; i++) {
+    const result = await downloadAssetOnce(relPath);
+    if (result !== "error") return result;
+    if (i < retries - 1) await sleep(1500 * (i + 1));
+  }
+  return "error";
 }
 
 async function main() {
