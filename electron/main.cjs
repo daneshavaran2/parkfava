@@ -33,6 +33,14 @@ const { spawn } = require("node:child_process");
 const EmbeddedPostgres = require("embedded-postgres").default;
 const postgres = require("postgres");
 
+// app.getPath('userData') is keyed off app.getName(), which defaults to
+// package.json's `name` ("tanstack_start_ts", the internal project name) —
+// not `build.productName`. Left unset, every install's local database/
+// uploads/logs would sit in a folder named after the source repo instead of
+// the product, which is confusing for anyone poking around their own
+// AppData. Must be called before app.getPath() is used anywhere below.
+app.setName("FAVA Park Atlas Offline");
+
 const APP_PORT = 34177;
 const PG_PORT = 55432;
 const PG_USER = "postgres";

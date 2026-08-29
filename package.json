@@ -1,5 +1,8 @@
 {
   "name": "tanstack_start_ts",
+  "version": "1.0.0",
+  "description": "اطلس شرکت‌های پارک فاوا",
+  "author": "FAVA Park",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -27,7 +30,7 @@
     "format": "prettier --write .",
     "offline:seed": "bun run scripts/build-offline-seed.ts",
     "electron:dev": "electron .",
-    "electron:build": "vite build && electron-builder --win nsis"
+    "electron:build": "vite build && node scripts/electron-vendor-deps.mjs && electron-builder --win nsis"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -125,12 +128,10 @@
     "files": [
       "electron/main.cjs",
       "package.json",
-      "node_modules/**/*"
-    ],
-    "asarUnpack": [
-      "node_modules/**/*"
+      "!node_modules/**/*"
     ],
     "extraResources": [
+      { "from": "electron/vendor/node_modules", "to": "node_modules" },
       { "from": ".output", "to": ".output" },
       { "from": "electron/seed", "to": "electron/seed" },
       { "from": "db/migrations", "to": "db/migrations" }
