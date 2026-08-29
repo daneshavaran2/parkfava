@@ -64,6 +64,7 @@ function AdminAboutPage() {
             <Link to="/about" className="btn btn-ghost">{t("adminAbout.view_page")}</Link>
             <Link to="/admin/parks" className="btn btn-ghost">{t("adminAbout.parks_link")}</Link>
             <Link to="/admin/exhibition" className="btn btn-ghost">{t("adminAbout.exhibition_link")}</Link>
+            <Link to="/admin/offline-sync" className="btn btn-ghost">{t("adminAbout.offline_sync_link")}</Link>
             <button className="btn btn-primary" onClick={addSection}>{t("adminAbout.add_section")}</button>
             <button className="btn btn-ghost" onClick={async () => { await signOutFn(); navigate({ to: "/auth", search: { next: "" } }); }}>{t("common.logout")}</button>
           </div>

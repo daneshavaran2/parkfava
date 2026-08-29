@@ -480,7 +480,18 @@
     "replace_video_2": "Replace video 2",
     "upload_video_2": "Upload video 2",
     "confirm_delete_section": "Delete this section?",
-    "uploaded": "Uploaded ✓"
+    "uploaded": "Uploaded ✓",
+    "offline_sync_link": "Offline sync"
+  },
+  "adminOfflineSync": {
+    "title": "Offline build sync",
+    "description": "This section is only relevant to the offline Windows desktop app. Clicking the button below downloads the latest public data (parks, companies, products, About Atlas) from the live site and applies it to this device's local copy.",
+    "one_way_notice": "Note: this sync is one-way (live site → this local copy). Edits you make here are never pushed back to the live site automatically.",
+    "refresh_button": "Refresh from live site",
+    "refreshing": "Fetching…",
+    "success": "Updated successfully",
+    "failure": "Refresh failed — check your internet connection",
+    "last_export_at": "Data as of"
   },
   "zipImporter": {
     "files_found": "{{count}} files found in the archive",
@@ -661,6 +672,7 @@
     "about_og_title": "About Atlas",
     "about_title": "About Atlas — ICT PARK Network",
     "admin_about_title": "Manage About Atlas",
+    "admin_offline_sync_title": "Offline build sync",
     "admin_attachments_title": "Attachments dashboard",
     "admin_exhibition_title": "Manage exhibition",
     "admin_kahkeshan_title": "Manage ICT PARK Galaxy",

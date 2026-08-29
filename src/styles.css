@@ -819,6 +819,18 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
   .hero .lead { margin-top: 4px; }
   .hero-cta { margin-top: 12px; gap: 8px; }
   .hero-orb { max-width: 168px; }
+  /* Home page only: the small side-by-side logo read as cramped/cluttered
+     on a phone — a single centered column with the logo big and up top
+     (order: -1 moves it before the text, which is second in DOM order)
+     reads as the intentional, immersive mobile hero it's meant to be.
+     Margins below are trimmed from their base values (28px/14px) to buy
+     back the vertical room the bigger logo spends, so the last chip row
+     still clears the fixed .asst-fab bubble at zero scroll instead of
+     rendering underneath it. */
+  .home-view .hero-grid { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 12px; }
+  .home-view .hero-orb { order: -1; max-width: 200px; }
+  .home-view .ai-block { margin-top: 16px; margin-inline: auto; }
+  .home-view .ai-sugg { justify-content: center; margin-top: 10px; }
   .footer { padding: 16px 0; }
   .nav-inner { padding: 8px 24px; }
 
@@ -836,6 +848,14 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
   .kpi-row { grid-template-columns: 1fr; }
   .hero-grid { grid-template-columns: 1fr 108px; gap: 10px; }
   .hero-orb { max-width: 108px; }
+  /* Smaller phones: same centered/stacked home hero as the 720px
+     breakpoint, just a smaller logo and tighter gaps — less spare height
+     to work with, so the last chip row still needs the extra trim to
+     clear the fixed .asst-fab bubble at zero scroll. */
+  .home-view .hero-orb { max-width: 160px; }
+  .home-view .hero-grid { gap: 8px; }
+  .home-view .ai-block { margin-top: 12px; }
+  .home-view .ai-sugg { margin-top: 8px; }
 }
 
 /* mono direction: collapse all per-element colors to the single accent */
