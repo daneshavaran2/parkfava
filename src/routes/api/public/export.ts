@@ -49,14 +49,32 @@ export const Route = createFileRoute("/api/public/export")({
           const companyIds = new Set(companies.map((c) => c.company_id));
           const scopedProducts = products.filter((p) => companyIds.has(p.company_id));
 
+          // owner_user_id/reviewed_by (exhibition_companies) and updated_by
+          // (park_content) are FKs into `users`, which is never exported —
+          // an importer inserting these rows as-is against a fresh local
+          // database (no matching user ever exists there) hits a foreign
+          // key violation and the row is dropped entirely, taking every
+          // product that references it down too. Null them out here: the
+          // offline copy has no concept of "owned/reviewed/updated by
+          // which real-site user" anyway.
+          const sanitizedCompanies = companies.map((c) => ({
+            ...c,
+            owner_user_id: null,
+            reviewed_by: null,
+          }));
+          const sanitizedParkContent = (parkContent as Record<string, unknown>[]).map((pc) => ({
+            ...pc,
+            updated_by: null,
+          }));
+
           return Response.json({
             exportedAt: new Date().toISOString(),
             parks,
-            companies,
+            companies: sanitizedCompanies,
             products: scopedProducts,
             attachments,
             aboutSections,
-            parkContent,
+            parkContent: sanitizedParkContent,
             parkImages,
             parkNews,
           });
