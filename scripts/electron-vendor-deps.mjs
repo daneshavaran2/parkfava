@@ -62,4 +62,6 @@ for (const pkg of PACKAGES) {
   copied++;
 }
 
-console.log(`[electron-vendor-deps] vendored ${copied}/${PACKAGES.length} package(s) into electron/vendor/node_modules`);
+console.log(
+  `[electron-vendor-deps] vendored ${copied}/${PACKAGES.length} package(s) into electron/vendor/node_modules`,
+);
