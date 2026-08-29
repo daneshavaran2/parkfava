@@ -28,9 +28,12 @@ scripts/output/
 data/
 
 # Offline Windows build: generated seed content (scripts/build-offline-seed.ts's
-# output, bundled into the installer via extraResources) and electron-builder's
-# packaged output — both build artifacts, not source.
+# output, bundled into the installer via extraResources), the vendored
+# node_modules subset for packaging (scripts/electron-vendor-deps.mjs's
+# output), and electron-builder's packaged output — all build artifacts, not
+# source.
 electron/seed/
+electron/vendor/
 release/
 
 # Wrangler / Cloudflare
