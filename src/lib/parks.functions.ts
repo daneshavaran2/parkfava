@@ -32,20 +32,33 @@ const parkSchema = z.object({
   sort_order: z.number().int().optional(),
 });
 
+// Admin-only: the full table, including parks an admin deactivated to hide
+// them. Was previously callable by anyone (no middleware, no is_active
+// filter) — loadFavaVendor() (src/lib/fava/load.ts) used to rely on that to
+// learn which parks had just gone inactive, which meant every anonymous
+// visitor's browser received a deactivated park's full row (name, map
+// coordinates, jobs, area, live company count) over the network before
+// client-side JS discarded it. loadFavaVendor() now uses getActiveParks() +
+// getInactiveParkIds() (below) instead, so this can be admin-gated like
+// every other function here that touches non-public data.
+//
 // Live count, not a stored column: a park's resident-company number must
 // never drift from exhibition_companies again the way the old companies_hint
 // column did (it was seeded once and never updated).
-export const getParks = createServerFn({ method: "GET" }).handler(async () => {
-  if (!hasDb()) return [] as Park[];
-  const sql = getDb();
-  return await sql<Park[]>`
-    SELECT p.*,
-      (SELECT COUNT(*)::int FROM exhibition_companies ec
-         WHERE ec.park_id = p.park_id AND ec.status = 'approved' AND ec.is_active = true
-      ) AS companies_count
-    FROM parks p ORDER BY p.sort_order ASC
-  `;
-});
+export const getParks = createServerFn({ method: "GET" })
+  .middleware([requireMfaVerified])
+  .handler(async ({ context }) => {
+    assertIsAdmin(context);
+    if (!hasDb()) return [] as Park[];
+    const sql = getDb();
+    return await sql<Park[]>`
+      SELECT p.*,
+        (SELECT COUNT(*)::int FROM exhibition_companies ec
+           WHERE ec.park_id = p.park_id AND ec.status = 'approved' AND ec.is_active = true
+        ) AS companies_count
+      FROM parks p ORDER BY p.sort_order ASC
+    `;
+  });
 
 export const getActiveParks = createServerFn({ method: "GET" }).handler(async () => {
   if (!hasDb()) return [] as Park[];
@@ -57,6 +70,17 @@ export const getActiveParks = createServerFn({ method: "GET" }).handler(async ()
       ) AS companies_count
     FROM parks p WHERE p.is_active = true ORDER BY p.sort_order ASC
   `;
+});
+
+// Public and deliberately minimal: anonymous clients need to know WHICH
+// parks were just deactivated so a locally-cached bundle can drop them
+// (see loadFavaVendor()), but never need anything else about a park an
+// admin explicitly hid.
+export const getInactiveParkIds = createServerFn({ method: "GET" }).handler(async () => {
+  if (!hasDb()) return [] as string[];
+  const sql = getDb();
+  const rows = await sql<{ park_id: string }[]>`SELECT park_id FROM parks WHERE is_active = false`;
+  return rows.map((r) => r.park_id);
 });
 
 export const upsertParkAdmin = createServerFn({ method: "POST" })

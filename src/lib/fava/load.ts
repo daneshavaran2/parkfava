@@ -3,7 +3,7 @@
  * Loads the FAVA vendor bundle on the client, then hydrates window.FAVA.PARKS
  * from the database so admins can add/remove/edit parks without a code change.
  */
-import { fetchParks } from "@/lib/parks-api";
+import { fetchActiveParks, fetchInactiveParkIds } from "@/lib/parks-api";
 
 let loaded = false;
 let loading: Promise<void> | null = null;
@@ -20,14 +20,20 @@ export function loadFavaVendor(): Promise<void> {
       import("./image-slot.js"),
     ]);
     try {
-      // All parks, not just active ones — an inactive row still needs to
-      // reach this merge so its static fallback entry gets dropped below.
-      // Fetching only active rows (as this used to) meant a deactivated
-      // park's bundled defaults were never touched and kept showing with
-      // stale hardcoded numbers forever, since is_active=false made it
-      // silently vanish from the fetch instead of from the merged map.
-      const rows = await fetchParks();
-      if (rows.length && (window as any).FAVA) {
+      // Two calls, not one "all parks" fetch — getParks() (which used to be
+      // called here) has no auth and no is_active filter, so calling it from
+      // this client-side path meant every anonymous visitor's browser
+      // received a deactivated park's full row (name, coordinates, jobs,
+      // area, live company count) over the network before this code got a
+      // chance to drop it. fetchInactiveParkIds() is the admin-safe public
+      // equivalent: an id-only list, nothing else about the hidden park —
+      // that's all this code actually needs to remove a deactivated park's
+      // bundled defaults from the merged map below instead of leaving them
+      // showing with stale hardcoded numbers forever. fetchActiveParks()
+      // (already public and is_active-filtered server-side) supplies the
+      // full data for the parks that ARE meant to be visible.
+      const [rows, inactiveIds] = await Promise.all([fetchActiveParks(), fetchInactiveParkIds()]);
+      if ((rows.length || inactiveIds.length) && (window as any).FAVA) {
         const fallback = (window as any).FAVA.PARKS ?? [];
         // Merge onto the bundled defaults rather than replacing the array
         // outright — a park the DB doesn't have yet (e.g. a new park added
@@ -35,13 +41,10 @@ export function loadFavaVendor(): Promise<void> {
         // visible using its static defaults instead of vanishing from the
         // map the moment any DB row comes back.
         const byId = new Map(fallback.map((p: any) => [p.id, p]));
+        // Explicitly deactivated — remove outright, including any bundled
+        // static entry for the same id.
+        inactiveIds.forEach((id) => byId.delete(id));
         rows.forEach((r) => {
-          if (r.is_active === false) {
-            // Explicitly deactivated — remove it outright, including any
-            // bundled static entry for the same id.
-            byId.delete(r.park_id);
-            return;
-          }
           const prev = byId.get(r.park_id) ?? {};
           byId.set(r.park_id, {
             ...prev,
