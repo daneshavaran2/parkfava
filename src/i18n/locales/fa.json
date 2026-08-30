@@ -18,6 +18,8 @@
     "clear_filter": "حذف فیلتر",
     "empty": "موردی یافت نشد.",
     "file": "فایل",
+    "browse_file_upload": "برای آپلود فایل کلیک کنید",
+    "no_file_selected": "فایلی انتخاب نشده",
     "saved": "ذخیره شد ✓",
     "error": "خطا",
     "login": "ورود",

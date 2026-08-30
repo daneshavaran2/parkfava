@@ -2712,3 +2712,64 @@ body[data-theme='dark'] .auth-error { color: #ff8a97; }
   .auth-brand { font-size: calc(30 * var(--t)); }
   .auth-brand-sub { display: none; }
 }
+
+/* ---- FileUploadZone (src/components/admin/FileUploadZone.tsx) ----
+   Design supplied directly by the user (Uiverse.io, by Yaya12085) — the
+   original is a fixed 300x300px light-only box; recolored onto this app's
+   theme tokens (so it isn't invisible in dark mode) and sized in relative
+   units so it fits both a wide standalone section and a compact grid cell. */
+.file-upload-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+.file-upload-zone__header {
+  flex: 1;
+  min-height: 120px;
+  border: 2px dashed var(--accent);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  cursor: pointer;
+  color: var(--ink-soft);
+  background: color-mix(in oklab, var(--accent) 6%, transparent);
+  transition: background 0.2s, border-color 0.2s;
+}
+.file-upload-zone__header:hover { background: color-mix(in oklab, var(--accent) 12%, transparent); border-color: var(--accent-glow); }
+.file-upload-zone__header svg { width: 44px; height: 44px; color: var(--accent); flex-shrink: 0; }
+.file-upload-zone__header p { text-align: center; font-size: 13px; margin: 0; }
+.file-upload-zone__footer {
+  background: color-mix(in oklab, var(--accent) 8%, var(--panel-2));
+  border: 1px solid var(--stroke);
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+}
+.file-upload-zone__footer p { flex: 1; text-align: center; font-size: 12px; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-upload-zone__footer svg:first-of-type {
+  width: 22px; height: 22px; flex-shrink: 0;
+  fill: var(--accent);
+  background: color-mix(in oklab, var(--accent) 14%, transparent);
+  border-radius: 50%;
+  padding: 3px;
+}
+.file-upload-zone__footer svg:last-of-type { width: 18px; height: 18px; flex-shrink: 0; color: var(--ink-mute); }
+.file-upload-zone[aria-disabled='true'] .file-upload-zone__header,
+.file-upload-zone[aria-disabled='true'] .file-upload-zone__footer { cursor: wait; opacity: 0.7; }
+
+/* Compact: a ~140px product-row cell instead of a wide standalone section. */
+.file-upload-zone--compact .file-upload-zone__header { min-height: 64px; padding: 6px; gap: 4px; }
+.file-upload-zone--compact .file-upload-zone__header svg { width: 24px; height: 24px; }
+.file-upload-zone--compact .file-upload-zone__header p { font-size: 11px; }
+.file-upload-zone--compact .file-upload-zone__footer { padding: 5px 8px; }
+.file-upload-zone--compact .file-upload-zone__footer p { font-size: 11px; }

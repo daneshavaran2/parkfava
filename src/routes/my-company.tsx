@@ -25,6 +25,7 @@ import {
 import { parseLatLng } from "@/lib/geo";
 import { useTranslation } from "react-i18next";
 import { tHead } from "@/i18n/head";
+import { FileUploadZone } from "@/components/admin/FileUploadZone";
 
 export const Route = createFileRoute("/my-company")({
   head: () => ({ meta: [{ title: tHead("meta.my_company_title") }] }),
@@ -279,8 +280,7 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
     setBusy(false);
   }
 
-  async function onAddImage(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]; if (!file) return;
+  async function onAddImage(file: File) {
     setBusy(true);
     try {
       const path = await uploadExhibitionAsset(companyId, file);
@@ -288,7 +288,7 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
       invalidate();
       if ((res as any)?.pending) setMsg(t("myCompany.change_pending_msg"));
     } catch (e: any) { setMsg(`${t("common.error")}: ${e.message ?? e}`); }
-    setBusy(false); e.target.value = "";
+    setBusy(false);
   }
 
   async function removeImage(id: string) {
@@ -328,10 +328,14 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
                 {logoUrl ? <img src={logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("myCompany.logo_placeholder")}</span>}
               </div>
               {canEdit && (
-                <label className="btn btn-ghost" style={{ marginTop: 8, fontSize: 12, cursor: "pointer", display: "block", textAlign: "center" }}>
-                  {t("myCompany.upload_logo")}
-                  <input type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0])} />
-                </label>
+                <div style={{ marginTop: 8 }}>
+                  <FileUploadZone
+                    compact
+                    accept="image/*"
+                    label={t("myCompany.upload_logo")}
+                    onSelect={uploadLogo}
+                  />
+                </div>
               )}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -391,11 +395,16 @@ function OwnerEditor({ companyId, onSignOut, qc }: { companyId: string; onSignOu
             <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("myCompany.teaser_video_not_uploaded")}</div>
           )}
           {canEdit && (
-            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-              <label className="btn btn-ghost" style={{ fontSize: 12, cursor: "pointer" }}>
-                {form.video_url ? t("myCompany.replace_video") : t("myCompany.upload_video")}
-                <input type="file" accept="video/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadVideo(f); e.target.value = ""; }} />
-              </label>
+            <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "flex-start" }}>
+              <div style={{ maxWidth: 260 }}>
+                <FileUploadZone
+                  compact
+                  accept="video/*"
+                  label={form.video_url ? t("myCompany.replace_video") : t("myCompany.upload_video")}
+                  onSelect={uploadVideo}
+                  busy={busy}
+                />
+              </div>
               {form.video_url && <button className="btn btn-ghost" onClick={removeVideo} disabled={busy} style={{ fontSize: 12 }}>{t("myCompany.delete")}</button>}
             </div>
           )}
@@ -446,7 +455,7 @@ function ImagesPanel({ images, pendingChanges, canEdit, onAdd, onRemove, onCance
   images: Array<{ id: string; image_url: string }>;
   pendingChanges: ExhibitionChangeRequest[];
   canEdit: boolean;
-  onAdd: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onAdd: (file: File) => void;
   onRemove: (id: string) => void;
   onCancel: (id: string) => void;
 }) {
@@ -463,13 +472,12 @@ function ImagesPanel({ images, pendingChanges, canEdit, onAdd, onRemove, onCance
     <div className="panel" style={{ padding: 20, marginTop: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <h3 style={{ margin: 0 }}>{t("myCompany.gallery_images")}</h3>
-        {canEdit && (
-          <label className="btn btn-ghost" style={{ fontSize: 12, cursor: "pointer" }}>
-            {t("myCompany.add_image")}
-            <input type="file" accept="image/*" hidden onChange={onAdd} />
-          </label>
-        )}
       </div>
+      {canEdit && (
+        <div style={{ maxWidth: 260, marginBottom: 12 }}>
+          <FileUploadZone compact accept="image/*" label={t("myCompany.add_image")} onSelect={onAdd} />
+        </div>
+      )}
       {images.length === 0 && draftCreates.length === 0 ? (
         <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("myCompany.no_images_yet")}</div>
       ) : (
@@ -687,17 +695,15 @@ function OwnedProductRow({ p, pendingCreate, pendingChange, companyId, canEdit, 
           {img ? <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>{t("myCompany.product_main_image")}</span>}
         </div>
         {canEdit && !readOnly && (
-          <label className="btn btn-ghost" style={{ width: 140, fontSize: 11, padding: "4px 6px", cursor: "pointer", display: "flex", justifyContent: "center", marginBottom: 4 }}>
-            {t("myCompany.product_main_image")}
-            <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) upload("image_url", f); e.target.value = ""; }} />
-          </label>
+          <div style={{ width: 140, marginBottom: 4 }}>
+            <FileUploadZone compact accept="image/*" label={t("myCompany.product_main_image")} onSelect={(f) => upload("image_url", f)} />
+          </div>
         )}
         {vid && <video src={vid} controls style={{ width: 140, borderRadius: 6, marginBottom: 4 }} />}
         {canEdit && !readOnly && (
-          <label className="btn btn-ghost" style={{ width: 140, fontSize: 11, padding: "4px 6px", cursor: "pointer", display: "flex", justifyContent: "center", marginBottom: 4 }}>
-            {form.video_url ? t("myCompany.replace_video") : t("myCompany.product_video")}
-            <input type="file" accept="video/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) upload("video_url", f); e.target.value = ""; }} />
-          </label>
+          <div style={{ width: 140, marginBottom: 4 }}>
+            <FileUploadZone compact accept="video/*" label={form.video_url ? t("myCompany.replace_video") : t("myCompany.product_video")} onSelect={(f) => upload("video_url", f)} />
+          </div>
         )}
         {cat && (
           <a href={cat} target="_blank" rel="noopener" className="btn btn-ghost" style={{ width: 140, fontSize: 11, padding: "4px 6px", display: "flex", justifyContent: "center", marginBottom: 4 }}>
@@ -705,10 +711,9 @@ function OwnedProductRow({ p, pendingCreate, pendingChange, companyId, canEdit, 
           </a>
         )}
         {canEdit && !readOnly && (
-          <label className="btn btn-ghost" style={{ width: 140, fontSize: 11, padding: "4px 6px", cursor: "pointer", display: "flex", justifyContent: "center" }}>
-            {form.catalog_url ? t("myCompany.replace_catalog") : t("myCompany.product_catalog")}
-            <input type="file" accept=".pdf,application/pdf,.doc,.docx" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) upload("catalog_url", f); e.target.value = ""; }} />
-          </label>
+          <div style={{ width: 140 }}>
+            <FileUploadZone compact accept=".pdf,application/pdf,.doc,.docx" label={form.catalog_url ? t("myCompany.replace_catalog") : t("myCompany.product_catalog")} onSelect={(f) => upload("catalog_url", f)} />
+          </div>
         )}
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

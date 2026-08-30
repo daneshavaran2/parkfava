@@ -18,6 +18,8 @@
     "clear_filter": "Clear filter",
     "empty": "No results found.",
     "file": "File",
+    "browse_file_upload": "Click to upload a file",
+    "no_file_selected": "No file selected",
     "saved": "Saved ✓",
     "error": "Error",
     "login": "Log in",
