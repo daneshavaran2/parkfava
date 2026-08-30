@@ -13,6 +13,7 @@ import {
   type ExhibitionCompany,
 } from "@/lib/exhibition-api";
 import { saveAdminCompany, upsertExhibitionProduct } from "@/lib/exhibition-api.functions";
+import { FileUploadZone } from "@/components/admin/FileUploadZone";
 
 const IMG_RE = /\.(png|jpe?g|webp|gif|svg)$/i;
 const VID_RE = /\.(mp4|webm|mov|m4v)$/i;
@@ -402,24 +403,19 @@ export function ZipImporter({
             {t("zipImporter.structure_intro")} <code>company.json</code>, <code>logo.*</code>, <code>gallery/</code>, <code>products/&lt;{t("zipImporter.name_placeholder")}&gt;/</code>, <code>catalog.pdf</code>, <code>form_fa.docx</code>, <code>form_en.docx</code>, <code>documents/</code>
           </p>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
           <a href="/templates/template-company.zip" download className="btn btn-ghost" style={{ fontSize: 12 }}>
             {t("zipImporter.download_template")}
           </a>
-          <label className="btn btn-primary" style={{ fontSize: 12, cursor: busy ? "wait" : "pointer" }}>
-            {busy ? t("zipImporter.processing") : t("zipImporter.select_file")}
-            <input
-              type="file"
+          <div style={{ maxWidth: 220 }}>
+            <FileUploadZone
+              compact
               accept=".zip,.rar,.7z,.tar,application/zip,application/x-rar-compressed,application/x-7z-compressed,application/x-tar"
-              disabled={busy}
-              style={{ display: "none" }}
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) importZip(f);
-                e.target.value = "";
-              }}
+              label={busy ? t("zipImporter.processing") : t("zipImporter.select_file")}
+              onSelect={importZip}
+              busy={busy}
             />
-          </label>
+          </div>
         </div>
       </div>
       {log.length > 0 && (

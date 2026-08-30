@@ -36,6 +36,7 @@ import { fetchParks } from "@/lib/parks-api";
 import { parseLatLng } from "@/lib/geo";
 import { useTranslation } from "react-i18next";
 import { tHead } from "@/i18n/head";
+import { FileUploadZone } from "@/components/admin/FileUploadZone";
 
 export const Route = createFileRoute("/admin/exhibition")({
   head: () => ({ meta: [{ title: tHead("meta.admin_exhibition_title") }] }),
@@ -363,15 +364,14 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
     invalidate();
   }
 
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]; if (!file) return;
+  async function handleImageUpload(file: File) {
     setBusy(true);
     try {
       const path = await uploadExhibitionAsset(companyId, file);
       await addExhibitionImageFn({ data: { company_id: companyId, image_url: path } });
       invalidate();
     } catch (e: any) { setMsg(`${t("adminExhibition.upload_error")}: ${e.message ?? e}`); }
-    setBusy(false); e.target.value = "";
+    setBusy(false);
   }
 
   async function moveImage(idx: number, dir: -1 | 1) {
@@ -443,10 +443,9 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
             <div style={{ width: 160, height: 160, borderRadius: 14, background: "var(--panel-2)", border: "1px solid var(--stroke)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {logoUrl ? <img src={logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("adminExhibition.no_logo")}</span>}
             </div>
-            <label className="btn btn-ghost" style={{ marginTop: 8, width: 160, fontSize: 12, cursor: "pointer", display: "flex", justifyContent: "center" }}>
-              {form.logo_url ? t("adminExhibition.replace_logo") : t("adminExhibition.upload_logo")}
-              <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadField("logo_url", f); e.target.value = ""; }} style={{ display: "none" }} />
-            </label>
+            <div style={{ marginTop: 8, width: 160 }}>
+              <FileUploadZone compact accept="image/*" label={form.logo_url ? t("adminExhibition.replace_logo") : t("adminExhibition.upload_logo")} onSelect={(f) => handleUploadField("logo_url", f)} />
+            </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -601,11 +600,10 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
           ) : (
             <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("adminExhibition.intro_video_not_uploaded")}</div>
           )}
-          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <label className="btn btn-ghost" style={{ fontSize: 12, cursor: "pointer" }}>
-              {form.video_url ? t("adminExhibition.replace") : t("adminExhibition.upload_video")}
-              <input type="file" accept="video/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadField("video_url", f); e.target.value = ""; }} style={{ display: "none" }} />
-            </label>
+          <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "flex-start" }}>
+            <div style={{ maxWidth: 260 }}>
+              <FileUploadZone compact accept="video/*" label={form.video_url ? t("adminExhibition.replace") : t("adminExhibition.upload_video")} onSelect={(f) => handleUploadField("video_url", f)} />
+            </div>
             {form.video_url && <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => clearField("video_url")}>{t("myCompany.delete")}</button>}
           </div>
         </div>
@@ -616,11 +614,10 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
           ) : (
             <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("adminExhibition.catalog_not_uploaded")}</div>
           )}
-          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <label className="btn btn-ghost" style={{ fontSize: 12, cursor: "pointer" }}>
-              {form.catalog_url ? t("adminExhibition.replace") : t("adminExhibition.upload_catalog")}
-              <input type="file" accept="application/pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadField("catalog_url", f); e.target.value = ""; }} style={{ display: "none" }} />
-            </label>
+          <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "flex-start" }}>
+            <div style={{ maxWidth: 260 }}>
+              <FileUploadZone compact accept="application/pdf" label={form.catalog_url ? t("adminExhibition.replace") : t("adminExhibition.upload_catalog")} onSelect={(f) => handleUploadField("catalog_url", f)} />
+            </div>
             {form.catalog_url && <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => clearField("catalog_url")}>{t("myCompany.delete")}</button>}
           </div>
         </div>
@@ -633,10 +630,9 @@ function CompanyEditor({ companyId, onDeleted }: { companyId: string; onDeleted:
       <div className="panel" style={{ padding: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <h3>{t("company.image_gallery")}</h3>
-          <label className="btn btn-ghost" style={{ fontSize: 12, cursor: "pointer" }}>
-            {t("adminExhibition.add_photo")}
-            <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: "none" }} />
-          </label>
+        </div>
+        <div style={{ maxWidth: 260, marginBottom: 12 }}>
+          <FileUploadZone compact accept="image/*" label={t("adminExhibition.add_photo")} onSelect={handleImageUpload} />
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10 }}>
           {data?.images.map((img, i) => (
@@ -887,24 +883,21 @@ function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionPro
         <div style={{ width: 140, height: 105, background: "#fff", borderRadius: 8, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 6, border: "1px solid var(--stroke)" }}>
           {img ? <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>{t("adminExhibition.main_image")}</span>}
         </div>
-        <label className="btn btn-ghost" style={{ width: 140, fontSize: 11, padding: "4px 6px", cursor: "pointer", display: "flex", justifyContent: "center", marginBottom: 4 }}>
-          {t("adminExhibition.main_image")}
-          <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload("image_url", f); e.target.value = ""; }} />
-        </label>
+        <div style={{ width: 140, marginBottom: 4 }}>
+          <FileUploadZone compact accept="image/*" label={t("adminExhibition.main_image")} onSelect={(f) => upload("image_url", f)} />
+        </div>
         {vid && <video src={vid} controls style={{ width: 140, borderRadius: 6, marginBottom: 4 }} />}
-        <label className="btn btn-ghost" style={{ width: 140, fontSize: 11, padding: "4px 6px", cursor: "pointer", display: "flex", justifyContent: "center", marginBottom: 4 }}>
-          {form.video_url ? t("adminExhibition.replace_video") : t("adminExhibition.video")}
-          <input type="file" accept="video/*" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload("video_url", f); e.target.value = ""; }} />
-        </label>
+        <div style={{ width: 140, marginBottom: 4 }}>
+          <FileUploadZone compact accept="video/*" label={form.video_url ? t("adminExhibition.replace_video") : t("adminExhibition.video")} onSelect={(f) => upload("video_url", f)} />
+        </div>
         {cat && (
           <a href={cat} target="_blank" rel="noopener" className="btn btn-ghost" style={{ width: 140, fontSize: 11, padding: "4px 6px", display: "flex", justifyContent: "center", marginBottom: 4 }}>
             {t("adminExhibition.view_catalog_short")}
           </a>
         )}
-        <label className="btn btn-ghost" style={{ width: 140, fontSize: 11, padding: "4px 6px", cursor: "pointer", display: "flex", justifyContent: "center" }}>
-          {form.catalog_url ? t("adminExhibition.replace_catalog") : t("adminExhibition.catalog_pdf_short")}
-          <input type="file" accept=".pdf,application/pdf,.doc,.docx" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload("catalog_url", f); e.target.value = ""; }} />
-        </label>
+        <div style={{ width: 140 }}>
+          <FileUploadZone compact accept=".pdf,application/pdf,.doc,.docx" label={form.catalog_url ? t("adminExhibition.replace_catalog") : t("adminExhibition.catalog_pdf_short")} onSelect={(f) => upload("catalog_url", f)} />
+        </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t("myCompany.field_name")} style={field} />
@@ -917,11 +910,9 @@ function ProductRow({ p, companyId, onChange, onUp, onDown }: { p: ExhibitionPro
         <div style={{ marginTop: 4, padding: 8, border: "1px dashed var(--stroke)", borderRadius: 8 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
             <div style={{ fontSize: 12, fontWeight: 700 }}>{t("adminExhibition.product_gallery_title")}</div>
-            <label className="btn btn-ghost" style={{ fontSize: 11, padding: "3px 8px", cursor: "pointer" }}>
-              {t("adminExhibition.add_photo_short")}
-              <input type="file" accept="image/*" style={{ display: "none" }}
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) addGalleryImage(f); e.target.value = ""; }} />
-            </label>
+          </div>
+          <div style={{ maxWidth: 200, marginBottom: 6 }}>
+            <FileUploadZone compact accept="image/*" label={t("adminExhibition.add_photo_short")} onSelect={addGalleryImage} />
           </div>
           {productImages.length === 0 ? (
             <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>{t("adminExhibition.no_product_photos")}</div>

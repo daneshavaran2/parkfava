@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAssetUrl } from "@/lib/use-auth";
 import { AttachmentPreviewButton } from "@/components/admin/AttachmentPreview";
+import { FileUploadZone } from "@/components/admin/FileUploadZone";
 import {
   fetchAttachmentsAdmin,
   uploadAttachment,
@@ -117,20 +118,9 @@ function KindSection({
     <div style={{ border: "1px solid var(--stroke)", borderRadius: 10, padding: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <strong style={{ fontSize: 14 }}>{label} <span style={{ color: "var(--ink-soft)", fontSize: 12, fontWeight: 400 }}>({items.length})</span></strong>
-        <label className="btn btn-ghost" style={{ fontSize: 12, cursor: busy ? "wait" : "pointer" }}>
-          {t("attachmentsManager.add")}
-          <input
-            type="file"
-            accept={accept}
-            disabled={busy}
-            style={{ display: "none" }}
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onUpload(f);
-              e.target.value = "";
-            }}
-          />
-        </label>
+        <div style={{ maxWidth: 200 }}>
+          <FileUploadZone compact accept={accept} label={t("attachmentsManager.add")} onSelect={onUpload} busy={busy} />
+        </div>
       </div>
       {!items.length ? (
         <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("attachmentsManager.no_files_uploaded")}</div>

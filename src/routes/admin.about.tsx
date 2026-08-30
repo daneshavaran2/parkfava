@@ -12,6 +12,7 @@ import {
 } from "@/lib/exhibition-api";
 import { signOutFn } from "@/lib/auth.functions";
 import { tHead } from "@/i18n/head";
+import { FileUploadZone } from "@/components/admin/FileUploadZone";
 
 export const Route = createFileRoute("/admin/about")({
   head: () => ({ meta: [{ title: tHead("meta.admin_about_title") }] }),
@@ -108,8 +109,7 @@ function SectionEditor({ section }: { section: AboutSection }) {
     setBusy(false);
   }
 
-  async function upload(kind: "image" | "video" | "video2", e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]; if (!file) return;
+  async function upload(kind: "image" | "video" | "video2", file: File) {
     setBusy(true);
     try {
       const path = await uploadAboutAsset(file);
@@ -121,7 +121,7 @@ function SectionEditor({ section }: { section: AboutSection }) {
       qc.invalidateQueries({ queryKey: ["about-public"] });
       setMsg(t("adminAbout.uploaded"));
     } catch (e: any) { setMsg(`${t("common.error")}: ${e.message ?? e}`); }
-    setBusy(false); e.target.value = "";
+    setBusy(false);
   }
 
   async function remove() {
@@ -190,10 +190,9 @@ function SectionEditor({ section }: { section: AboutSection }) {
               {imgUrl ? <img src={imgUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("adminAbout.no_image")}</span>}
             </div>
-            <label className="btn btn-ghost" style={{ marginTop: 6, fontSize: 12, cursor: "pointer", display: "block", textAlign: "center" }}>
-              {t("adminAbout.upload_image")}
-              <input type="file" accept="image/*" onChange={(e) => upload("image", e)} style={{ display: "none" }} />
-            </label>
+            <div style={{ marginTop: 6 }}>
+              <FileUploadZone compact accept="image/*" label={t("adminAbout.upload_image")} onSelect={(f) => upload("image", f)} busy={busy} />
+            </div>
           </div>
           <div>
             <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 6 }}>{t("adminAbout.video_1")}</div>
@@ -201,10 +200,9 @@ function SectionEditor({ section }: { section: AboutSection }) {
               {videoSrc ? <video src={videoSrc} controls style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("adminAbout.no_video")}</span>}
             </div>
-            <label className="btn btn-ghost" style={{ marginTop: 6, fontSize: 12, cursor: "pointer", display: "block", textAlign: "center" }}>
-              {form.video_url ? t("adminAbout.replace_video_1") : t("adminAbout.upload_video_1")}
-              <input type="file" accept="video/*" onChange={(e) => upload("video", e)} style={{ display: "none" }} />
-            </label>
+            <div style={{ marginTop: 6 }}>
+              <FileUploadZone compact accept="video/*" label={form.video_url ? t("adminAbout.replace_video_1") : t("adminAbout.upload_video_1")} onSelect={(f) => upload("video", f)} busy={busy} />
+            </div>
           </div>
           <div>
             <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 6 }}>{t("adminAbout.video_2")}</div>
@@ -212,10 +210,9 @@ function SectionEditor({ section }: { section: AboutSection }) {
               {videoSrc2 ? <video src={videoSrc2} controls style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("adminAbout.no_video")}</span>}
             </div>
-            <label className="btn btn-ghost" style={{ marginTop: 6, fontSize: 12, cursor: "pointer", display: "block", textAlign: "center" }}>
-              {form.video_url_2 ? t("adminAbout.replace_video_2") : t("adminAbout.upload_video_2")}
-              <input type="file" accept="video/*" onChange={(e) => upload("video2", e)} style={{ display: "none" }} />
-            </label>
+            <div style={{ marginTop: 6 }}>
+              <FileUploadZone compact accept="video/*" label={form.video_url_2 ? t("adminAbout.replace_video_2") : t("adminAbout.upload_video_2")} onSelect={(f) => upload("video2", f)} busy={busy} />
+            </div>
           </div>
         </div>
       </div>

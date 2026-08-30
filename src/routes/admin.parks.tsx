@@ -19,6 +19,7 @@ import { fetchParks, upsertPark, type Park } from "@/lib/parks-api";
 import { AttachmentsManager } from "@/components/admin/AttachmentsManager";
 import { ZipImporter } from "@/components/admin/ZipImporter";
 import { tHead } from "@/i18n/head";
+import { FileUploadZone } from "@/components/admin/FileUploadZone";
 
 export const Route = createFileRoute("/admin/parks")({
   head: () => ({ meta: [{ title: tHead("meta.admin_parks_title") }] }),
@@ -135,9 +136,7 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
     setBusy(false);
   }
 
-  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function handleLogoUpload(file: File) {
     setBusy(true);
     setMsg(null);
     try {
@@ -156,12 +155,9 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
       setMsg(`${t("adminParks.upload_error")}: ${e.message ?? e}`);
     }
     setBusy(false);
-    e.target.value = "";
   }
 
-  async function handleVideoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function handleVideoUpload(file: File) {
     setBusy(true);
     setMsg(null);
     try {
@@ -181,7 +177,6 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
       setMsg(`${t("adminParks.upload_error")}: ${e.message ?? e}`);
     }
     setBusy(false);
-    e.target.value = "";
   }
 
   async function removeParkVideo() {
@@ -199,9 +194,7 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
     setBusy(false);
   }
 
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function handleImageUpload(file: File) {
     setBusy(true);
     setMsg(null);
     try {
@@ -214,7 +207,6 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
       setMsg(`${t("adminParks.upload_error")}: ${e.message ?? e}`);
     }
     setBusy(false);
-    e.target.value = "";
   }
 
   if (isLoading) return <div className="panel" style={{ padding: 24 }}>{t("common.loading")}</div>;
@@ -237,10 +229,9 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
             <div style={{ width: 120, height: 120, borderRadius: 14, background: "var(--panel-2)", border: "1px solid var(--stroke)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {logoUrl ? <img src={logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("adminParks.no_logo")}</span>}
             </div>
-            <label className="btn btn-ghost" style={{ marginTop: 8, width: 120, fontSize: 12, cursor: "pointer", display: "flex", justifyContent: "center" }}>
-              {t("adminParks.upload_logo")}
-              <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: "none" }} />
-            </label>
+            <div style={{ marginTop: 8, width: 120 }}>
+              <FileUploadZone compact accept="image/*" label={t("adminParks.upload_logo")} onSelect={handleLogoUpload} busy={busy} />
+            </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <input value={form.display_name ?? ""} onChange={(e) => setForm({ ...form, display_name: e.target.value })}
@@ -258,11 +249,9 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
         <h3 style={{ marginBottom: 6 }}>{t("adminParks.park_video")}</h3>
         <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 10 }}>{t("adminParks.park_video_hint")}</div>
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <label className="btn btn-ghost" style={{ fontSize: 12, cursor: busy ? "wait" : "pointer" }}>
-            {form.video_url ? t("adminParks.replace_video") : t("adminParks.add_video")}
-            <input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={handleVideoUpload}
-              disabled={busy} style={{ display: "none" }} />
-          </label>
+          <div style={{ maxWidth: 260 }}>
+            <FileUploadZone compact accept="video/mp4,video/webm,video/quicktime" label={form.video_url ? t("adminParks.replace_video") : t("adminParks.add_video")} onSelect={handleVideoUpload} busy={busy} />
+          </div>
           {form.video_url && (
             <button type="button" className="btn btn-ghost" disabled={busy} onClick={removeParkVideo}
               style={{ fontSize: 11, padding: "4px 10px" }}>
@@ -278,10 +267,9 @@ function ParkEditor({ parkId, parks }: { parkId: string; parks: { id: string; na
       <div className="panel" style={{ padding: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <h3>{t("adminParks.gallery_images")}</h3>
-          <label className="btn btn-ghost" style={{ fontSize: 12, cursor: "pointer" }}>
-            {t("adminParks.add_photo")}
-            <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: "none" }} />
-          </label>
+        </div>
+        <div style={{ maxWidth: 260, marginBottom: 12 }}>
+          <FileUploadZone compact accept="image/*" label={t("adminParks.add_photo")} onSelect={handleImageUpload} busy={busy} />
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 10 }}>
           {data?.images.map((img) => (
@@ -414,9 +402,7 @@ function NewsEditor({ parkId, news }: { parkId: string; news: ParkNews[] }) {
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  async function handleVideoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function handleVideoUpload(file: File) {
     setErr(null);
     setUploading(true);
     try {
@@ -428,7 +414,6 @@ function NewsEditor({ parkId, news }: { parkId: string; news: ParkNews[] }) {
       setErr(`${t("adminParks.upload_error")}: ${e.message ?? e}`);
     }
     setUploading(false);
-    e.target.value = "";
   }
 
   async function add() {
@@ -452,11 +437,9 @@ function NewsEditor({ parkId, news }: { parkId: string; news: ParkNews[] }) {
         <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder={t("adminParks.news_body_placeholder")} rows={3} style={{ ...field, resize: "vertical", fontFamily: "inherit" }} />
 
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <label className="btn btn-ghost" style={{ fontSize: 12, cursor: uploading ? "wait" : "pointer" }}>
-            {uploading ? t("adminParks.uploading") : t("adminParks.add_video")}
-            <input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={handleVideoUpload}
-              disabled={uploading} style={{ display: "none" }} />
-          </label>
+          <div style={{ maxWidth: 260 }}>
+            <FileUploadZone compact accept="video/mp4,video/webm,video/quicktime" label={uploading ? t("adminParks.uploading") : t("adminParks.add_video")} onSelect={handleVideoUpload} busy={uploading} />
+          </div>
           {videoUrl && (
             <>
               <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{videoName}</span>
