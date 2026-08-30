@@ -113,12 +113,24 @@ export const verifyOtp = createServerFn({ method: "POST" })
     if (row.mfa_otp_expires_at.getTime() < Date.now()) throw new Error("OTP_EXPIRED");
 
     const { OTP_MAX_ATTEMPTS, MFA_TOKEN_TTL_MS, hashOtpCode, generateMfaToken } = await import("@/lib/mfa/otp.server");
-    if (row.mfa_otp_attempts >= OTP_MAX_ATTEMPTS) {
-      throw new Error("OTP_MAX_ATTEMPTS");
-    }
+
+    // Atomic check-and-increment: reading mfa_otp_attempts once and only
+    // conditionally writing it back (the old shape here) lets concurrent
+    // requests all read the same stale count and all pass the < N gate
+    // before any single one's increment commits — the cap was enforced by
+    // application code racing itself, not by the database. Guarding the
+    // UPDATE's own WHERE clause with the same condition means Postgres's
+    // row-level locking serializes the attempts for real: only a request
+    // that finds the row still under the limit at write time ever gets a
+    // row back, no matter how many arrive at once.
+    const [claimed] = await sql<{ mfa_otp_attempts: number }[]>`
+      UPDATE users SET mfa_otp_attempts = mfa_otp_attempts + 1
+      WHERE id = ${context.user.id} AND mfa_otp_attempts < ${OTP_MAX_ATTEMPTS}
+      RETURNING mfa_otp_attempts
+    `;
+    if (!claimed) throw new Error("OTP_MAX_ATTEMPTS");
 
     if (hashOtpCode(data.code) !== row.mfa_otp_hash) {
-      await sql`UPDATE users SET mfa_otp_attempts = mfa_otp_attempts + 1 WHERE id = ${context.user.id}`;
       throw new Error("OTP_INCORRECT");
     }
 

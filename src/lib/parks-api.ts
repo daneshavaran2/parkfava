@@ -1,4 +1,4 @@
-import { getParks, getActiveParks, upsertParkAdmin, deleteParkAdmin, reorderParksAdmin } from "./parks.functions";
+import { getParks, getActiveParks, getInactiveParkIds, upsertParkAdmin, deleteParkAdmin, reorderParksAdmin } from "./parks.functions";
 
 export type Park = {
   park_id: string;
@@ -19,6 +19,7 @@ export type Park = {
   sort_order: number;
 };
 
+/** Admin-only (see getParks) — full table including deactivated parks. */
 export async function fetchParks(): Promise<Park[]> {
   const data = await getParks();
   return (data ?? []) as Park[];
@@ -27,6 +28,12 @@ export async function fetchParks(): Promise<Park[]> {
 export async function fetchActiveParks(): Promise<Park[]> {
   const data = await getActiveParks();
   return (data ?? []) as Park[];
+}
+
+/** Public, minimal — just the ids of parks an admin has deactivated. */
+export async function fetchInactiveParkIds(): Promise<string[]> {
+  const data = await getInactiveParkIds();
+  return (data ?? []) as string[];
 }
 
 export async function upsertPark(p: Partial<Park> & { park_id: string; name: string }) {

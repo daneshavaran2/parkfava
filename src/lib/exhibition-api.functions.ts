@@ -303,13 +303,34 @@ export const upsertExhibitionProduct = createServerFn({ method: "POST" })
   .inputValidator((i) => productWriteSchema.parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
-    const mode = await resolveEditMode(sql, context, data.company_id);
     const { id, change_request_id, company_id, ...payload } = data;
+
+    // company_id is client-supplied and only safe to trust outright for a
+    // brand-new product (no id yet). For an edit, an existing product's
+    // real owning company is the only thing that may ever be touched —
+    // verify id actually belongs to the claimed company_id before doing
+    // anything else, the same way deleteExhibitionProduct/
+    // updateExhibitionImage derive company_id from the row instead of the
+    // request. Without this, a caller who legitimately owns company A
+    // could pass an id belonging to company B's product and mutate it.
+    if (id) {
+      const [existing] = await sql<{ company_id: string }[]>`
+        SELECT company_id FROM exhibition_products WHERE id = ${id}
+      `;
+      if (!existing) throw new Error("NOT_FOUND");
+      if (existing.company_id !== company_id) throw new Error("FORBIDDEN");
+    }
+
+    const mode = await resolveEditMode(sql, context, company_id);
 
     if (mode !== "propose") {
       const cols = Object.keys(payload);
       if (id) {
-        await sql`UPDATE exhibition_products SET ${sql(payload as any, ...cols)} WHERE id = ${id}`;
+        // company_id filter here is defense in depth — the check above
+        // already guarantees the match, but a WHERE clause that can never
+        // silently touch another company's row is worth keeping even if
+        // the guard above is ever weakened by a future edit.
+        await sql`UPDATE exhibition_products SET ${sql(payload as any, ...cols)} WHERE id = ${id} AND company_id = ${company_id}`;
       } else {
         await sql`INSERT INTO exhibition_products ${sql({ ...payload, company_id } as any, "company_id", ...cols)}`;
       }
@@ -494,18 +515,23 @@ export const approveChangeRequestAdmin = createServerFn({ method: "POST" })
           await tx`INSERT INTO exhibition_products ${tx({ ...payload, company_id: cr.company_id } as any, "company_id", ...cols)}`;
         } else if (cr.action === "update") {
           if (cols.length) {
-            const [updated] = await tx`UPDATE exhibition_products SET ${tx(payload as any, ...cols)} WHERE id = ${cr.entity_id} RETURNING id`;
+            // company_id filter: entity_id alone isn't enough to trust —
+            // the request that created this change_requests row is what's
+            // fixed by the upsertExhibitionProduct-side check now, but this
+            // is the layer that would still catch a mismatched/stale row
+            // some other way (e.g. one filed before that fix existed).
+            const [updated] = await tx`UPDATE exhibition_products SET ${tx(payload as any, ...cols)} WHERE id = ${cr.entity_id} AND company_id = ${cr.company_id} RETURNING id`;
             if (!updated) notFoundTarget = true;
           }
         } else {
-          const [deleted] = await tx`DELETE FROM exhibition_products WHERE id = ${cr.entity_id} RETURNING id`;
+          const [deleted] = await tx`DELETE FROM exhibition_products WHERE id = ${cr.entity_id} AND company_id = ${cr.company_id} RETURNING id`;
           if (!deleted) notFoundTarget = true;
         }
       } else {
         if (cr.action === "create") {
           await tx`INSERT INTO exhibition_images ${tx({ ...payload, company_id: cr.company_id } as any, "company_id", ...cols)}`;
         } else {
-          const [deleted] = await tx`DELETE FROM exhibition_images WHERE id = ${cr.entity_id} RETURNING id`;
+          const [deleted] = await tx`DELETE FROM exhibition_images WHERE id = ${cr.entity_id} AND company_id = ${cr.company_id} RETURNING id`;
           if (!deleted) notFoundTarget = true;
         }
       }
