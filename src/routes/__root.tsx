@@ -106,6 +106,22 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body data-density="regular" data-theme="light" data-direction="colorful">
+        {/* Blocking, runs before anything below it paints: without this, every
+            visitor who saved "dark" got the light theme's HTML/CSS for one
+            visible frame on every single load — a full-page color flash —
+            because the server always renders data-theme="light" above and
+            RootComponent only corrected it from a useEffect, which by
+            definition runs after that first paint. Reading localStorage
+            synchronously here and writing the same attribute the CSS already
+            keys off of (body[data-theme]) closes that gap; it's static,
+            developer-authored markup (THEME_STORAGE_KEY is a hardcoded
+            constant, never user input), the same trust level as any other
+            inline script this app ships. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});if(t==="dark"||t==="light")document.body.dataset.theme=t;}catch(e){}`,
+          }}
+        />
         {children}
         <Scripts />
       </body>
@@ -124,7 +140,15 @@ function RootComponent() {
   const isParksFull = path === "/parks" || path.startsWith("/parks/");
 
   const [query, setQuery] = useState("");
-  const [theme, setTheme] = useState<"dark" | "light">("light");
+  // Lazy-initialized from the same source the inline script in RootShell
+  // already read synchronously — starting this at the hardcoded "light"
+  // default would make the mount effect below (`document.body.dataset.theme
+  // = theme`) briefly stomp that script's correct value back to light
+  // before the OTHER effect (loadStoredTheme) had a chance to fire and
+  // correct it again, reintroducing the exact flash this is meant to avoid.
+  // loadStoredTheme() already no-ops to "light" server-side (no
+  // `localStorage` there), so SSR output is unaffected.
+  const [theme, setTheme] = useState<"dark" | "light">(loadStoredTheme);
 
   useEffect(() => {
     installRobotPointer();
