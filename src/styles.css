@@ -805,6 +805,22 @@ image-slot::part(ring) { border-color: color-mix(in oklab, var(--cc, #1f7fd6) 45
   .brand .word b { font-size: 13px; }
   .nav-inner { gap: 10px; }
 
+  /* Flag-only. At this width the row's fixed-size items (brand, language
+     trigger, theme switch, login, hamburger) already need ~460px with zero
+     slack — more than the viewport itself — and nothing here is allowed to
+     wrap, so the row silently overflowed and pushed the login button and
+     the hamburger both off-screen to the left with no visible scrollbar to
+     hint why. The label + chevron were the single biggest item (~124px);
+     dropping them is the same icon-only trade already made for .auth-corner
+     on a phone-width login screen, for the same reason. */
+  .lang-select-trigger { gap: 0; padding: 0; width: 36px; height: 36px; justify-content: center; }
+  .lang-select-label { display: none; }
+  /* Two classes, not one — the base .lang-select-chevron rule (further down
+     this file) sets its own display:inline-flex, and an equal-specificity
+     rule earlier in the file loses that fight regardless of media query. */
+  .lang-select-trigger .lang-select-chevron { display: none; }
+  .lang-select-flag { width: 28px; height: 28px; }
+
   /* Tighten the home hero so it comes much closer to fitting a phone
      screen without scrolling — full elimination isn't realistic on the
      smallest devices (the hero text + orb + footer genuinely exceed a
