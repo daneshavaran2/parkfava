@@ -7,6 +7,8 @@ import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/language-selector";
 import { norm, terms } from "@/lib/assistant/match";
 import logoSpin from "@/assets/logo-spin.webp";
+import { DepthCarousel } from "@/components/fava/DepthCarousel";
+import { getAssetUrl } from "@/lib/use-auth";
 
 import {
   Icon,
@@ -1198,39 +1200,20 @@ export function CompanyProfile({ id }) {
                 <h3>
                   <Icon name="grid" size={18} className="pi" /> {t("company.image_gallery")}
                 </h3>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))",
-                    gap: 10,
-                  }}
-                >
-                  {cloudImages.map((img) => (
-                    <figure key={img.id} style={{ margin: 0 }}>
-                      <div
-                        style={{
-                          aspectRatio: "1/1",
-                          overflow: "hidden",
-                          borderRadius: 12,
-                          background: "var(--panel-2)",
-                        }}
-                      >
-                        <AssetImg
-                          path={img.image_url}
-                          alt={pickLocalized(img, "caption", i18n.language) || ""}
-                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                        />
-                      </div>
-                      {pickLocalized(img, "caption", i18n.language) && (
-                        <figcaption
-                          style={{ marginTop: 6, fontSize: 12, color: "var(--ink-soft)" }}
-                        >
-                          {pickLocalized(img, "caption", i18n.language)}
-                        </figcaption>
-                      )}
-                    </figure>
-                  ))}
-                </div>
+                <DepthCarousel
+                  items={cloudImages.map((img) => ({
+                    image: getAssetUrl(img.image_url) || "",
+                    alt: pickLocalized(img, "caption", i18n.language) || "",
+                  }))}
+                  cardWidth={260}
+                  cardHeight={320}
+                  tiltDirection={i18n.language === "en" ? "right" : "left"}
+                  prevLabel={t("company.gallery_prev")}
+                  nextLabel={t("company.gallery_next")}
+                  slideLabel={(current, total) => t("company.gallery_slide", { current, total })}
+                  dotLabel={(n) => t("company.gallery_go_to_slide", { n })}
+                  groupLabel={t("company.image_gallery")}
+                />
               </div>
             )}
 
