@@ -2,18 +2,22 @@ import { getAssistantRuntimeConfig } from "./app-settings.server";
 
 // Server-only. Powers the smart assistant.
 //
-// Two providers, in order:
-//   1. Lovable AI Gateway (LOVABLE_API_KEY) — works out of the box, no setup.
+// Three providers, in order:
+//   1. OpenAI direct (OPENAI_API_KEY/OPENAI_MODEL) — used when the operator
+//      has set a raw OpenAI key (sk-... — NOT an OpenRouter key, which is a
+//      different service/format despite the similarly-shaped token).
 //   2. OpenRouter (admin panel key, or OPENROUTER_API_KEY/OPENROUTER_MODEL) —
 //      used when the operator has configured their own key.
+//   3. Lovable AI Gateway (LOVABLE_API_KEY) — works out of the box, no setup.
 //
-// If neither is available we throw AI_NOT_CONFIGURED instead of pretending to
+// If none is available we throw AI_NOT_CONFIGURED instead of pretending to
 // answer — same "fail loud, no silent fallback" convention as
 // src/lib/sms/send-sms.server.ts.
 type ChatTurn = { role: "user" | "assistant"; content: string };
 
 const LOVABLE_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const LOVABLE_DEFAULT_MODEL = "google/gemini-2.5-flash";
+const OPENAI_DEFAULT_MODEL = "gpt-4o-mini";
 
 function buildMessages(systemPrompt: string, history: ChatTurn[], question: string) {
   return [
@@ -63,6 +67,36 @@ async function askLovableAi(
   return pickContent(await res.json());
 }
 
+async function askOpenAiWith(
+  apiKey: string,
+  model: string,
+  systemPrompt: string,
+  history: ChatTurn[],
+  question: string,
+  maxTokens: number,
+): Promise<string> {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: buildMessages(systemPrompt, history, question),
+      temperature: 0.4,
+      max_tokens: maxTokens,
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    console.error(`[assistant] OpenAI ${res.status}: ${body.slice(0, 500)}`);
+    if (res.status === 429) throw new Error("RATE_LIMITED");
+    throw new Error(`OpenAI request failed: ${res.status}`);
+  }
+  return pickContent(await res.json());
+}
+
 async function askOpenRouterWith(
   apiKey: string,
   model: string,
@@ -106,6 +140,26 @@ export async function askOpenRouter(
   question: string,
   maxTokens = 1200,
 ): Promise<string> {
+  // A directly-set OpenAI key wins first — it's an explicit operator choice
+  // set outside the admin panel (env var), same trust level as the
+  // OpenRouter env-var fallback below, just checked first since setting it
+  // is the more deliberate of the two env-only paths.
+  const openAiKey = process.env.OPENAI_API_KEY;
+  if (openAiKey) {
+    try {
+      return await askOpenAiWith(
+        openAiKey,
+        process.env.OPENAI_MODEL || OPENAI_DEFAULT_MODEL,
+        systemPrompt,
+        history,
+        question,
+        maxTokens,
+      );
+    } catch (error) {
+      console.error("[assistant] OpenAI failed, falling back to OpenRouter/Lovable", error);
+    }
+  }
+
   // Operator-configured OpenRouter key wins when present; otherwise the
   // built-in Lovable AI Gateway answers, so the assistant works with no setup.
   const openRouter = await getAssistantRuntimeConfig().catch(() => ({
