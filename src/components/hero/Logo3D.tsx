@@ -141,8 +141,17 @@ export function Logo3D({
   const shouldDefer = deferHeavyLayers ?? isMobile;
   const { ref: rootRef, ready: heavyReady } = useDeferredMount<HTMLDivElement>(shouldDefer, 240);
 
-  // Ceiling tier from initial probe (SSR-safe: start medium)
-  const [ceiling, setCeiling] = useState<Tier>(forceTier ?? "medium");
+  // Ceiling tier from initial probe (SSR-safe: start low, then upgrade).
+  // Used to default to "medium" here, before detectTier() has run — on a
+  // weak Android device that meant a real (not just probed) medium-tier
+  // render, immediately followed by this effect correctly detecting "low"
+  // and *removing* half the extrusion slices. Added slices fade in (see
+  // sliceFadeKf below); removed ones just vanish, so that downgrade is
+  // exactly the visible pop/jump this was reported as. Starting at the
+  // floor and only ever upgrading means a weak device that resolves to
+  // "low" never changes tier at all, and a capable device's upgrade uses
+  // the same fade-in as any other slice addition — never a removal.
+  const [ceiling, setCeiling] = useState<Tier>(forceTier ?? "low");
   useEffect(() => {
     if (forceTier) {
       setCeiling(forceTier);
@@ -155,7 +164,7 @@ export function Logo3D({
   }, [forceTier, isMobile, effectiveReduced]);
 
   // Active tier: starts at ceiling, can be tuned down by adaptive loop
-  const [activeTier, setActiveTier] = useState<Tier>(forceTier ?? "medium");
+  const [activeTier, setActiveTier] = useState<Tier>(forceTier ?? "low");
   useEffect(() => setActiveTier(ceiling), [ceiling]);
 
   const SLICES = SLICES_FOR[activeTier];
