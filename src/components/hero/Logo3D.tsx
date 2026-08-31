@@ -9,6 +9,9 @@ const DEPTH = 76;
 
 type Tier = "low" | "medium" | "high";
 const SLICES_FOR: Record<Tier, number> = { low: 16, medium: 32, high: 48 };
+// How long an outgoing slice takes to fade to opacity 0 before its element
+// is actually dropped (see `renderedSlices` in the component below).
+const EXIT_FADE_MS = 180;
 
 const TIER_ORDER: Tier[] = ["low", "medium", "high"];
 
@@ -33,7 +36,12 @@ function detectTier(): Tier {
               ),
             )
           : "";
-      if (/swiftshader|software|adreno 3|mali-4|llvmpipe/i.test(r)) weakGpu = true;
+      // "adreno 3" (no wildcard) missed the vendor string most Adreno 3xx
+      // devices actually report — "Adreno (TM) 308" — since "(TM) " sits
+      // between the name and the model number. \D* bridges any non-digit
+      // filler so 302/305/306/308/320/330/etc. all match regardless of
+      // what the driver puts in between.
+      if (/swiftshader|software|adreno\D*3\d\d|mali-4|llvmpipe/i.test(r)) weakGpu = true;
     } catch {
       /* ignore */
     }
@@ -168,6 +176,36 @@ export function Logo3D({
   useEffect(() => setActiveTier(ceiling), [ceiling]);
 
   const SLICES = SLICES_FOR[activeTier];
+
+  // Rendered slice count lags SLICES on a *decrease* so the outgoing slices
+  // can fade to opacity 0 (see `exiting` below) instead of vanishing the
+  // instant the adaptive controller drops tier — the same abrupt pop the
+  // initial-mount default used to cause, just triggered later by real
+  // measured FPS instead of a wrong initial guess. An *increase* snaps up
+  // immediately; added slices already fade in via sliceFadeKf.
+  const [renderedSlices, setRenderedSlices] = useState(SLICES);
+  const shrinkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (shrinkTimeoutRef.current) {
+      clearTimeout(shrinkTimeoutRef.current);
+      shrinkTimeoutRef.current = null;
+    }
+    if (SLICES >= renderedSlices) {
+      setRenderedSlices(SLICES);
+      return;
+    }
+    shrinkTimeoutRef.current = setTimeout(() => {
+      setRenderedSlices(SLICES);
+      shrinkTimeoutRef.current = null;
+    }, EXIT_FADE_MS);
+    return () => {
+      if (shrinkTimeoutRef.current) clearTimeout(shrinkTimeoutRef.current);
+    };
+    // renderedSlices intentionally excluded: this effect only reacts to a
+    // *target* (SLICES) change; including the lagging value it itself sets
+    // would refire on its own update and fight the timeout above.
+  }, [SLICES]);
+
   // Duration is deliberately independent of tier so adaptive quality changes
   // never alter the spin speed (which would restart/jump the animation).
   const BASE_DURATION = 16;
@@ -343,13 +381,24 @@ export function Logo3D({
     else anim.play();
   }, [animPaused]);
 
-  const sliceEls = Array.from({ length: SLICES }, (_, idx) => {
-    const i = SLICES - idx;
-    const t = i / SLICES;
-    const tz = -(i * depth) / SLICES;
-    const hidden = i > SLICES * 0.75;
+  // renderedSlices >= SLICES always (see the effect above); the ratio is an
+  // exact integer for every pair that matters here (16↔32, 16↔48 — every
+  // transition a weak device can go through) since a smaller tier's depth
+  // fractions are a strict subset of a larger one's at those ratios. When
+  // it isn't exact (32↔48, ratio 1.5 — neither tier a weak device settles
+  // on) `step` falls back to 1 and every slice is just always "wanted",
+  // i.e. today's plain swap — no fade, but also no regression.
+  const shrinkRatio = renderedSlices / SLICES;
+  const step = Number.isInteger(shrinkRatio) ? shrinkRatio : 1;
+
+  const sliceEls = Array.from({ length: renderedSlices }, (_, idx) => {
+    const i = renderedSlices - idx;
+    const t = i / renderedSlices;
+    const tz = -(i * depth) / renderedSlices;
+    const hidden = i > renderedSlices * 0.75;
     const brightness = 0.22 + (1 - t) * 0.34;
     const saturate = 0.72 + (1 - t) * 0.2;
+    const wanted = i % step === 0;
     // Key by depth fraction, not index: tiers 16/32/48 share fractions, so a
     // tier change only mounts the *added* slices instead of remounting all.
     return (
@@ -375,7 +424,11 @@ export function Logo3D({
           backfaceVisibility: "hidden",
           transformOrigin: "50% 50%",
           transform: `translateZ(${tz.toFixed(2)}px)`,
-          animation: `${sliceFadeKf} 120ms ease-out both`,
+          // Outgoing (no longer wanted) slices fade out instead of the
+          // mount-only `animation` below, which never plays in reverse.
+          ...(wanted
+            ? { animation: `${sliceFadeKf} 120ms ease-out both` }
+            : { opacity: 0, transition: `opacity ${EXIT_FADE_MS}ms ease-in` }),
           filter: hidden
             ? undefined
             : `brightness(${brightness.toFixed(3)}) saturate(${saturate.toFixed(3)}) contrast(1.26)`,
@@ -394,13 +447,14 @@ export function Logo3D({
   // the full 360°. Shading is inverted (t, not 1-t) because "closest to the
   // viewer" flips meaning when viewed from behind: the strip nearest the
   // back face (tz closest to -depth, t=1) is now the near one.
-  const backSliceEls = Array.from({ length: SLICES }, (_, idx) => {
-    const i = SLICES - idx;
-    const t = i / SLICES;
-    const tz = -(i * depth) / SLICES;
-    const hidden = i < SLICES * 0.25;
+  const backSliceEls = Array.from({ length: renderedSlices }, (_, idx) => {
+    const i = renderedSlices - idx;
+    const t = i / renderedSlices;
+    const tz = -(i * depth) / renderedSlices;
+    const hidden = i < renderedSlices * 0.25;
     const brightness = 0.22 + t * 0.34;
     const saturate = 0.72 + t * 0.2;
+    const wanted = i % step === 0;
     return (
       <img
         key={t.toFixed(4)}
@@ -418,7 +472,9 @@ export function Logo3D({
           backfaceVisibility: "hidden",
           transformOrigin: "50% 50%",
           transform: `translateZ(${tz.toFixed(2)}px) rotateY(180deg)`,
-          animation: `${sliceFadeKf} 120ms ease-out both`,
+          ...(wanted
+            ? { animation: `${sliceFadeKf} 120ms ease-out both` }
+            : { opacity: 0, transition: `opacity ${EXIT_FADE_MS}ms ease-in` }),
           filter: hidden
             ? undefined
             : `brightness(${brightness.toFixed(3)}) saturate(${saturate.toFixed(3)}) contrast(1.26)`,
