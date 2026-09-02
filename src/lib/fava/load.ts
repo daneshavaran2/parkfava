@@ -50,11 +50,17 @@ export function loadFavaVendor(): Promise<void> {
             ...prev,
             id: r.park_id,
             name: r.name,
-            name_en: r.name_en ?? prev.name_en ?? null,
+            // || not ?? for the _en fields: several DB rows have these set to
+            // "" rather than left null (never translated, but explicitly
+            // empty), and "" is not nullish — ?? would happily accept it and
+            // discard the vendor bundle's own good English fallback (Mashhad,
+            // Sari, Karaj, ...), which is exactly why the English UI kept
+            // showing Persian city/province names for those parks.
+            name_en: r.name_en || prev.name_en || null,
             province: r.province ?? prev.province ?? "",
-            province_en: r.province_en ?? prev.province_en ?? null,
+            province_en: r.province_en || prev.province_en || null,
             city: r.city ?? prev.city ?? "",
-            city_en: r.city_en ?? prev.city_en ?? null,
+            city_en: r.city_en || prev.city_en || null,
             // ?? not ||: a park with 0 companies means 0.
             companies: r.companies_count ?? prev.companies ?? 0,
             jobs: r.jobs ?? prev.jobs ?? 0,
