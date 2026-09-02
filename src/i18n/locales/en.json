@@ -75,7 +75,8 @@
     "resident_companies": "Resident companies ({{count}})",
     "video": "Park video",
     "all_park_companies": "All companies in this park",
-    "other_parks": "Other parks"
+    "other_parks": "Other parks",
+    "fava_brand_name": "FAVA Technology & Communications Park"
   },
   "categories": {
     "eyebrow": "Technology Domains",
