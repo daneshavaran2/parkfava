@@ -2379,7 +2379,11 @@ function ParkDashboard({ park, PARKS, parkCompanies, onSelect, sel, navigate }) 
         </div>
         <div className="pd-head-text">
           <span className="park-detail-prov">{pickLocalized(park, "province", i18n.language)}</span>
-          <h3 className="park-detail-name">{displayName}</h3>
+          {/* Middle line is the shared FAVA brand name for every park, not
+              each park's own distinct name (still used above for the logo's
+              alt text) — province above and city below are what actually
+              tell them apart here. */}
+          <h3 className="park-detail-name">{t("park.fava_brand_name")}</h3>
           <div className="park-detail-city">
             <Icon name="pin" size={14} /> {pickLocalized(park, "city", i18n.language)}
           </div>
