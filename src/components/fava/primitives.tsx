@@ -294,12 +294,19 @@ export function AICommandBar({ onAsk }) {
           <button type="submit" className="ai-go"><Icon name="send" size={16} /> {t("home.ai_ask")}</button>
         </form>
       </div>
-      <div className="ai-sugg">
-        <span className="ai-sugg-lbl mono">AI</span>
-        <Suspense fallback={null}>
-          <LazyAnimatedChipRow pool={suggPool} visibleCount={4} />
-        </Suspense>
-      </div>
+      {/* Persian only — every phrase in suggPool is a Persian search query
+          (fire() passes the Persian term even when its label is translated),
+          so in English this row typed and cleared translated labels whose
+          click target still searched in Persian. Simplest correct fix is no
+          row at all under English, not a mismatched pool. */}
+      {!i18n.language?.startsWith("en") && (
+        <div className="ai-sugg">
+          <span className="ai-sugg-lbl mono">AI</span>
+          <Suspense fallback={null}>
+            <LazyAnimatedChipRow pool={suggPool} visibleCount={4} />
+          </Suspense>
+        </div>
+      )}
     </div>
   );
 }
