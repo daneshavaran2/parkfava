@@ -1,0 +1,18 @@
+2026-11-16T09:45:32Z (patched, MFA_ENFORCED=true)
+SEC-004  MFA state is per session
+  ok   owner's own session is verified
+  ok   a second, password-only session is NOT verified
+  ok   that session is refused by MFA-gated functions  [{"t":10,"i":0,"p":{"k":["error"],"v":[{"t":25,"i":1,"s":{"message":{"t":1,"s":"M]
+SEC-005  verified phone cannot be replaced without MFA
+  ok   password-only session cannot replace the verified phone  [{"t":10,"i":0,"p":{"k":["error"],"v":[{"t":25,"i":1,"s":{"message":{"t":1,"s":"P]
+  ok   stored phone is unchanged  [09120000001]
+  ok   the MFA-verified session can still change it  [{"t":10,"i":0,"p":{"k":["result"],"v":[{"t":10,"i":1,"p":{"k":["ok"],"v":[{"t":2]
+SEC-007  password change needs the current password and ends other sessions
+  ok   change without the current password is refused  [{"t":10,"i":0,"p":{"k":["error"],"v":[{"t":25,"i":1,"s":{"message":{"t":1,"s":"I]
+  ok   change with a wrong current password is refused  [{"t":10,"i":0,"p":{"k":["error"],"v":[{"t":25,"i":1,"s":{"message":{"t":1,"s":"I]
+  ok   change with the correct current password succeeds  [{"t":10,"i":0,"p":{"k":["result"],"v":[{"t":10,"i":1,"p":{"k":["ok"],"v":[{"t":2]
+  ok   the account's other session was signed out  [{"t":10,"i":0,"p":{"k":["result"],"v":[{"t":2,"s":0}]},"o":0}]
+  ok   the session that changed it stays signed in
+
+all passed
+exit=0

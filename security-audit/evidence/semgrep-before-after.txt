@@ -1,0 +1,19 @@
+Semgrep (semgrep-rules mirror + Trail of Bits + elttam + Apiiro + kondukto), OSS engine
+total findings incl. style/i18n: before=1157 after=1129
+rule                                                 before after
+bun-missing-minimum-release-age                           1     1
+contains-bidirectional-characters                         1     1
+detect-insecure-websocket                                 0     1
+dockerfile-source-not-pinned                              2     2
+dynamic-urllib-use-detected                               4     4
+gcm-no-tag-length                                         1     0
+html-in-template-string                                   4     4
+insecure-document-method                                  1     1
+insecure-innerhtml                                        1     1
+insecure-object-assign                                    1     1
+insecure-urlopen                                          1     1
+missing-user                                              3     3
+third-party-action-not-pinned-to-commit-sha               7     0
+unsafe-formatstring                                       7     7
+use-distroless-base-image                                 1     1
+after-run scans: [('semgrep-rules', 1253, 305, ''), ('semgrep-rules', 0, 305, ''), ('semgrep-rules', 0, 305, 'partial'), ('malicious-code-ruleset', 28, 195, ''), ('semgrep-rules', 3, 1, '')] failed: [] skipped: []

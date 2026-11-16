@@ -1,0 +1,66 @@
+2026-11-16T09:42:29Z
+Admin-only mutations reject an anonymous caller
+  ok   anon parks.upsertParkAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon parks.deleteParkAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon parks.reorderParksAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon park-content.upsertParkContentAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon park-content.addParkImageAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon park-content.deleteParkImageAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon park-content.upsertParkNewsAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon park-content.deleteParkNewsAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon about-sections.upsertAboutSectionAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon about-sections.deleteAboutSectionAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon attachments.updateAttachmentAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon attachments.deleteAttachmentAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon attachments.reorderAttachmentsAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon admin-users.grantAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon admin-users.revokeAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon admin-users.assignCompanyOwner  [AUTH_REJECT(unauthenticated)]
+  ok   anon exhibition-api.saveAdminCompany  [AUTH_REJECT(unauthenticated)]
+  ok   anon exhibition-api.deleteExhibitionCompanyAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon exhibition-api.reorderExhibitionCompaniesAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon exhibition-api.approveCompanyAdmin  [AUTH_REJECT(unauthenticated)]
+  ok   anon exhibition-api.rejectCompanyAdmin  [AUTH_REJECT(unauthenticated)]
+
+Admin-only mutations reject a signed-in NON-admin
+  ok   non-admin parks.upsertParkAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin parks.deleteParkAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin parks.reorderParksAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin park-content.upsertParkContentAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin park-content.addParkImageAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin park-content.deleteParkImageAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin park-content.upsertParkNewsAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin park-content.deleteParkNewsAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin about-sections.upsertAboutSectionAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin about-sections.deleteAboutSectionAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin attachments.updateAttachmentAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin attachments.deleteAttachmentAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin attachments.reorderAttachmentsAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin admin-users.grantAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin admin-users.revokeAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin admin-users.assignCompanyOwner  [AUTH_REJECT(forbidden)]
+  ok   non-admin exhibition-api.saveAdminCompany  [AUTH_REJECT(forbidden)]
+  ok   non-admin exhibition-api.deleteExhibitionCompanyAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin exhibition-api.reorderExhibitionCompaniesAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin exhibition-api.approveCompanyAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin exhibition-api.rejectCompanyAdmin  [AUTH_REJECT(forbidden)]
+
+Admin-only reads reject a signed-in NON-admin
+  ok   non-admin admin-users.listUsers  [AUTH_REJECT(forbidden)]
+  ok   non-admin attachments.getAllAttachmentsAdmin  [AUTH_REJECT(forbidden)]
+  ok   non-admin exhibition-api.listAdminCompanies  [AUTH_REJECT(forbidden)]
+
+Admin cannot revoke their own admin role
+  ok   admin revokeAdmin(self)  [GUARD(cannot_revoke_self)]
+
+Owner-A cannot mutate owner-B's company
+  ok   ownerA->B exhibition-api.addExhibitionImage  [AUTH_REJECT(forbidden)]
+  ok   ownerA->B exhibition-api.upsertExhibitionProduct  [AUTH_REJECT(forbidden)]
+  ok   ownerA->B exhibition-api.submitCompanyForReview  [AUTH_REJECT(forbidden)]
+  ok   ownerA->B exhibition-api.reorderExhibitionProducts  [AUTH_REJECT(forbidden)]
+
+Owner-A's saveOwnedCompany cannot alter owner-B's row
+  ok   ownerA->B exhibition-api.saveOwnedCompany  [no-op, row unchanged]
+
+51 passed, 0 failed
+exit=0

@@ -1,0 +1,130 @@
+# PROPOSED — not active. To enable after review, copy to
+# .github/workflows/security.yml. See remediation-plan.md (Phase 10).
+#
+# Design: read-only token everywhere; only the SARIF upload job gets
+# security-events: write. Every action pinned to a commit SHA, every tool to an
+# exact version with a checksum check. Nothing is sent to third-party scanning
+# services; results stay in this repository's Actions artifacts / code scanning.
+name: Security
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 3 * * 1" # weekly, Monday 03:17 UTC: catches newly published advisories
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  dependencies:
+    name: Dependency advisories (bun.lock)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      # Gate: fail on High/Critical. Moderate/Low are reported but do not block.
+      - run: bun audit --audit-level=high
+
+  secrets:
+    name: Secret scan (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install gitleaks 8.30.1 (checksum-verified)
+        run: |
+          curl -sSfL -o gl.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          curl -sSfL -o gl.sum https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_checksums.txt
+          grep " gitleaks_8.30.1_linux_x64.tar.gz" gl.sum | sed 's/gitleaks_8.30.1_linux_x64.tar.gz/gl.tgz/' | sha256sum -c -
+          tar -xzf gl.tgz gitleaks
+      # Scans only the commits of this push/PR; the .env in 13cd74d (SEC-022)
+      # is historical and would otherwise fail every run.
+      - name: Scan new commits
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -n "$BASE" ] && [ "$BASE" != "0000000000000000000000000000000000000000" ]; then
+            ./gitleaks git . --redact --no-banner --log-opts="$BASE..HEAD"
+          else
+            ./gitleaks dir . --redact --no-banner
+          fi
+
+  sast:
+    name: Semgrep
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - run: pip install semgrep==1.185.0
+      # Registry rules need semgrep.dev (reachable from GitHub runners).
+      # --metrics=off: no telemetry. Only ERROR-severity rules gate the build.
+      - run: >
+          semgrep scan --metrics=off --error --severity ERROR
+          --config p/security-audit --config p/secrets --config p/typescript
+          --config p/react --config p/nodejs --config p/dockerfile --config p/github-actions
+          --exclude security-audit --exclude node_modules
+
+  workflows:
+    name: GitHub Actions lint (zizmor)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - run: pip install zizmor==1.32.0
+      - run: zizmor --offline --min-severity medium .github/workflows
+
+  dockerfile:
+    name: Dockerfile lint (Hadolint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
+        with:
+          dockerfile: Dockerfile
+
+  auth-regressions:
+    name: Unit security regressions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - run: bun install --frozen-lockfile
+      - run: bunx vitest run tests/unit
+
+  # Optional: CodeQL needs GitHub Advanced Security on private repositories.
+  codeql:
+    name: CodeQL (JavaScript/TypeScript)
+    if: ${{ vars.ENABLE_CODEQL == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+      - uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3

@@ -1,0 +1,12 @@
+2026-11-16T09:41:53Z (baseline: MFA patch stashed)
+SEC-004  MFA state is per session
+  ok   owner's own session is verified
+  FAIL a second, password-only session is NOT verified
+  FAIL that session is refused by MFA-gated functions  [{"t":10,"i":0,"p":{"k":["result"],"v":[{"t":10,"i":1,"p":{"k":["roles","owned_co]
+SEC-005  verified phone cannot be replaced without MFA
+  FAIL password-only session cannot replace the verified phone  [{"t":10,"i":0,"p":{"k":["result"],"v":[{"t":10,"i":1,"p":{"k":["ok"],"v":[{"t":2]
+  FAIL stored phone is unchanged  [09129999999]
+  ok   the MFA-verified session can still change it  [{"t":10,"i":0,"p":{"k":["result"],"v":[{"t":10,"i":1,"p":{"k":["ok"],"v":[{"t":2]
+
+4 FAILED
+exit=1

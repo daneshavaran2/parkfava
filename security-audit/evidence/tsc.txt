@@ -1,0 +1,8 @@
+src/components/ui/carousel.tsx(2,61): error TS2307: Cannot find module 'embla-carousel-react' or its corresponding type declarations.
+src/components/ui/chart.tsx(2,36): error TS2307: Cannot find module 'recharts' or its corresponding type declarations.
+src/components/ui/chart.tsx(169,22): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/components/ui/chart.tsx(170,19): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/components/ui/chart.tsx(170,25): error TS7006: Parameter 'index' implicitly has an 'any' type.
+src/components/ui/chart.tsx(267,18): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/components/ui/chart.tsx(268,15): error TS7006: Parameter 'item' implicitly has an 'any' type.
+exit=2
