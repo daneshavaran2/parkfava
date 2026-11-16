@@ -1,7 +1,8 @@
 # Risk Register (residual, after this audit's patches)
 
-Likelihood (L) and impact (I) on 1–3; risk = L × I. Assumes the branch is deployed;
-until then, SEC-001/002/003/004/005 remain live in production.
+Likelihood (L) and impact (I) on 1–3; risk = L × I. Assumes the branch is deployed.
+Until then SEC-001/002/003 remain exploitable in production; SEC-004/005 are present
+but dormant while MFA is off (they would undermine MFA the moment it is enabled).
 
 | ID | Risk | Source | L | I | Risk | Treatment | Owner | Due |
 |---|---|---|---|---|---|---|---|---|

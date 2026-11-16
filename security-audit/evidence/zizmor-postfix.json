@@ -1,0 +1,170 @@
+[
+  {
+    "ident": "adhoc-packages",
+    "desc": "ad-hoc installation of packages",
+    "url": "https://docs.zizmor.sh/audits/#adhoc-packages",
+    "determinations": {
+      "confidence": "High",
+      "severity": "Low",
+      "persona": "Regular"
+    },
+    "locations": [
+      {
+        "symbolic": {
+          "key": {
+            "Local": {
+              "verbatim_path": ".github/workflows/deploy.yml"
+            }
+          },
+          "annotation": "this step",
+          "route": {
+            "route": [
+              {
+                "Key": "jobs"
+              },
+              {
+                "Key": "deploy"
+              },
+              {
+                "Key": "steps"
+              },
+              {
+                "Index": 1
+              }
+            ]
+          },
+          "feature_kind": "Normal",
+          "kind": "Hidden"
+        },
+        "concrete": {
+          "location": {
+            "start_point": {
+              "row": 20,
+              "column": 8
+            },
+            "end_point": {
+              "row": 24,
+              "column": 75
+            },
+            "offset_span": {
+              "start": 402,
+              "end": 625
+            }
+          },
+          "feature": "name: Install Liara CLI\n        run: npm install -g @liara/cli@9.6.7\n\n      # Secrets never touch the repo — they're read from GitHub's encrypted\n      # secret store at run time and pushed straight to Liara's env config.",
+          "comments": [
+            "# Secrets never touch the repo — they're read from GitHub's encrypted",
+            "# secret store at run time and pushed straight to Liara's env config."
+          ]
+        }
+      },
+      {
+        "symbolic": {
+          "key": {
+            "Local": {
+              "verbatim_path": ".github/workflows/deploy.yml"
+            }
+          },
+          "annotation": "this step",
+          "route": {
+            "route": [
+              {
+                "Key": "jobs"
+              },
+              {
+                "Key": "deploy"
+              },
+              {
+                "Key": "steps"
+              },
+              {
+                "Index": 1
+              },
+              {
+                "Key": "run"
+              }
+            ]
+          },
+          "feature_kind": "KeyOnly",
+          "kind": "Related"
+        },
+        "concrete": {
+          "location": {
+            "start_point": {
+              "row": 21,
+              "column": 8
+            },
+            "end_point": {
+              "row": 21,
+              "column": 11
+            },
+            "offset_span": {
+              "start": 434,
+              "end": 437
+            }
+          },
+          "feature": "run",
+          "comments": []
+        }
+      },
+      {
+        "symbolic": {
+          "key": {
+            "Local": {
+              "verbatim_path": ".github/workflows/deploy.yml"
+            }
+          },
+          "annotation": "installs a package outside of a lockfile",
+          "route": {
+            "route": [
+              {
+                "Key": "jobs"
+              },
+              {
+                "Key": "deploy"
+              },
+              {
+                "Key": "steps"
+              },
+              {
+                "Index": 1
+              },
+              {
+                "Key": "run"
+              }
+            ]
+          },
+          "feature_kind": {
+            "Subfeature": {
+              "after": 0,
+              "fragment": {
+                "Regex": "npm\\s+install\\s+\\-g\\s+@liara/cli@9\\.6\\.7"
+              }
+            }
+          },
+          "kind": "Primary"
+        },
+        "concrete": {
+          "location": {
+            "start_point": {
+              "row": 21,
+              "column": 13
+            },
+            "end_point": {
+              "row": 21,
+              "column": 44
+            },
+            "offset_span": {
+              "start": 439,
+              "end": 470
+            }
+          },
+          "feature": "npm install -g @liara/cli@9.6.7",
+          "comments": []
+        }
+      }
+    ],
+    "ignored": false,
+    "fixes": []
+  }
+]

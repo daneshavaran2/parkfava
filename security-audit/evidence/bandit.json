@@ -1,322 +1,322 @@
 {
-  "errors": [],
-  "generated_at": "2026-11-16T09:27:50Z",
-  "metrics": {
-    "_totals": {
-      "CONFIDENCE.HIGH": 6,
-      "CONFIDENCE.LOW": 1,
-      "CONFIDENCE.MEDIUM": 2,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 3,
-      "SEVERITY.MEDIUM": 6,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 1234,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
-    "scripts/generate-national-id-logins.py": {
-      "CONFIDENCE.HIGH": 0,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 0,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 130,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
-    "scripts/logo-diff.py": {
-      "CONFIDENCE.HIGH": 0,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 0,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 39,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
-    "scripts/test-api-contracts.py": {
-      "CONFIDENCE.HIGH": 2,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 2,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 155,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
-    "scripts/test-authz-coverage.py": {
-      "CONFIDENCE.HIGH": 2,
-      "CONFIDENCE.LOW": 1,
-      "CONFIDENCE.MEDIUM": 1,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 2,
-      "SEVERITY.MEDIUM": 2,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 295,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
-    "scripts/test-company-smoke.py": {
-      "CONFIDENCE.HIGH": 0,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 0,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 147,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
-    "scripts/test-directions-e2e.py": {
-      "CONFIDENCE.HIGH": 1,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 1,
-      "SEVERITY.MEDIUM": 0,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 115,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
-    "scripts/test-product-routing.py": {
-      "CONFIDENCE.HIGH": 0,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 1,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 1,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 96,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
-    "scripts/test-request-id-e2e.py": {
-      "CONFIDENCE.HIGH": 1,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 1,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 115,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
-    "scripts/test-visual-regression.py": {
-      "CONFIDENCE.HIGH": 0,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 0,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 142,
-      "nosec": 0,
-      "skipped_tests": 0
-    }
+ "errors": [],
+ "generated_at": "2026-11-16T09:27:50Z",
+ "metrics": {
+  "_totals": {
+   "CONFIDENCE.HIGH": 6,
+   "CONFIDENCE.LOW": 1,
+   "CONFIDENCE.MEDIUM": 2,
+   "CONFIDENCE.UNDEFINED": 0,
+   "SEVERITY.HIGH": 0,
+   "SEVERITY.LOW": 3,
+   "SEVERITY.MEDIUM": 6,
+   "SEVERITY.UNDEFINED": 0,
+   "loc": 1234,
+   "nosec": 0,
+   "skipped_tests": 0
   },
-  "results": [
-    {
-      "code": "99     try:\n100         with urllib.request.urlopen(req, timeout=20) as resp:\n101             return resp.status, resp.read().decode(\"utf-8\", \"replace\")\n",
-      "col_offset": 13,
-      "end_col_offset": 52,
-      "filename": "scripts/test-api-contracts.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 22,
-        "link": "https://cwe.mitre.org/data/definitions/22.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
-      "line_number": 100,
-      "line_range": [
-        100
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
-      "test_id": "B310",
-      "test_name": "blacklist"
-    },
-    {
-      "code": "138 try:\n139     urllib.request.urlopen(f\"{BASE_URL}/api/public/health\", timeout=10)\n140 except Exception as exc:  # noqa: BLE001 - any failure to reach the server is fatal here\n",
-      "col_offset": 4,
-      "end_col_offset": 71,
-      "filename": "scripts/test-api-contracts.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 22,
-        "link": "https://cwe.mitre.org/data/definitions/22.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
-      "line_number": 139,
-      "line_range": [
-        139
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
-      "test_id": "B310",
-      "test_name": "blacklist"
-    },
-    {
-      "code": "43 OWNER_B_EMAIL = \"authz-owner-b@example.test\"\n44 PASSWORD = \"TestPassw0rd!\"\n45 \n",
-      "col_offset": 11,
-      "end_col_offset": 26,
-      "filename": "scripts/test-authz-coverage.py",
-      "issue_confidence": "MEDIUM",
-      "issue_cwe": {
-        "id": 259,
-        "link": "https://cwe.mitre.org/data/definitions/259.html"
-      },
-      "issue_severity": "LOW",
-      "issue_text": "Possible hardcoded password: 'TestPassw0rd!'",
-      "line_number": 44,
-      "line_range": [
-        44
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
-      "test_id": "B105",
-      "test_name": "hardcoded_password_string"
-    },
-    {
-      "code": "183         try:\n184             urllib.request.urlopen(f\"{BASE_URL}{p}\", timeout=90).read()\n185         except Exception:  # noqa: BLE001\n",
-      "col_offset": 12,
-      "end_col_offset": 64,
-      "filename": "scripts/test-authz-coverage.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 22,
-        "link": "https://cwe.mitre.org/data/definitions/22.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
-      "line_number": 184,
-      "line_range": [
-        184
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
-      "test_id": "B310",
-      "test_name": "blacklist"
-    },
-    {
-      "code": "184             urllib.request.urlopen(f\"{BASE_URL}{p}\", timeout=90).read()\n185         except Exception:  # noqa: BLE001\n186             pass\n187 \n",
-      "col_offset": 8,
-      "end_col_offset": 16,
-      "filename": "scripts/test-authz-coverage.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 703,
-        "link": "https://cwe.mitre.org/data/definitions/703.html"
-      },
-      "issue_severity": "LOW",
-      "issue_text": "Try, Except, Pass detected.",
-      "line_number": 185,
-      "line_range": [
-        185,
-        186
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
-      "test_id": "B110",
-      "test_name": "try_except_pass"
-    },
-    {
-      "code": "235     print(\"This suite needs one; grant it once with:\")\n236     print(\"  INSERT INTO user_roles (user_id, role) \"\n237           f\"SELECT id, 'admin' FROM users WHERE email = '{ADMIN_EMAIL}' \"\n238           \"ON CONFLICT DO NOTHING;\")\n239     sys.exit(1)\n",
-      "col_offset": 10,
-      "end_col_offset": 57,
-      "filename": "scripts/test-authz-coverage.py",
-      "issue_confidence": "LOW",
-      "issue_cwe": {
-        "id": 89,
-        "link": "https://cwe.mitre.org/data/definitions/89.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Possible SQL injection vector through string-based query construction.",
-      "line_number": 236,
-      "line_range": [
-        236,
-        237,
-        238
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
-      "test_id": "B608",
-      "test_name": "hardcoded_sql_expressions"
-    },
-    {
-      "code": "46             return cp\n47         except Exception:\n48             continue\n49     return None\n",
-      "col_offset": 8,
-      "end_col_offset": 20,
-      "filename": "scripts/test-directions-e2e.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 703,
-        "link": "https://cwe.mitre.org/data/definitions/703.html"
-      },
-      "issue_severity": "LOW",
-      "issue_text": "Try, Except, Continue detected.",
-      "line_number": 47,
-      "line_range": [
-        47,
-        48
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b112_try_except_continue.html",
-      "test_id": "B112",
-      "test_name": "try_except_continue"
-    },
-    {
-      "code": "9 BASE_URL = \"http://localhost:8080\"\n10 SCREENSHOTS = Path(\"/tmp/browser/product-routing-test/screenshots\")\n11 PRODUCT_PATH_RE = re.compile(r\"^/company/([^/]+)/product/([^/]+)$\")\n",
-      "col_offset": 19,
-      "end_col_offset": 66,
-      "filename": "scripts/test-product-routing.py",
-      "issue_confidence": "MEDIUM",
-      "issue_cwe": {
-        "id": 377,
-        "link": "https://cwe.mitre.org/data/definitions/377.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Probable insecure usage of temp file/directory.",
-      "line_number": 10,
-      "line_range": [
-        10
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b108_hardcoded_tmp_directory.html",
-      "test_id": "B108",
-      "test_name": "hardcoded_tmp_directory"
-    },
-    {
-      "code": "29     try:\n30         resp = urllib.request.urlopen(r, timeout=10)\n31         return resp.status, dict(resp.headers), resp.read()\n",
-      "col_offset": 15,
-      "end_col_offset": 52,
-      "filename": "scripts/test-request-id-e2e.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 22,
-        "link": "https://cwe.mitre.org/data/definitions/22.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
-      "line_number": 30,
-      "line_range": [
-        30
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
-      "test_id": "B310",
-      "test_name": "blacklist"
-    }
-  ]
+  "scripts/generate-national-id-logins.py": {
+   "CONFIDENCE.HIGH": 0,
+   "CONFIDENCE.LOW": 0,
+   "CONFIDENCE.MEDIUM": 0,
+   "CONFIDENCE.UNDEFINED": 0,
+   "SEVERITY.HIGH": 0,
+   "SEVERITY.LOW": 0,
+   "SEVERITY.MEDIUM": 0,
+   "SEVERITY.UNDEFINED": 0,
+   "loc": 130,
+   "nosec": 0,
+   "skipped_tests": 0
+  },
+  "scripts/logo-diff.py": {
+   "CONFIDENCE.HIGH": 0,
+   "CONFIDENCE.LOW": 0,
+   "CONFIDENCE.MEDIUM": 0,
+   "CONFIDENCE.UNDEFINED": 0,
+   "SEVERITY.HIGH": 0,
+   "SEVERITY.LOW": 0,
+   "SEVERITY.MEDIUM": 0,
+   "SEVERITY.UNDEFINED": 0,
+   "loc": 39,
+   "nosec": 0,
+   "skipped_tests": 0
+  },
+  "scripts/test-api-contracts.py": {
+   "CONFIDENCE.HIGH": 2,
+   "CONFIDENCE.LOW": 0,
+   "CONFIDENCE.MEDIUM": 0,
+   "CONFIDENCE.UNDEFINED": 0,
+   "SEVERITY.HIGH": 0,
+   "SEVERITY.LOW": 0,
+   "SEVERITY.MEDIUM": 2,
+   "SEVERITY.UNDEFINED": 0,
+   "loc": 155,
+   "nosec": 0,
+   "skipped_tests": 0
+  },
+  "scripts/test-authz-coverage.py": {
+   "CONFIDENCE.HIGH": 2,
+   "CONFIDENCE.LOW": 1,
+   "CONFIDENCE.MEDIUM": 1,
+   "CONFIDENCE.UNDEFINED": 0,
+   "SEVERITY.HIGH": 0,
+   "SEVERITY.LOW": 2,
+   "SEVERITY.MEDIUM": 2,
+   "SEVERITY.UNDEFINED": 0,
+   "loc": 295,
+   "nosec": 0,
+   "skipped_tests": 0
+  },
+  "scripts/test-company-smoke.py": {
+   "CONFIDENCE.HIGH": 0,
+   "CONFIDENCE.LOW": 0,
+   "CONFIDENCE.MEDIUM": 0,
+   "CONFIDENCE.UNDEFINED": 0,
+   "SEVERITY.HIGH": 0,
+   "SEVERITY.LOW": 0,
+   "SEVERITY.MEDIUM": 0,
+   "SEVERITY.UNDEFINED": 0,
+   "loc": 147,
+   "nosec": 0,
+   "skipped_tests": 0
+  },
+  "scripts/test-directions-e2e.py": {
+   "CONFIDENCE.HIGH": 1,
+   "CONFIDENCE.LOW": 0,
+   "CONFIDENCE.MEDIUM": 0,
+   "CONFIDENCE.UNDEFINED": 0,
+   "SEVERITY.HIGH": 0,
+   "SEVERITY.LOW": 1,
+   "SEVERITY.MEDIUM": 0,
+   "SEVERITY.UNDEFINED": 0,
+   "loc": 115,
+   "nosec": 0,
+   "skipped_tests": 0
+  },
+  "scripts/test-product-routing.py": {
+   "CONFIDENCE.HIGH": 0,
+   "CONFIDENCE.LOW": 0,
+   "CONFIDENCE.MEDIUM": 1,
+   "CONFIDENCE.UNDEFINED": 0,
+   "SEVERITY.HIGH": 0,
+   "SEVERITY.LOW": 0,
+   "SEVERITY.MEDIUM": 1,
+   "SEVERITY.UNDEFINED": 0,
+   "loc": 96,
+   "nosec": 0,
+   "skipped_tests": 0
+  },
+  "scripts/test-request-id-e2e.py": {
+   "CONFIDENCE.HIGH": 1,
+   "CONFIDENCE.LOW": 0,
+   "CONFIDENCE.MEDIUM": 0,
+   "CONFIDENCE.UNDEFINED": 0,
+   "SEVERITY.HIGH": 0,
+   "SEVERITY.LOW": 0,
+   "SEVERITY.MEDIUM": 1,
+   "SEVERITY.UNDEFINED": 0,
+   "loc": 115,
+   "nosec": 0,
+   "skipped_tests": 0
+  },
+  "scripts/test-visual-regression.py": {
+   "CONFIDENCE.HIGH": 0,
+   "CONFIDENCE.LOW": 0,
+   "CONFIDENCE.MEDIUM": 0,
+   "CONFIDENCE.UNDEFINED": 0,
+   "SEVERITY.HIGH": 0,
+   "SEVERITY.LOW": 0,
+   "SEVERITY.MEDIUM": 0,
+   "SEVERITY.UNDEFINED": 0,
+   "loc": 142,
+   "nosec": 0,
+   "skipped_tests": 0
+  }
+ },
+ "results": [
+  {
+   "code": "99     try:\n100         with urllib.request.urlopen(req, timeout=20) as resp:\n101             return resp.status, resp.read().decode(\"utf-8\", \"replace\")\n",
+   "col_offset": 13,
+   "end_col_offset": 52,
+   "filename": "scripts/test-api-contracts.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 22,
+    "link": "https://cwe.mitre.org/data/definitions/22.html"
+   },
+   "issue_severity": "MEDIUM",
+   "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+   "line_number": 100,
+   "line_range": [
+    100
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+   "test_id": "B310",
+   "test_name": "blacklist"
+  },
+  {
+   "code": "138 try:\n139     urllib.request.urlopen(f\"{BASE_URL}/api/public/health\", timeout=10)\n140 except Exception as exc:  # noqa: BLE001 - any failure to reach the server is fatal here\n",
+   "col_offset": 4,
+   "end_col_offset": 71,
+   "filename": "scripts/test-api-contracts.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 22,
+    "link": "https://cwe.mitre.org/data/definitions/22.html"
+   },
+   "issue_severity": "MEDIUM",
+   "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+   "line_number": 139,
+   "line_range": [
+    139
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+   "test_id": "B310",
+   "test_name": "blacklist"
+  },
+  {
+   "code": "[removed: test fixture credential]",
+   "col_offset": 11,
+   "end_col_offset": 26,
+   "filename": "scripts/test-authz-coverage.py",
+   "issue_confidence": "MEDIUM",
+   "issue_cwe": {
+    "id": 259,
+    "link": "https://cwe.mitre.org/data/definitions/259.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "Possible hardcoded password: [removed: test fixture credential]",
+   "line_number": 44,
+   "line_range": [
+    44
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+   "test_id": "B105",
+   "test_name": "hardcoded_password_string"
+  },
+  {
+   "code": "183         try:\n184             urllib.request.urlopen(f\"{BASE_URL}{p}\", timeout=90).read()\n185         except Exception:  # noqa: BLE001\n",
+   "col_offset": 12,
+   "end_col_offset": 64,
+   "filename": "scripts/test-authz-coverage.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 22,
+    "link": "https://cwe.mitre.org/data/definitions/22.html"
+   },
+   "issue_severity": "MEDIUM",
+   "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+   "line_number": 184,
+   "line_range": [
+    184
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+   "test_id": "B310",
+   "test_name": "blacklist"
+  },
+  {
+   "code": "184             urllib.request.urlopen(f\"{BASE_URL}{p}\", timeout=90).read()\n185         except Exception:  # noqa: BLE001\n186             pass\n187 \n",
+   "col_offset": 8,
+   "end_col_offset": 16,
+   "filename": "scripts/test-authz-coverage.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 703,
+    "link": "https://cwe.mitre.org/data/definitions/703.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "Try, Except, Pass detected.",
+   "line_number": 185,
+   "line_range": [
+    185,
+    186
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+   "test_id": "B110",
+   "test_name": "try_except_pass"
+  },
+  {
+   "code": "235     print(\"This suite needs one; grant it once with:\")\n236     print(\"  INSERT INTO user_roles (user_id, role) \"\n237           f\"SELECT id, 'admin' FROM users WHERE email = '{ADMIN_EMAIL}' \"\n238           \"ON CONFLICT DO NOTHING;\")\n239     sys.exit(1)\n",
+   "col_offset": 10,
+   "end_col_offset": 57,
+   "filename": "scripts/test-authz-coverage.py",
+   "issue_confidence": "LOW",
+   "issue_cwe": {
+    "id": 89,
+    "link": "https://cwe.mitre.org/data/definitions/89.html"
+   },
+   "issue_severity": "MEDIUM",
+   "issue_text": "Possible SQL injection vector through string-based query construction.",
+   "line_number": 236,
+   "line_range": [
+    236,
+    237,
+    238
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+   "test_id": "B608",
+   "test_name": "hardcoded_sql_expressions"
+  },
+  {
+   "code": "46             return cp\n47         except Exception:\n48             continue\n49     return None\n",
+   "col_offset": 8,
+   "end_col_offset": 20,
+   "filename": "scripts/test-directions-e2e.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 703,
+    "link": "https://cwe.mitre.org/data/definitions/703.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "Try, Except, Continue detected.",
+   "line_number": 47,
+   "line_range": [
+    47,
+    48
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b112_try_except_continue.html",
+   "test_id": "B112",
+   "test_name": "try_except_continue"
+  },
+  {
+   "code": "9 BASE_URL = \"http://localhost:8080\"\n10 SCREENSHOTS = Path(\"/tmp/browser/product-routing-test/screenshots\")\n11 PRODUCT_PATH_RE = re.compile(r\"^/company/([^/]+)/product/([^/]+)$\")\n",
+   "col_offset": 19,
+   "end_col_offset": 66,
+   "filename": "scripts/test-product-routing.py",
+   "issue_confidence": "MEDIUM",
+   "issue_cwe": {
+    "id": 377,
+    "link": "https://cwe.mitre.org/data/definitions/377.html"
+   },
+   "issue_severity": "MEDIUM",
+   "issue_text": "Probable insecure usage of temp file/directory.",
+   "line_number": 10,
+   "line_range": [
+    10
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b108_hardcoded_tmp_directory.html",
+   "test_id": "B108",
+   "test_name": "hardcoded_tmp_directory"
+  },
+  {
+   "code": "29     try:\n30         resp = urllib.request.urlopen(r, timeout=10)\n31         return resp.status, dict(resp.headers), resp.read()\n",
+   "col_offset": 15,
+   "end_col_offset": 52,
+   "filename": "scripts/test-request-id-e2e.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 22,
+    "link": "https://cwe.mitre.org/data/definitions/22.html"
+   },
+   "issue_severity": "MEDIUM",
+   "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+   "line_number": 30,
+   "line_range": [
+    30
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+   "test_id": "B310",
+   "test_name": "blacklist"
+  }
+ ]
 }

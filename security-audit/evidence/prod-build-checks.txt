@@ -1,0 +1,29 @@
+===== 2026-11-16T11:23:16Z production build at 72e224e, NODE_ENV=production
+--- GET /auth?next= headers:
+content-security-policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsaf
+referrer-policy: strict-origin-when-cross-origin
+strict-transport-security: max-age=31536000
+x-content-type-options: nosniff
+--- GET /assets/x.png headers:
+referrer-policy: strict-origin-when-cross-origin
+strict-transport-security: max-age=31536000
+x-content-type-options: nosniff
+--- debug-echo GET status: 404
+--- export: companies with non-null rejection_note / owner_user_id / reviewed_by: 54 companies; 0 0 0
+--- anonymous company detail (owner exists in DB: t):
+responses with owner_user_id: 1 | samples: [ 'owner_user_id"' ]
+uuid leaked: false
+--- SEC-003 PoC (after): 3 logins, X-Forwarded-For '203.0.113.N, 198.51.100.7' (proxy-appended real IP last); buckets:
+signin-ip:198.51.100.7|3
+===== 2026-11-16T11:23:28Z production build at 72e224e, NODE_ENV=unset
+--- GET /auth?next= headers:
+content-security-policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsaf
+referrer-policy: strict-origin-when-cross-origin
+strict-transport-security: max-age=31536000
+x-content-type-options: nosniff
+--- GET /assets/x.png headers:
+referrer-policy: strict-origin-when-cross-origin
+strict-transport-security: max-age=31536000
+x-content-type-options: nosniff
+--- debug-echo GET status: 404
+--- export: companies with non-null rejection_note / owner_user_id / reviewed_by: 54 companies; 0 0 0

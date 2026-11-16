@@ -1,0 +1,15 @@
+{
+  "baseline": ["p/security-audit", "p/secrets"],
+  "javascript": ["p/javascript", "p/react", "p/nodejs"],
+  "typescript": ["p/typescript"],
+  "python": ["p/python"],
+  "docker": ["p/dockerfile"],
+  "github-actions": ["p/github-actions"],
+  "yaml": ["p/yaml"],
+  "third_party": [
+    "https://github.com/trailofbits/semgrep-rules",
+    "https://github.com/elttam/semgrep-rules",
+    "https://github.com/apiiro/malicious-code-ruleset",
+    "https://github.com/kondukto-io/semgrep-rules"
+  ]
+}

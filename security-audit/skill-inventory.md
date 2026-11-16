@@ -25,7 +25,7 @@ malicious samples for their own detectors.
 
 | Repository | Result |
 |---|---|
-| trailofbits/skills (9 installed plugins) | Reviewed before installation (prior session step). Only `fp-check` registers hooks: two `prompt`-type Stop/SubagentStop hooks (LLM check, no shell). Scripts in static-analysis and supply-chain-risk-auditor run only when the skill is invoked. No issues found. |
+| trailofbits/skills (9 installed plugins) | Reviewed before installation (earlier step of this engagement, same day). Only `fp-check` registers hooks: two `prompt`-type Stop/SubagentStop hooks (LLM check, no shell). Scripts in static-analysis and supply-chain-risk-auditor run only when the skill is invoked. No issues found. |
 | OWASP/secure-agent-playbook | All matches are documentation describing attacks (e.g. "avoid eval()"). 7 maintainer scripts extract reference data; skills do not invoke them. No issues found. |
 | UnitOneAI/SecuritySkills | Markdown-only skills; 8 Ruby repository-validation scripts not used by skills. Skills explicitly instruct the agent to treat embedded instructions as findings. No issues found. |
 | secureIO-GmbH/security-skills | Markdown only, no scripts. No issues found. |

@@ -1,0 +1,3 @@
+{
+  "third_party": ["https://github.com/semgrep/semgrep-rules"]
+}

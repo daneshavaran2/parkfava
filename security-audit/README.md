@@ -35,9 +35,9 @@ Start with the [executive summary](executive-summary.md), then the
 
 1. **Phase 0** — 5 skill repositories cloned and reviewed (no installs); 9 Trail of Bits plugins already installed and used.
 2. **Discovery** — 67 server functions, 5 public HTTP routes, 15 tables, 25 environment variables mapped.
-3. **Scanning** — 13 tools executed; registry Semgrep rules, CodeQL and ZAP not run (see tools-execution.md).
-4. **Validation** — High/Medium code findings reproduced on a disposable database before patching.
-5. **Patching** — 4 commits on `claude/epic-meitner-ctcy12`; nothing deployed; nothing pushed to `main`.
+3. **Scanning** — 12 tools executed; registry Semgrep rules, CodeQL and ZAP not run (see tools-execution.md).
+4. **Validation** — SEC-003, SEC-004 and SEC-005 reproduced against the pre-fix code on a disposable database; SEC-007 verified after the fix only; dependency findings verified by version and re-audit.
+5. **Patching** — commits `763c1c6`, `5e9dc7c`, `2377040`, `97d4db0` on `claude/epic-meitner-ctcy12`; nothing deployed; nothing pushed to `main`.
 6. **Regression** — existing suites plus 19 unit tests and an 11-check auth hardening script.
 
 ## Re-running the evidence
@@ -59,6 +59,24 @@ auth hardening script also needs `MFA_ENFORCED=true`). Never point them at produ
 
 ## Independent review record
 
-Completed after all documents were written; corrections applied are listed below.
+An independent reviewer (a separate agent with no access to the audit conversation,
+read-only) checked every finding's file and line, every evidence claim and the
+consistency of counts across documents. It confirmed package versions, status and
+severity counts, exit codes and all test tallies, and raised the following, all of
+which were corrected:
 
-_(filled in by the final review step)_
+| # | Issue raised | Resolution |
+|---|---|---|
+| 1–6 | Seven line references pointed at a declaration or the pre-fix line instead of the cited statement (SEC-003, 004, 007, 013, 015, 026, 029) | Corrected in findings.md |
+| 7 | "Phase 8 commit (this report)" unnamed | Named `97d4db0` everywhere and added to SEC-004/005/018/019/020 |
+| 8 | Gitleaks "215 commits" was the `rev-list` count incl. merges; two new commits unscanned | Re-ran Gitleaks after the final commits: 168 commits scanned, same 3 historical leaks |
+| 9 | Semgrep raw counts not backed by an evidence file | Added `semgrep-run{1,2,3}-scans.json` and corrected figures |
+| 10 | "13 tools" counted the project test suites | Corrected to 12 tools |
+| 11 | "Tested in 6 of 11 domains" but only 5 rows said Tested | Corrected to 5 |
+| 12 | README claimed all High/Medium findings were reproduced; SEC-007 was not | Wording corrected |
+| — | SEC-026 Informational contradicted risk R-02 = 6 | Raised to Medium (CWE-308) |
+| — | SEC-006 rated below the advisory without rationale | Rationale added |
+| — | R-01 implied SEC-004/005 are exploitable in production while MFA is off | Reworded |
+| — | Claims for SEC-003/012/014/016, the post-fix zizmor run and the 88-advisory baseline had no raw output | Captured: `xff-poc-baseline.txt`, `prod-build-checks.txt`, `zizmor-postfix.json`, `bun-audit-baseline-d877c06.json` |
+| — | Threat-model residual column did not follow its own L × I rule | Recomputed |
+| — | Checkov evidence quoted salts and hash prefixes of the SEC-023 hashes; Bandit evidence quoted a test password | Removed from the evidence files |

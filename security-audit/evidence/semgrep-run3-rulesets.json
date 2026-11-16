@@ -1,0 +1,9 @@
+{
+  "third_party": [
+    "https://github.com/semgrep/semgrep-rules",
+    "https://github.com/trailofbits/semgrep-rules",
+    "https://github.com/elttam/semgrep-rules",
+    "https://github.com/apiiro/malicious-code-ruleset",
+    "https://github.com/kondukto-io/semgrep-rules"
+  ]
+}

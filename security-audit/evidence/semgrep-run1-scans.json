@@ -1,0 +1,128 @@
+{
+  "outputDir": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1",
+  "rawDir": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw",
+  "reposPath": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/repos",
+  "mode": "run-all",
+  "pro": false,
+  "excludePattern": "",
+  "maxTargetBytes": 20000000,
+  "scans": [
+    {
+      "lang": "all",
+      "ruleset": "https://github.com/trailofbits/semgrep-rules",
+      "json": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/all-trailofbits-semgrep-rules.json",
+      "sarif": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/all-trailofbits-semgrep-rules.sarif",
+      "findings": 0,
+      "filesScanned": 296,
+      "partial": false,
+      "exitCode": 0
+    },
+    {
+      "lang": "all",
+      "ruleset": "https://github.com/elttam/semgrep-rules",
+      "json": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/all-elttam-semgrep-rules.json",
+      "sarif": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/all-elttam-semgrep-rules.sarif",
+      "findings": 0,
+      "filesScanned": 296,
+      "partial": true,
+      "exitCode": 2
+    },
+    {
+      "lang": "all",
+      "ruleset": "https://github.com/apiiro/malicious-code-ruleset",
+      "json": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/all-apiiro-malicious-code-ruleset.json",
+      "sarif": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/all-apiiro-malicious-code-ruleset.sarif",
+      "findings": 28,
+      "filesScanned": 194,
+      "partial": true,
+      "exitCode": 2
+    },
+    {
+      "lang": "all",
+      "ruleset": "https://github.com/kondukto-io/semgrep-rules",
+      "json": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/all-kondukto-io-semgrep-rules.json",
+      "sarif": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/all-kondukto-io-semgrep-rules.sarif",
+      "findings": 3,
+      "filesScanned": 1,
+      "partial": false,
+      "exitCode": 0
+    }
+  ],
+  "failed": [
+    {
+      "lang": "all",
+      "ruleset": "p/secrets",
+      "json": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/all-secrets.json",
+      "sarif": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/all-secrets.sarif",
+      "error": "kages/semgrep/app/session.py\", line 228, in request\n    response = super().request(*args, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/adapters.py\", line 723, in send\n    raise ProxyError(e, request=request)\nrequests.exceptions.ProxyError: HTTPSConnectionPool(host='semgrep.dev', port=443): Max retries exceeded with url: /c/p/secrets (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))"
+    },
+    {
+      "lang": "all",
+      "ruleset": "p/security-audit",
+      "json": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/all-security-audit.json",
+      "sarif": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/all-security-audit.sarif",
+      "error": "emgrep/app/session.py\", line 228, in request\n    response = super().request(*args, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/adapters.py\", line 723, in send\n    raise ProxyError(e, request=request)\nrequests.exceptions.ProxyError: HTTPSConnectionPool(host='semgrep.dev', port=443): Max retries exceeded with url: /c/p/security-audit (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))"
+    },
+    {
+      "lang": "docker",
+      "ruleset": "p/dockerfile",
+      "json": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/docker-dockerfile.json",
+      "sarif": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/docker-dockerfile.sarif",
+      "error": "es/semgrep/app/session.py\", line 228, in request\n    response = super().request(*args, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/adapters.py\", line 723, in send\n    raise ProxyError(e, request=request)\nrequests.exceptions.ProxyError: HTTPSConnectionPool(host='semgrep.dev', port=443): Max retries exceeded with url: /c/p/dockerfile (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))"
+    },
+    {
+      "lang": "github-actions",
+      "ruleset": "p/github-actions",
+      "json": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/github-actions-github-actions.json",
+      "sarif": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/github-actions-github-actions.sarif",
+      "error": "emgrep/app/session.py\", line 228, in request\n    response = super().request(*args, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/adapters.py\", line 723, in send\n    raise ProxyError(e, request=request)\nrequests.exceptions.ProxyError: HTTPSConnectionPool(host='semgrep.dev', port=443): Max retries exceeded with url: /c/p/github-actions (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))"
+    },
+    {
+      "lang": "javascript",
+      "ruleset": "p/javascript",
+      "json": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/javascript-javascript.json",
+      "sarif": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/javascript-javascript.sarif",
+      "error": "es/semgrep/app/session.py\", line 228, in request\n    response = super().request(*args, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/adapters.py\", line 723, in send\n    raise ProxyError(e, request=request)\nrequests.exceptions.ProxyError: HTTPSConnectionPool(host='semgrep.dev', port=443): Max retries exceeded with url: /c/p/javascript (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))"
+    },
+    {
+      "lang": "javascript",
+      "ruleset": "p/nodejs",
+      "json": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/javascript-nodejs.json",
+      "sarif": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/javascript-nodejs.sarif",
+      "error": "ckages/semgrep/app/session.py\", line 228, in request\n    response = super().request(*args, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/adapters.py\", line 723, in send\n    raise ProxyError(e, request=request)\nrequests.exceptions.ProxyError: HTTPSConnectionPool(host='semgrep.dev', port=443): Max retries exceeded with url: /c/p/nodejs (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))"
+    },
+    {
+      "lang": "javascript",
+      "ruleset": "p/react",
+      "json": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/javascript-react.json",
+      "sarif": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/javascript-react.sarif",
+      "error": "ackages/semgrep/app/session.py\", line 228, in request\n    response = super().request(*args, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/adapters.py\", line 723, in send\n    raise ProxyError(e, request=request)\nrequests.exceptions.ProxyError: HTTPSConnectionPool(host='semgrep.dev', port=443): Max retries exceeded with url: /c/p/react (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))"
+    },
+    {
+      "lang": "python",
+      "ruleset": "p/python",
+      "json": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/python-python.json",
+      "sarif": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/python-python.sarif",
+      "error": "ckages/semgrep/app/session.py\", line 228, in request\n    response = super().request(*args, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/adapters.py\", line 723, in send\n    raise ProxyError(e, request=request)\nrequests.exceptions.ProxyError: HTTPSConnectionPool(host='semgrep.dev', port=443): Max retries exceeded with url: /c/p/python (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))"
+    },
+    {
+      "lang": "typescript",
+      "ruleset": "p/typescript",
+      "json": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/typescript-typescript.json",
+      "sarif": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/typescript-typescript.sarif",
+      "error": "es/semgrep/app/session.py\", line 228, in request\n    response = super().request(*args, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/adapters.py\", line 723, in send\n    raise ProxyError(e, request=request)\nrequests.exceptions.ProxyError: HTTPSConnectionPool(host='semgrep.dev', port=443): Max retries exceeded with url: /c/p/typescript (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))"
+    },
+    {
+      "lang": "yaml",
+      "ruleset": "p/yaml",
+      "json": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/yaml-yaml.json",
+      "sarif": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_1/raw/yaml-yaml.sarif",
+      "error": "packages/semgrep/app/session.py\", line 228, in request\n    response = super().request(*args, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n  File \"/root/.local/share/uv/tools/semgrep/lib/python3.13/site-packages/requests/adapters.py\", line 723, in send\n    raise ProxyError(e, request=request)\nrequests.exceptions.ProxyError: HTTPSConnectionPool(host='semgrep.dev', port=443): Max retries exceeded with url: /c/p/yaml (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))"
+    }
+  ],
+  "skipped": [],
+  "alsoShared": [],
+  "unscoped": [],
+  "coveredNothing": [],
+  "oversized": []
+}

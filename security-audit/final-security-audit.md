@@ -4,7 +4,7 @@
 |---|---|
 | Date | 2026-11-16 |
 | Scope | Repository `daneshavaran2/parkfava` (branch `claude/epic-meitner-ctcy12`), local isolated test instance, CI configuration. Production and the Liara account were out of reach and not tested. |
-| Method | Skill-assisted multi-domain review (Trail of Bits static-analysis, insecure-defaults corpus, supply-chain-risk-auditor), 13 scanners, exploit reproduction on a disposable database, patching with regression tests, independent review |
+| Method | Skill-assisted multi-domain review (Trail of Bits static-analysis, insecure-defaults corpus, supply-chain-risk-auditor), 12 scanning tools, exploit reproduction on a disposable database, patching with regression tests, independent review |
 | Rules of engagement | Non-destructive; no production traffic; no real accounts; secrets redacted |
 
 ## 1. Overall assessment
@@ -23,9 +23,9 @@ for the dashboard and coverage table.
 |---|---|
 | Critical | SEC-001 TanStack Start reflected XSS (patched) · SEC-002 seroval deserialization (patched) |
 | High (conditional on MFA) | SEC-004 MFA shared across sessions (patched) · SEC-005 verified phone replaceable (patched) |
-| Medium | SEC-003 rate-limit bypass (patched) · SEC-006 zod DoS (patched) · SEC-007 password change controls (patched) · SEC-009 CI/CD hardening (patched) · SEC-010 stale npm lockfile (open) |
+| Medium | SEC-003 rate-limit bypass (patched) · SEC-006 zod DoS (patched) · SEC-007 password change controls (patched) · SEC-009 CI/CD hardening (patched) · SEC-010 stale npm lockfile (open) · SEC-026 MFA off, admins password-only (open) |
 | Low | SEC-008, 011, 012, 013, 014, 015, 016, 017, 018, 019, 020, 021, 022, 023, 024, 025 |
-| Informational | SEC-026 … SEC-032 |
+| Informational | SEC-027 … SEC-032 |
 
 Full register with evidence, root cause and remediation: [findings.md](findings.md).
 Rejected candidates: [false-positives.md](false-positives.md).
@@ -49,14 +49,15 @@ Rejected candidates: [false-positives.md](false-positives.md).
 | `763c1c6` | TanStack Start/Router, seroval, zod 4, Electron, Vite/Vitest, in-range build-tool fixes; `.inputValidator` → `.validator`; route error type |
 | `5e9dc7c` | Workflow permissions, SHA-pinned actions, pinned Liara CLI |
 | `2377040` | Rate-limit client key, login timing, password-change controls, URL scheme validation, public field stripping, debug endpoint, GCM tag, security headers, `founded_at` validation bug |
-| Phase 8 commit (this report) | Session-bound MFA (`0022` migration), verified-phone guard, OTP log redaction, outbound timeouts, offline-import identifier allowlist, `persist-credentials: false`, `client-ip.ts` refactor, regression tests |
+| `97d4db0` | Session-bound MFA (`0022` migration), verified-phone guard, OTP log redaction, outbound timeouts, offline-import identifier allowlist, `persist-credentials: false`, `client-ip.ts` refactor, regression tests |
+| `72e224e` + review corrections | This report and its evidence |
 
 Details and evidence: [patch-validation.md](patch-validation.md).
 
 ## 5. Test results
 
 Authorization suite 51/51 · API contracts 13/13 · auth hardening 11/11 (baseline: 4 of 6
-MFA checks failed, proving the flaws) · unit tests 45/45 · browser flows 8/8 · production
+MFA checks failed, proving the flaws) · rate-limit PoC 3 buckets → 1 · unit tests 45/45 · browser flows 8/8 · production
 build OK · type check unchanged from baseline (7 pre-existing errors) · bun audit 88 → 1.
 
 ## 6. Unresolved risks and limitations
@@ -66,6 +67,7 @@ Residual risks: [risk-register.md](risk-register.md). Limitations of this assess
 - **Not tested:** production configuration, Liara network/database/backups, branch protection, DOM-XSS dynamic scanning (ZAP), CodeQL taint analysis, live-model prompt injection, load/availability behaviour.
 - **Network policy** blocked the Semgrep registry and the OSV API; equivalent rule sets and an offline OSV database were used instead.
 - Severity for SEC-001/002/006 relies on vendor advisories; exploits were not reproduced.
+- SEC-007 was verified only after the fix (no baseline run); SEC-013/018/019/020 by code review only.
 - `insecure-defaults` and `skill-supply-chain-audit` could not run as designed (missing tool / execution refused); their checks were applied manually or not at all.
 
 ## 7. Recommended next actions

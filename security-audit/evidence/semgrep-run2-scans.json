@@ -1,0 +1,27 @@
+{
+  "outputDir": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_2",
+  "rawDir": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_2/raw",
+  "reposPath": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_2/repos",
+  "mode": "run-all",
+  "pro": false,
+  "excludePattern": "",
+  "maxTargetBytes": 20000000,
+  "scans": [
+    {
+      "lang": "all",
+      "ruleset": "https://github.com/semgrep/semgrep-rules",
+      "json": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_2/raw/all-semgrep-semgrep-rules.json",
+      "sarif": "/tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/static_analysis_semgrep_2/raw/all-semgrep-semgrep-rules.sarif",
+      "findings": 1280,
+      "filesScanned": 296,
+      "partial": false,
+      "exitCode": 0
+    }
+  ],
+  "failed": [],
+  "skipped": [],
+  "alsoShared": [],
+  "unscoped": [],
+  "coveredNothing": [],
+  "oversized": []
+}

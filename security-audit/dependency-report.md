@@ -13,7 +13,7 @@
 
 | Stage | Tool | Critical | High | Moderate | Low | Total |
 |---|---|---|---|---|---|---|
-| Before (commit `d877c06`) | bun audit | 4 | 41 | 33 | 10 | 88 |
+| Before (commit `d877c06`, `evidence/bun-audit-baseline-d877c06.json`) | bun audit | 4 | 41 | 33 | 10 | 88 |
 | After TanStack/Vite/Electron updates | bun audit | 1 | 32 | 22 | 6 | 61 |
 | After `bun audit fix` (in-range) | bun audit | 0 | 1 | 1 | 0 | 2 |
 | After zod 4 | bun audit / OSV-Scanner offline | 0 | 0 | 1 | 0 | **1** |
