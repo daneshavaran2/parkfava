@@ -68,7 +68,7 @@ Residual risks: [risk-register.md](risk-register.md). Limitations of this assess
 - **Not tested:** production configuration, Liara network/database/backups, branch protection, DOM-XSS dynamic scanning (ZAP), CodeQL taint analysis, live-model prompt injection, load/availability behaviour.
 - **Network policy** blocked the Semgrep registry and the OSV API; equivalent rule sets and an offline OSV database were used instead.
 - Severity for SEC-001/002/006 relies on vendor advisories; exploits were not reproduced.
-- SEC-007 was verified only after the fix (no baseline run); SEC-013/018/019/020 by code review only.
+- SEC-007 was verified only after the fix (no baseline run); SEC-019/020 by code review only.
 - `insecure-defaults` and `skill-supply-chain-audit` could not run as designed (missing tool / execution refused); their checks were applied manually or not at all.
 
 ## 7. Recommended next actions

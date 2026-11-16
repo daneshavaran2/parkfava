@@ -35,7 +35,7 @@ misleading.
 | By severity | Critical 1 · High 3 (2 conditional on MFA) · Medium 5 · Low 2 · Informational 21 |
 | Rejected candidates (false positives, grouped) | 23 groups — [false-positives.md](false-positives.md) |
 | Fixes applied | 17 complete + 1 partial |
-| Fixes verified by an executed test or rescan (raw output in `evidence/`) | 13 (4 more verified by code review only) |
+| Fixes verified by an executed test or rescan (raw output in `evidence/`) | 14 (3 more verified by code review only) |
 | Proposed, not applied | 10 (mostly configuration or need a product decision) |
 | Not started | 3 · Accepted with controls 1 |
 | Remaining high-risk items | Deployment gap (R-01), MFA off (R-02), backups unverified (R-08) |

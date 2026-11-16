@@ -202,11 +202,11 @@ checkout credentials, `72e224e` this report.
 
 ### SEC-013 — Username enumeration through login response time
 
-- **fp-check verdict:** FALSE POSITIVE — not measured; negligible value since sign-up discloses emails and national IDs are public (gates 3, 4 fail). Fix kept.
+- **fp-check verdict:** FALSE POSITIVE — the signal was real (43 ms before the fix, 4.8 ms after; `evidence/sec013-timing.txt`) but only reveals account existence, which sign-up already discloses for emails and which is public for national IDs (gate 3 fails). Fix kept.
 
 - **Status:** Hardening (fp-check: false positive) · **Severity:** Informational · **CWE:** CWE-208
 - **Location:** `signIn` skipped scrypt for unknown usernames.
-- **Patch:** Applied — dummy scrypt verification (`src/lib/auth.functions.ts:171`, helper `dummyHash()` at `:138`). **Verification:** code review only.
+- **Patch:** Applied — dummy scrypt verification (`src/lib/auth.functions.ts:171`, helper `dummyHash()` at `:138`). **Verification:** local timing, 25 samples per case — median difference 43 ms before, 4.8 ms after (`evidence/sec013-timing.txt`).
 
 ### SEC-014 — Debug endpoint enabled whenever NODE_ENV is unset
 

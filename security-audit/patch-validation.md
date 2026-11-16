@@ -18,7 +18,7 @@ via Playwright. Dates are UTC, 2026-11-16.
 | SEC-008 | `src/lib/safe-url.ts` | 14 unit cases; Playwright: save `javascript:alert(document.cookie)` then `https://…` | stored (pre-fix code accepted any string) | rejected / saved | `evidence/e2e-login-flows.txt` |
 | SEC-009 | workflows | zizmor, Checkov, Semgrep, YAML parse | zizmor 8 Medium + 1 Low; Semgrep pin rule 7 | zizmor 1 Low; Checkov 296/296; Semgrep 0 | `evidence/zizmor.log`, `evidence/zizmor-postfix.json`, `evidence/semgrep-before-after.txt` |
 | SEC-012 | public-path field stripping | Anonymous company page response; export | `owner_user_id` UUID present (observed during review, not saved) | no UUID; export 54 companies, 0 internal fields | `evidence/prod-build-checks.txt` |
-| SEC-013 | dummy scrypt | code review | — | — | not measured |
+| SEC-013 | dummy scrypt | 25 timed sign-ins per case (known vs unknown account), rate-limit counters cleared | median Δ 43 ms | median Δ 4.8 ms (within σ ≈ 9 ms) | `evidence/sec013-timing.txt` |
 | SEC-014 | opt-in debug endpoint | `curl /api/public/debug-echo` on production build | enabled when `NODE_ENV` unset (by code) | 404 with `production` and unset | `evidence/prod-build-checks.txt` |
 | SEC-015 | `authTagLength: 16` | Semgrep `gcm-no-tag-length` | 1 | 0 | `evidence/semgrep-before-after.txt` |
 | SEC-016 | headers | `curl -D -` on production build (HTML and `/assets/x.png`) | absent | `nosniff`, `strict-origin-when-cross-origin`, `max-age=31536000` present | `evidence/prod-build-checks.txt` |
@@ -48,7 +48,6 @@ via Playwright. Dates are UTC, 2026-11-16.
 
 ## Not validated
 
-- SEC-013 timing equalisation was not measured statistically.
 - SEC-019 timeouts were not exercised with a stalled upstream.
 - SEC-021 was not tested against a live model.
 - No test ran against production; deployment state is unverified.

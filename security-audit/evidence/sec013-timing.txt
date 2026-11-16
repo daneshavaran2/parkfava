@@ -1,0 +1,3 @@
+===== 2026-11-16T11:45:30Z SEC-013 local timing (dev server, disposable DB, rate-limit counters cleared per request)
+BEFORE fix (auth.functions.ts @5e9dc7c): median known=48.8 ms, unknown=5.8 ms, difference=43.0 ms; stdev known=7.5, unknown=0.6; n=25 each; responses identical (INVALID_CREDENTIALS)
+AFTER fix (dummy scrypt): median known=51.2 ms, unknown=46.4 ms, difference=4.8 ms; stdev known=8.3, unknown=9.2; n=25 each; responses identical (INVALID_CREDENTIALS)

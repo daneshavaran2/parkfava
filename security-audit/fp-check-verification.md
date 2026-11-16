@@ -95,15 +95,20 @@ same-origin requests carry it).
 - 4.4 Negative PoC: on `@tanstack/start-server-core@1.169.45` client input is limited to public fields, so no internal field can be injected; without a victim opening the link nothing happens.
 - 4.5 PoC verification: the pseudocode matches the advisory's stated cause and fix (OSV offline DB entry GHSA-qx66-fv34-fjm8); the post-upgrade audit no longer reports it (`evidence/bun-audit.log`).
 
-**Phase 5.** 1 Non-vuln explanation: none — vendor-confirmed defect. 2 Developer
-justification: N/A (framework). 3 Missing context: a WAF could block it — none is
-configured. 4 Pattern bias: no, claim is from the vendor advisory, not a code pattern.
-5 Validation prevents it? App validators run too late. 6 Trusted data assumed attacker
-data? No — query string is attacker-controlled. 7 Math: N/A. 8 Practical: yes, one link.
-9 DiD confusion: no, output handling is primary. 10 Runtime protections: CSP with
-`unsafe-inline` does not eliminate it. 11 Hallucination: version range checked in
-`bun.lock` at `d877c06`. 12 Dismissing due to complexity: no. 13 Invented mitigations:
-re-read `csp.ts` — `unsafe-inline` present.
+**Phase 5.**
+- Q1 Non-vuln explanation: none — vendor-confirmed defect.
+- Q2 Developer justification: N/A (framework).
+- Q3 Missing context: a WAF could block it — none is configured.
+- Q4 Pattern bias: no, claim is from the vendor advisory, not a code pattern.
+- Q5 Validation prevents it? App validators run too late.
+- Q6 Trusted data assumed attacker data? No — query string is attacker-controlled.
+- Q7 Math: N/A.
+- Q8 Practical: yes, one link.
+- Q9 DiD confusion: no, output handling is primary.
+- Q10 Runtime protections: CSP with `unsafe-inline` does not eliminate it.
+- Q11 Hallucination: version range checked in `bun.lock` at `d877c06`.
+- Q12 Dismissing due to complexity: no.
+- Q13 Invented mitigations: re-read `csp.ts` — `unsafe-inline` present.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -140,7 +145,20 @@ request plugin set; **none was identified** in this review.
 - 4.4 Negative PoC: seroval ≥ 1.6.8 checks lengths against the data present; normal payloads carry consistent lengths and are unaffected.
 - 4.5 PoC verification: the call site and the attacker-controlled input were confirmed in the installed framework code; the pseudocode follows the advisories' stated cause; the upgraded seroval (1.8.1) is no longer flagged (`evidence/bun-audit.log`).
 
-**Phase 5.** 1 Non-vuln explanation for (a): callable invocation needs a gadget — accepted, (a) not proven. 2 Dev justification: N/A. 3 Missing context: body size limits at Liara's proxy may cap payloads but (b) needs only a small body. 4 Pattern bias: no, vendor advisories. 5 Validation: app validators run after deserialization. 6 Trusted data? No, request body. 7 Math: length/amplification argued in 2.2. 8 Practical: (b) yes, single requests. 9 DiD: no. 10 Runtime: worker auto-restart reduces but does not prevent outage. 11 Hallucination: version `1.5.4` confirmed in `bun.lock` at `d877c06`. 12 Dismissing (a) because complex? Possibly — recorded as unproven, not disproven. 13 Invented mitigations: handler line re-read.
+**Phase 5.**
+- Q1 Non-vuln explanation for (a): callable invocation needs a gadget — accepted, (a) not proven.
+- Q2 Dev justification: N/A.
+- Q3 Missing context: body size limits at Liara's proxy may cap payloads but (b) needs only a small body.
+- Q4 Pattern bias: no, vendor advisories.
+- Q5 Validation: app validators run after deserialization.
+- Q6 Trusted data? No, request body.
+- Q7 Math: length/amplification argued in 2.2.
+- Q8 Practical: (b) yes, single requests.
+- Q9 DiD: no.
+- Q10 Runtime: worker auto-restart reduces but does not prevent outage.
+- Q11 Hallucination: version `1.5.4` confirmed in `bun.lock` at `d877c06`.
+- Q12 Dismissing (a) because complex? Possibly — recorded as unproven, not disproven.
+- Q13 Invented mitigations: handler line re-read.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -175,7 +193,20 @@ across many accounts, and unlimited sign-ups / assistant calls up to the global 
 - 4.4 Negative PoC: requests without a spoofed header used the real address even before the fix; after the fix spoofed headers share one bucket `198.51.100.7` (`evidence/prod-build-checks.txt`).
 - 4.5 PoC verification: before/after runs with identical requests show the behaviour change; unit tests pass (`evidence/unit-tests.txt`).
 
-**Phase 5.** 1 Non-vuln explanation: the developer assumed XFF holds only proxy data — false for appended headers. 2 Justification: "behind Liara the socket is the proxy" — correct, but the wrong XFF entry was chosen. 3 Missing context: Liara might strip client XFF — the PoC cannot prove production behaviour; residual uncertainty noted (if Liara overwrote XFF, the old code would have been safe). 4 Pattern bias: no, reproduced. 5 Validation: none on the header. 6 Trusted data? No. 7 Math: buckets = distinct values. 8 Practical: trivial header. 9 DiD: per-account limit is a separate control; per-IP is the primary anti-spraying one. 10 Runtime: none. 11 Hallucination: reproduced. 12 Complexity: low. 13 Invented mitigations: re-read the old function.
+**Phase 5.**
+- Q1 Non-vuln explanation: the developer assumed XFF holds only proxy data — false for appended headers.
+- Q2 Justification: "behind Liara the socket is the proxy" — correct, but the wrong XFF entry was chosen.
+- Q3 Missing context: Liara might strip client XFF — the PoC cannot prove production behaviour; residual uncertainty noted (if Liara overwrote XFF, the old code would have been safe).
+- Q4 Pattern bias: no, reproduced.
+- Q5 Validation: none on the header.
+- Q6 Trusted data? No.
+- Q7 Math: buckets = distinct values.
+- Q8 Practical: trivial header.
+- Q9 DiD: per-account limit is a separate control; per-IP is the primary anti-spraying one.
+- Q10 Runtime: none.
+- Q11 Hallucination: reproduced.
+- Q12 Complexity: low.
+- Q13 Invented mitigations: re-read the old function.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -208,7 +239,20 @@ Any owner who uses the site daily keeps the window open.
 - 4.4 Negative PoC: with `MFA_ENFORCED` off the gate is a no-op, so nothing changes; the owner's own verified session keeps working.
 - 4.5 PoC verification: patched run — second session refused with `MFA_REQUIRED` (`evidence/auth-hardening-patched.txt`).
 
-**Phase 5.** 1 Non-vuln: "MFA token per user is a remember-device feature" — but it is not bound to a device. 2 Justification: simpler schema. 3 Context: MFA is off in production → dormant. 4 Pattern: reproduced. 5 Validation: none. 6 Trusted data: password is attacker-held by threat model. 7 Math: N/A. 8 Practical: yes when MFA on. 9 DiD: MFA is primary. 10 Runtime: none. 11 Hallucination: reproduced. 12 Complexity: low. 13 Invented mitigations: re-read middleware.
+**Phase 5.**
+- Q1 Non-vuln: "MFA token per user is a remember-device feature" — but it is not bound to a device.
+- Q2 Justification: simpler schema.
+- Q3 Context: MFA is off in production → dormant.
+- Q4 Pattern: reproduced.
+- Q5 Validation: none.
+- Q6 Trusted data: password is attacker-held by threat model.
+- Q7 Math: N/A.
+- Q8 Practical: yes when MFA on.
+- Q9 DiD: MFA is primary.
+- Q10 Runtime: none.
+- Q11 Hallucination: reproduced.
+- Q12 Complexity: low.
+- Q13 Invented mitigations: re-read middleware.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -237,7 +281,20 @@ the password this fully replaces the second factor.
 - 4.4 Negative PoC: first-time phone setup (no verified phone) still works; an MFA-verified session can still change the number (patched run).
 - 4.5 PoC verification: patched run — `PHONE_CHANGE_REQUIRES_MFA`, stored phone unchanged (`evidence/auth-hardening-patched.txt`).
 
-**Phase 5.** Q1 Non-vuln explanation: first-time phone setup must work without MFA — the fix keeps that (guard applies only to verified phones). Q2 Developer justification: the phone step is only shown in the UI when no phone exists. Q3 Missing context: server functions are callable directly, regardless of the UI. Q4 Pattern bias: no — reproduced on the baseline. Q5 Validation sufficient? `normalizePhone` checks format only. Q6 Trusted data as attacker data? The new number is attacker-chosen by design of the threat model. Q7 Math: N/A (logic bug). Q8 Practical: yes, two calls. Q9 DiD confusion: no, the phone *is* the second factor. Q10 Runtime protections: none. Q11 Hallucination: reproduced (`evidence/auth-hardening-baseline-mfa.txt`). Q12 Dismissing as unlikely: no. Q13 Invented mitigations: re-read `setPhone` at `d877c06`.
+**Phase 5.**
+- Q1 Non-vuln explanation: first-time phone setup must work without MFA — the fix keeps that (guard applies only to verified phones).
+- Q2 Developer justification: the phone step is only shown in the UI when no phone exists.
+- Q3 Missing context: server functions are callable directly, regardless of the UI.
+- Q4 Pattern bias: no — reproduced on the baseline.
+- Q5 Validation sufficient? `normalizePhone` checks format only.
+- Q6 Trusted data as attacker data? The new number is attacker-chosen by design of the threat model.
+- Q7 Math: N/A (logic bug).
+- Q8 Practical: yes, two calls.
+- Q9 DiD confusion: no, the phone *is* the second factor.
+- Q10 Runtime protections: none.
+- Q11 Hallucination: reproduced (`evidence/auth-hardening-baseline-mfa.txt`).
+- Q12 Dismissing as unlikely: no.
+- Q13 Invented mitigations: re-read `setPhone` at `d877c06`.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -272,7 +329,20 @@ worker OOM. 2.3 N/A. 2.4 Repeatable per request.
 - 4.4 Negative PoC: normal UI calls send dozens of IDs; with zod 4.6.7 and `.max(1000)` the validator rejects oversized input with a single issue.
 - 4.5 PoC verification: reachability confirmed by reading the middleware → validator → handler order and listing the six unbounded validators; after the caps, authz 51/51, contracts 13/13 and the exhibition page confirm legitimate calls still pass.
 
-**Phase 5.** 1 Non-vuln: request body limits upstream — not configured in the repo; Liara's limit unknown (residual uncertainty). 2 Justification: lists are small in practice. 3 Missing context: Liara body limit could cap the attack — not verifiable here. 4 Not pattern-only: advisory + reachable validators listed. 5 Validation runs first by design. 6 Attacker data: yes. 7 Math in 2.2. 8 Practical with open sign-up. 9 Primary. 10 Auto-restart mitigates duration only. 11 Validators re-listed with grep. 12 Not dismissed. 13 Checked middleware/validator order in TanStack chain.
+**Phase 5.**
+- Q1 Non-vuln: request body limits upstream — not configured in the repo; Liara's limit unknown (residual uncertainty).
+- Q2 Justification: lists are small in practice.
+- Q3 Missing context: Liara body limit could cap the attack — not verifiable here.
+- Q4 Not pattern-only: advisory + reachable validators listed.
+- Q5 Validation runs first by design.
+- Q6 Attacker data: yes.
+- Q7 Math in 2.2.
+- Q8 Practical with open sign-up.
+- Q9 Primary.
+- Q10 Auto-restart mitigates duration only.
+- Q11 Validators re-listed with grep.
+- Q12 Not dismissed.
+- Q13 Checked middleware/validator order in TanStack chain.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -302,7 +372,20 @@ Owner's other sessions also stayed valid after the change.
 - 4.4 Negative PoC: the forced first-login change still works without the current password, as bootstrap accounts need.
 - 4.5 PoC verification: patched run — change refused without/with a wrong current password, accepted with the right one, other session signed out (`evidence/auth-hardening-patched.txt`).
 
-**Phase 5.** 1 Non-vuln: "a session already implies the owner" — sessions can be stolen. 2 Justification: only the forced-change UI exists. 3 Context: server fn callable directly. 4 Not pattern: logic reading of the handler. 5 No validation of current password existed. 6 Session is attacker-held per threat model. 7 N/A. 8 Practical given a stolen session. 9 Primary (re-auth). 10 None. 11 Re-read old handler at `d877c06`. 12 Not dismissed. 13 Verified.
+**Phase 5.**
+- Q1 Non-vuln: "a session already implies the owner" — sessions can be stolen.
+- Q2 Justification: only the forced-change UI exists.
+- Q3 Context: server fn callable directly.
+- Q4 Not pattern: logic reading of the handler.
+- Q5 No validation of current password existed.
+- Q6 Session is attacker-held per threat model.
+- Q7 N/A.
+- Q8 Practical given a stolen session.
+- Q9 Primary (re-auth).
+- Q10 None.
+- Q11 Re-read old handler at `d877c06`.
+- Q12 Not dismissed.
+- Q13 Verified.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -330,7 +413,20 @@ public path. 1.3 None. 1.4 Public list already used explicit columns (safe patte
 - 4.4 Negative PoC: owners and admins still receive the fields on non-public paths; the public list already used explicit columns.
 - 4.5 PoC verification: post-fix production build — no UUID in the anonymous response although the company has an owner; export 54 companies with 0 internal fields (`evidence/prod-build-checks.txt`).
 
-**Phase 5.** Q1 Non-vuln: UUIDs are not secrets — accepted, impact low. Q2 Justification: convenience `SELECT *`. Q3 Context: no IDOR exists to use the IDs (authz suite). Q4 Not pattern-only: the response was observed. Q5 Validation: none filtered the fields. Q6 Data is internal, served to anonymous callers — not a trust confusion. Q7 Math: N/A. Q8 Practical: yes, one request. Q9 Data minimisation is the control itself, not DiD. Q10 Runtime protections: none. Q11 Hallucination: observed in a real response. Q12 Not dismissed despite low value. Q13 Fields verified in the post-fix response.
+**Phase 5.**
+- Q1 Non-vuln: UUIDs are not secrets — accepted, impact low.
+- Q2 Justification: convenience `SELECT *`.
+- Q3 Context: no IDOR exists to use the IDs (authz suite).
+- Q4 Not pattern-only: the response was observed.
+- Q5 Validation: none filtered the fields.
+- Q6 Data is internal, served to anonymous callers — not a trust confusion.
+- Q7 Math: N/A.
+- Q8 Practical: yes, one request.
+- Q9 Data minimisation is the control itself, not DiD.
+- Q10 Runtime protections: none.
+- Q11 Hallucination: observed in a real response.
+- Q12 Not dismissed despite low value.
+- Q13 Fields verified in the post-fix response.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -368,7 +464,20 @@ top-level navigation is blocked by modern browsers; `vbscript:` is IE-only.
 - 4.4 Negative PoC: `https://…` saves and renders normally.
 - 4.5 PoC verification: the PoC does **not** show execution — consistent with the false-positive verdict.
 
-**Phase 5.** Q1 Non-vuln explanation: React 19 blocks the scheme. Q2 Developer justification: reliance on framework sanitisation. Q3 Missing context: future non-React consumers (export, desktop app) — the hardening rationale. Q4 Pattern bias: **yes**, the original finding came from a pattern ("length-only URL"). Q5 Does protection prevent the condition? Yes, at every sink found. Q6 Trusted vs attacker data: owner data is semi-trusted (admin-reviewed once approved). Q7 Math: N/A. Q8 Practical: no execution path. Q9 DiD confusion: yes — the server check is DiD. Q10 Runtime protection: React 19 eliminates it. Q11 Hallucination: initially over-reported. Q12 Dismissing a real bug? Other sinks were searched to avoid that. Q13 Invented mitigations? React's behaviour is documented; sinks re-searched with grep.
+**Phase 5.**
+- Q1 Non-vuln explanation: React 19 blocks the scheme.
+- Q2 Developer justification: reliance on framework sanitisation.
+- Q3 Missing context: future non-React consumers (export, desktop app) — the hardening rationale.
+- Q4 Pattern bias: **yes**, the original finding came from a pattern ("length-only URL").
+- Q5 Does protection prevent the condition? Yes, at every sink found.
+- Q6 Trusted vs attacker data: owner data is semi-trusted (admin-reviewed once approved).
+- Q7 Math: N/A.
+- Q8 Practical: no execution path.
+- Q9 DiD confusion: yes — the server check is DiD.
+- Q10 Runtime protection: React 19 eliminates it.
+- Q11 Hallucination: initially over-reported.
+- Q12 Dismissing a real bug? Other sinks were searched to avoid that.
+- Q13 Invented mitigations? React's behaviour is documented; sinks re-searched with grep.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -388,26 +497,38 @@ per-account limit 8/5 min and per-IP limit cap the number of samples. 1.4 Cross-
 `signUp` already reveals registered emails (`EMAIL_ALREADY_REGISTERED`); company
 national IDs are public records.
 
-**Phase 2.** 2.1 The attacker chooses the usernames. 2.2 Signal ≈ one scrypt
-(tens of ms) — plausibly measurable, but not measured here. 2.3 Race: N/A. 2.4 With ≤ 8
+**Phase 2.** 2.1 The attacker chooses the usernames. 2.2 Measured locally (`evidence/sec013-timing.txt`, n=25 each): before the fix, known accounts took a median 48.8 ms vs 5.8 ms for unknown (Δ 43 ms, σ ≈ 7.5 / 0.6 ms) — a clear signal; after the fix Δ 4.8 ms within σ ≈ 9 ms. 2.3 Race: N/A. 2.4 With ≤ 8
 samples per username per 5 min, statistical separation over the internet is weak.
 
 **Phase 3.** 3.1 Real impact vs operational robustness: No meaningful security impact — at most confirms an account exists, which sign-up already reveals for emails and which is public for national IDs. 3.2 Primary control vs defence-in-depth: Defence-in-depth — identical error responses and rate limits are the primary controls; constant-time behaviour is an extra layer.
 
 **Phase 4.**
 - 4.1 Pseudocode PoC: compare median latency of `signIn` for known vs unknown usernames; difference > jitter ⇒ exists.
-- 4.2 Executable PoC: **not run** (no statistical timing measurement).
+- 4.2 Executable PoC: **run** on the disposable instance — 25 timed sign-ins per case before and after the fix (`evidence/sec013-timing.txt`).
 - 4.3 Unit-test PoC: not applicable.
 - 4.4 Negative PoC: both cases return byte-identical `INVALID_CREDENTIALS` bodies.
-- 4.5 PoC verification: not achieved — the timing difference was never measured, which is why gate 4 fails.
+- 4.5 PoC verification: before the fix the medians separate by 43 ms with no overlap in practice (σ 7.5 / 0.6 ms) — the side channel existed; after the fix the separation (4.8 ms) is inside the noise. The PoC works, so the verdict rests on gate 3 (value of the information).
 
-**Phase 5.** Q1 Non-vuln: identical errors already. Q2 Justification: early return saves CPU. Q3 Missing context: sign-up discloses emails anyway. Q4 Pattern bias: yes. Q5 Do limits prevent it? They cap samples, not eliminate. Q6 Trusted data: N/A. Q7 Signal not proven statistically. Q8 Practical: low. Q9 DiD confusion: yes. Q10 Environment: network jitter. Q11 Over-reported. Q12 Dismissing real bug? Value is negligible even if measurable. Q13 Re-read the sign-up error path.
+**Phase 5.**
+- Q1 Non-vuln: identical errors already.
+- Q2 Justification: early return saves CPU.
+- Q3 Missing context: sign-up discloses emails anyway.
+- Q4 Pattern bias: no longer — the signal was measured, not inferred.
+- Q5 Do limits prevent it? They cap samples, not eliminate.
+- Q6 Trusted data: N/A.
+- Q7 Signal measured: 43 ms before, 4.8 ms after.
+- Q8 Practical: yes (43 ms is large), but it only yields information already available.
+- Q9 DiD confusion: yes — identical errors and sign-up behaviour are the deciding factors.
+- Q10 Environment: internet jitter adds noise; rate limits cap samples per account.
+- Q11 Not hallucinated (measured); the impact, not the signal, is what fails.
+- Q12 Dismissing real bug? Value is negligible even if measurable.
+- Q13 Re-read the sign-up error path.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
-| Result | Pass | Pass | **Fail** (negligible information) | **Fail** (no measurement) | N/A | Pass |
+| Result | Pass | Pass | **Fail** (negligible information) | Pass (measured, `evidence/sec013-timing.txt`) | N/A | Pass |
 
-`BUG SEC-013 FALSE POSITIVE — not demonstrated and of negligible value; the dummy hash stays as hardening.`
+`BUG SEC-013 FALSE POSITIVE — the timing signal was real (43 ms, measured) but only reveals account existence, which sign-up already discloses for emails and which is public for national IDs; fixed anyway (4.8 ms after).`
 
 ## SEC-014 — Debug endpoint enabled when NODE_ENV is unset
 
@@ -433,7 +554,20 @@ endpoint with `NODE_ENV=development`.
 - 4.4 Negative PoC: the same executed run — the build inlines `NODE_ENV=production`, so the endpoint is off.
 - 4.5 PoC verification: the exploit PoC fails on real builds — consistent with the false-positive verdict.
 
-**Phase 5.** Q1 Non-vuln: build-time inlining. Q2 Justification: test hook for CI. Q3 Missing context: Nitro inlines `NODE_ENV`. Q4 Pattern bias: yes. Q5 Prevention holds: yes, verified. Q6 Trusted config treated as attacker input: yes. Q7 N/A. Q8 Not practical. Q9 DiD. Q10 Build protection eliminates it. Q11 Over-reported. Q12 Not dismissing — executed the negative PoC. Q13 Verified by running the build.
+**Phase 5.**
+- Q1 Non-vuln: build-time inlining.
+- Q2 Justification: test hook for CI.
+- Q3 Missing context: Nitro inlines `NODE_ENV`.
+- Q4 Pattern bias: yes.
+- Q5 Prevention holds: yes, verified.
+- Q6 Trusted config treated as attacker input: yes.
+- Q7 N/A.
+- Q8 Not practical.
+- Q9 DiD.
+- Q10 Build protection eliminates it.
+- Q11 Over-reported.
+- Q12 Not dismissing — executed the negative PoC.
+- Q13 Verified by running the build.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -465,7 +599,20 @@ replace the stored key.
 - 4.4 Negative PoC: all server writes go through `encryptSecret()`, which always produces 16-byte tags.
 - 4.5 PoC verification: the only path needs DB write access — consistent with the false-positive verdict.
 
-**Phase 5.** Q1 Non-vuln: only the server writes ciphertext. Q2 Justification: default Node API usage. Q3 Missing context: storage is internal. Q4 Pattern bias: yes (Semgrep rule). Q5 Prevention: no network write path. Q6 **Trusted storage treated as attacker data: yes** (checklist item 8). Q7 Math irrelevant without access. Q8 Not practical. Q9 DiD. Q10 N/A. Q11 Over-reported. Q12 Not dismissing — DB write already grants more. Q13 Re-read write paths.
+**Phase 5.**
+- Q1 Non-vuln: only the server writes ciphertext.
+- Q2 Justification: default Node API usage.
+- Q3 Missing context: storage is internal.
+- Q4 Pattern bias: yes (Semgrep rule).
+- Q5 Prevention: no network write path.
+- Q6 **Trusted storage treated as attacker data: yes** (checklist item 8).
+- Q7 Math irrelevant without access.
+- Q8 Not practical.
+- Q9 DiD.
+- Q10 N/A.
+- Q11 Over-reported.
+- Q12 Not dismissing — DB write already grants more.
+- Q13 Re-read write paths.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -495,7 +642,20 @@ the logged code → `OTP_NOT_REQUESTED`.
 - 4.4 Negative PoC: with a configured provider the log line never runs.
 - 4.5 PoC verification: the logged code is unusable — consistent with the false-positive verdict.
 
-**Phase 5.** Q1 Non-vuln: the code is never stored. Q2 Justification: debugging aid before an SMS provider exists. Q3 Missing context: store-after-send ordering. Q4 Pattern bias: partly. Q5 Prevention verified by execution. Q6 Logs are trusted storage. Q7 N/A. Q8 Not practical. Q9 Hygiene, not primary. Q10 N/A. Q11 Initially over-rated. Q12 Not dismissing phone privacy — kept as hygiene. Q13 Verified by running it.
+**Phase 5.**
+- Q1 Non-vuln: the code is never stored.
+- Q2 Justification: debugging aid before an SMS provider exists.
+- Q3 Missing context: store-after-send ordering.
+- Q4 Pattern bias: partly.
+- Q5 Prevention verified by execution.
+- Q6 Logs are trusted storage.
+- Q7 N/A.
+- Q8 Not practical.
+- Q9 Hygiene, not primary.
+- Q10 N/A.
+- Q11 Initially over-rated.
+- Q12 Not dismissing phone privacy — kept as hygiene.
+- Q13 Verified by running it.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -524,7 +684,20 @@ operator. 1.4 Seven call sites, all fixed.
 - 4.4 Negative PoC: normal provider responses complete well within the new 45 s / 15 s / 120 s limits.
 - 4.5 PoC verification: no attacker path exists — consistent with the false-positive verdict.
 
-**Phase 5.** Q1 Non-vuln: upstream is not attacker-controlled. Q2 Justification: providers usually answer. Q3 Context: rate limits bound concurrency. Q4 Pattern bias: yes. Q5 N/A. Q6 Upstream behaviour treated as attacker input: yes. Q7 N/A. Q8 Not practical. Q9 Robustness vs security confusion: yes. Q10 N/A. Q11 Over-reported. Q12 Not dismissing availability — kept as resilience. Q13 Call sites re-read.
+**Phase 5.**
+- Q1 Non-vuln: upstream is not attacker-controlled.
+- Q2 Justification: providers usually answer.
+- Q3 Context: rate limits bound concurrency.
+- Q4 Pattern bias: yes.
+- Q5 N/A.
+- Q6 Upstream behaviour treated as attacker input: yes.
+- Q7 N/A.
+- Q8 Not practical.
+- Q9 Robustness vs security confusion: yes.
+- Q10 N/A.
+- Q11 Over-reported.
+- Q12 Not dismissing availability — kept as resilience.
+- Q13 Call sites re-read.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -556,7 +729,20 @@ the data being imported.
 - 4.4 Negative PoC: real exports contain only lower_snake_case column names.
 - 4.5 PoC verification: the only path needs a compromised trusted source — consistent with the false-positive verdict.
 
-**Phase 5.** Q1 Non-vuln: trusted source. Q2 Justification: mirrors the server schema. Q3 Context: HTTPS + operator config. Q4 Pattern bias: yes (`sql.unsafe`). Q5 TLS prevents tampering. Q6 **Trusted input treated as attacker input: yes** (checklist item 8). Q7 N/A. Q8 Not practical. Q9 DiD. Q10 TLS. Q11 Over-reported. Q12 Not dismissing — allowlist kept. Q13 Re-read the fetch and call site.
+**Phase 5.**
+- Q1 Non-vuln: trusted source.
+- Q2 Justification: mirrors the server schema.
+- Q3 Context: HTTPS + operator config.
+- Q4 Pattern bias: yes (`sql.unsafe`).
+- Q5 TLS prevents tampering.
+- Q6 **Trusted input treated as attacker input: yes** (checklist item 8).
+- Q7 N/A.
+- Q8 Not practical.
+- Q9 DiD.
+- Q10 TLS.
+- Q11 Over-reported.
+- Q12 Not dismissing — allowlist kept.
+- Q13 Re-read the fetch and call site.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -586,7 +772,20 @@ with bold/italic only (`src/components/fava/primitives.tsx:95`) — no links or 
 - 4.4 Negative PoC: unapproved text never reaches the prompt; replies render as plain text without links or HTML.
 - 4.5 PoC verification: even if the injection works, the outcome is misleading text only — consistent with the false-positive verdict.
 
-**Phase 5.** Q1 Non-vuln: no tools, public data only. Q2 Justification: richer answers. Q3 Context: admin approval gate. Q4 Pattern bias: LLM-risk framing. Q5 Approval prevents unreviewed text. Q6 Owner data is semi-trusted. Q7 N/A. Q8 Practical but harmless. Q9 Quality vs security confusion: yes. Q10 Plain-text rendering removes HTML/link vectors. Q11 Inflated by OWASP LLM categories. Q12 Not dismissing misinformation — kept as a recommendation. Q13 Re-read the renderer.
+**Phase 5.**
+- Q1 Non-vuln: no tools, public data only.
+- Q2 Justification: richer answers.
+- Q3 Context: admin approval gate.
+- Q4 Pattern bias: LLM-risk framing.
+- Q5 Approval prevents unreviewed text.
+- Q6 Owner data is semi-trusted.
+- Q7 N/A.
+- Q8 Practical but harmless.
+- Q9 Quality vs security confusion: yes.
+- Q10 Plain-text rendering removes HTML/link vectors.
+- Q11 Inflated by OWASP LLM categories.
+- Q12 Not dismissing misinformation — kept as a recommendation.
+- Q13 Re-read the renderer.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -629,7 +828,20 @@ existed; default `GITHUB_TOKEN` scope. 1.4 Same pattern in all three workflows.
 - 4.4 Negative PoC: with `@liara/cli@9.6.7` and SHA-pinned actions a new upstream release is not fetched.
 - 4.5 PoC verification: the pre-fix workflow line `npm install -g @liara/cli` and the absence of pinning were read in `.github/workflows/deploy.yml` at `d877c06`; zizmor/Semgrep findings cleared after the fix (`evidence/zizmor-postfix.json`, `semgrep-before-after.txt`).
 
-**Phase 5.** Q1 Non-vuln explanation: upstreams are reputable — compromise is rare but documented industry-wide. Q2 Justification: convenience. Q3 Missing context: branch protection unknown. Q4 Pattern bias: partly scanner-driven, but the secret exposure is concrete. Q5 Prevention: none before the fix. Q6 Attacker data: upstream code is untrusted by definition. Q7 Math: N/A. Q8 Practical: requires an upstream compromise — low likelihood, high impact. Q9 DiD vs primary: pinning is primary. Q10 Runtime: none. Q11 Hallucination: lines read in the workflow. Q12 Not dismissed for being unlikely. Q13 Re-read the pre-fix workflow.
+**Phase 5.**
+- Q1 Non-vuln explanation: upstreams are reputable — compromise is rare but documented industry-wide.
+- Q2 Justification: convenience.
+- Q3 Missing context: branch protection unknown.
+- Q4 Pattern bias: partly scanner-driven, but the secret exposure is concrete.
+- Q5 Prevention: none before the fix.
+- Q6 Attacker data: upstream code is untrusted by definition.
+- Q7 Math: N/A.
+- Q8 Practical: requires an upstream compromise — low likelihood, high impact.
+- Q9 DiD vs primary: pinning is primary.
+- Q10 Runtime: none.
+- Q11 Hallucination: lines read in the workflow.
+- Q12 Not dismissed for being unlikely.
+- Q13 Re-read the pre-fix workflow.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -661,7 +873,20 @@ are not internet-facing.
 - 4.4 Negative PoC: `bun install --frozen-lockfile` (Dockerfile:8) resolves the patched versions; `bun audit` shows 1 Moderate.
 - 4.5 PoC verification: Dockerfile and workflows re-read; no npm install path.
 
-**Phase 5.** Q1 Non-vuln: unused file. Q2 Justification: leftover from an earlier toolchain. Q3 Context: Lovable uses Bun (bunfig.toml). Q4 Pattern bias: scanner counts per file. Q5 Prevention: frozen Bun lockfile. Q6 N/A. Q7 N/A. Q8 Not practical against production. Q9 Hygiene. Q10 Build environment prevents it. Q11 Over-rated earlier (Medium). Q12 Not dismissed — kept as a decision item. Q13 Re-read Dockerfile and workflows.
+**Phase 5.**
+- Q1 Non-vuln: unused file.
+- Q2 Justification: leftover from an earlier toolchain.
+- Q3 Context: Lovable uses Bun (bunfig.toml).
+- Q4 Pattern bias: scanner counts per file.
+- Q5 Prevention: frozen Bun lockfile.
+- Q6 N/A.
+- Q7 N/A.
+- Q8 Not practical against production.
+- Q9 Hygiene.
+- Q10 Build environment prevents it.
+- Q11 Over-rated earlier (Medium).
+- Q12 Not dismissed — kept as a decision item.
+- Q13 Re-read Dockerfile and workflows.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -691,7 +916,20 @@ separate RCE first. 2.2 N/A. 2.3 N/A. 2.4 No RCE was found in this audit.
 - 4.4 Negative PoC: without an RCE nothing can use root.
 - 4.5 PoC verification: Checkov CKV_DOCKER_3 and Trivy DS-0002 confirm the configuration; no chain exists.
 
-**Phase 5.** Q1 Non-vuln: platform isolation. Q2 Justification: uploads disk ownership. Q3 Context: Liara disk permissions. Q4 Pattern bias: scanner rule. Q5 N/A. Q6 N/A. Q7 N/A. Q8 Not exploitable alone. Q9 DiD: yes. Q10 Container runtime isolation. Q11 Configuration is real; vulnerability is not. Q12 Not dismissed — kept as hardening. Q13 Re-read Dockerfile.
+**Phase 5.**
+- Q1 Non-vuln: platform isolation.
+- Q2 Justification: uploads disk ownership.
+- Q3 Context: Liara disk permissions.
+- Q4 Pattern bias: scanner rule.
+- Q5 N/A.
+- Q6 N/A.
+- Q7 N/A.
+- Q8 Not exploitable alone.
+- Q9 DiD: yes.
+- Q10 Container runtime isolation.
+- Q11 Configuration is real; vulnerability is not.
+- Q12 Not dismissed — kept as hardening.
+- Q13 Re-read Dockerfile.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -720,7 +958,20 @@ HTML; Liara serves HTTPS. 1.4 CSP `frame-ancestors 'none'` already present.
 - 4.4 Negative PoC: `/assets/x.png` served as `image/png`.
 - 4.5 PoC verification: headers now present (`evidence/prod-build-checks.txt`); no exploit path existed before.
 
-**Phase 5.** Q1 Non-vuln: allowlist + browser behaviour. Q2 Justification: CSP considered sufficient. Q3 Context: HTTPS-only platform. Q4 Pattern bias: header checklist. Q5 Allowlist prevents HTML uploads. Q6 N/A. Q7 N/A. Q8 Not practical. Q9 DiD. Q10 Browser protections. Q11 Not a vulnerability. Q12 Kept as hardening. Q13 Re-read `mime.ts`.
+**Phase 5.**
+- Q1 Non-vuln: allowlist + browser behaviour.
+- Q2 Justification: CSP considered sufficient.
+- Q3 Context: HTTPS-only platform.
+- Q4 Pattern bias: header checklist.
+- Q5 Allowlist prevents HTML uploads.
+- Q6 N/A.
+- Q7 N/A.
+- Q8 Not practical.
+- Q9 DiD.
+- Q10 Browser protections.
+- Q11 Not a vulnerability.
+- Q12 Kept as hardening.
+- Q13 Re-read `mime.ts`.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -751,7 +1002,20 @@ insufficient; whoever has the app env typically has the other secrets too. 2.2 N
 - 4.4 Negative PoC: dump alone cannot decrypt.
 - 4.5 PoC verification: key derivation re-read; both inputs required.
 
-**Phase 5.** Q1 Non-vuln: dump alone is safe. Q2 Justification: zero-config default. Q3 Context: env compromise exposes everything anyway. Q4 Pattern bias: fallback-secret rule. Q5 Prevention holds for dumps. Q6 Env is trusted storage. Q7 N/A. Q8 Not practical as escalation. Q9 DiD. Q10 N/A. Q11 Over-rated. Q12 Kept as config advice. Q13 Re-read function.
+**Phase 5.**
+- Q1 Non-vuln: dump alone is safe.
+- Q2 Justification: zero-config default.
+- Q3 Context: env compromise exposes everything anyway.
+- Q4 Pattern bias: fallback-secret rule.
+- Q5 Prevention holds for dumps.
+- Q6 Env is trusted storage.
+- Q7 N/A.
+- Q8 Not practical as escalation.
+- Q9 DiD.
+- Q10 N/A.
+- Q11 Over-rated.
+- Q12 Kept as config advice.
+- Q13 Re-read function.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -780,7 +1044,20 @@ N/A. 2.4 Abuse depends on the legacy Supabase project's RLS, outside this codeba
 - 4.4 Negative PoC: `role` claim is `anon`, not `service_role`.
 - 4.5 PoC verification: JWT claims decoded locally (values never printed).
 
-**Phase 5.** Q1 Non-vuln: publishable keys. Q2 Justification: early project setup. Q3 Context: legacy backend retired. Q4 Pattern bias: secret-scanner hit. Q5 N/A. Q6 Public data treated as secret: yes. Q7 N/A. Q8 Not practical. Q9 Hygiene. Q10 N/A. Q11 Over-reported by tool. Q12 Kept as advice (lock legacy project). Q13 Claims re-checked.
+**Phase 5.**
+- Q1 Non-vuln: publishable keys.
+- Q2 Justification: early project setup.
+- Q3 Context: legacy backend retired.
+- Q4 Pattern bias: secret-scanner hit.
+- Q5 N/A.
+- Q6 Public data treated as secret: yes.
+- Q7 N/A.
+- Q8 Not practical.
+- Q9 Hygiene.
+- Q10 N/A.
+- Q11 Over-reported by tool.
+- Q12 Kept as advice (lock legacy project).
+- Q13 Claims re-checked.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -812,7 +1089,20 @@ scrypt/s per GPU ≈ 2×10^5 s ≈ 2–3 days per hash per GPU (one per row, sal
 - 4.4 Negative PoC: accounts that already set their own password are unaffected.
 - 4.5 PoC verification: cost estimate from scrypt parameters; hashes present in git.
 
-**Phase 5.** Q1 Non-vuln: hashes, not plaintext — but low-entropy input. Q2 Justification: needed for provisioning. Q3 Context: private repository. Q4 Not pattern-only: math done. Q5 scrypt slows but does not prevent. Q6 Repo access = insider threat model. Q7 Math in 2.2. Q8 Practical for a motivated insider. Q9 Primary. Q10 None. Q11 Real. Q12 Not dismissed. Q13 Parameters re-read.
+**Phase 5.**
+- Q1 Non-vuln: hashes, not plaintext — but low-entropy input.
+- Q2 Justification: needed for provisioning.
+- Q3 Context: private repository.
+- Q4 Not pattern-only: math done.
+- Q5 scrypt slows but does not prevent.
+- Q6 Repo access = insider threat model.
+- Q7 Math in 2.2.
+- Q8 Practical for a motivated insider.
+- Q9 Primary.
+- Q10 None.
+- Q11 Real.
+- Q12 Not dismissed.
+- Q13 Parameters re-read.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -840,7 +1130,20 @@ not enable an attack; it hinders detection.
 - 4.4 Negative PoC: change requests do keep `created_by`/`reviewed_by`.
 - 4.5 PoC verification: code search found no audit writes.
 
-**Phase 5.** Q1 Non-vuln: absence is not a bug. Q2 Justification: small team. Q3 Context: platform logs exist. Q4 N/A. Q5 N/A. Q6 N/A. Q7 N/A. Q8 Not exploitable. Q9 Detection is DiD. Q10 N/A. Q11 Real gap, not a vuln. Q12 Kept in the risk register. Q13 Searched for audit writes.
+**Phase 5.**
+- Q1 Non-vuln: absence is not a bug.
+- Q2 Justification: small team.
+- Q3 Context: platform logs exist.
+- Q4 N/A.
+- Q5 N/A.
+- Q6 N/A.
+- Q7 N/A.
+- Q8 Not exploitable.
+- Q9 Detection is DiD.
+- Q10 N/A.
+- Q11 Real gap, not a vuln.
+- Q12 Kept in the risk register.
+- Q13 Searched for audit writes.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -868,7 +1171,20 @@ own config. 1.2 ReDoS needs attacker-controlled patterns. 1.3 Build machines onl
 - 4.4 Negative PoC: normal build completes.
 - 4.5 PoC verification: `bun pm why minimatch` traced it to the build toolchain only.
 
-**Phase 5.** Q1 Non-vuln: trusted input. Q2 Upstream constraint. Q3 Build-only. Q4 Scanner-driven. Q5 N/A. Q6 Trusted config as attacker data: yes. Q7 N/A. Q8 Not practical. Q9 Hygiene. Q10 N/A. Q11 Over-reported. Q12 Kept as upgrade item. Q13 Dependency path re-traced.
+**Phase 5.**
+- Q1 Non-vuln: trusted input.
+- Q2 Upstream constraint.
+- Q3 Build-only.
+- Q4 Scanner-driven.
+- Q5 N/A.
+- Q6 Trusted config as attacker data: yes.
+- Q7 N/A.
+- Q8 Not practical.
+- Q9 Hygiene.
+- Q10 N/A.
+- Q11 Over-reported.
+- Q12 Kept as upgrade item.
+- Q13 Dependency path re-traced.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -897,7 +1213,20 @@ role grants and all public content.
 - 4.4 Negative PoC: with `MFA_ENFORCED=true` and SMS configured, the session needs an OTP.
 - 4.5 PoC verification: `evidence/authz-coverage.txt` shows admin actions with a password-only session.
 
-**Phase 5.** Q1 Non-vuln: MFA is optional by design. Q2 Justification: no SMS provider yet. Q3 Context: small admin group. Q4 Not pattern-only. Q5 Rate limits don't stop phishing. Q6 Credential is attacker-held by threat model. Q7 N/A. Q8 Practical (phishing). Q9 Primary for admins. Q10 None. Q11 Real. Q12 Not dismissed. Q13 Re-read middleware.
+**Phase 5.**
+- Q1 Non-vuln: MFA is optional by design.
+- Q2 Justification: no SMS provider yet.
+- Q3 Context: small admin group.
+- Q4 Not pattern-only.
+- Q5 Rate limits don't stop phishing.
+- Q6 Credential is attacker-held by threat model.
+- Q7 N/A.
+- Q8 Practical (phishing).
+- Q9 Primary for admins.
+- Q10 None.
+- Q11 Real.
+- Q12 Not dismissed.
+- Q13 Re-read middleware.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -925,7 +1254,20 @@ read all data directly.
 - 4.4 Negative PoC: expired rows are rejected.
 - 4.5 PoC verification: `INSERT INTO sessions` stores the raw token (`session.server.ts:35`).
 
-**Phase 5.** Q1 Non-vuln: needs DB compromise. Q2 Justification: simplicity. Q3 Context: private DB. Q4 Pattern bias. Q5 N/A. Q6 Internal storage. Q7 N/A. Q8 Only after compromise. Q9 DiD. Q10 N/A. Q11 Real weakness, not a standalone vuln. Q12 Kept. Q13 Re-read.
+**Phase 5.**
+- Q1 Non-vuln: needs DB compromise.
+- Q2 Justification: simplicity.
+- Q3 Context: private DB.
+- Q4 Pattern bias.
+- Q5 N/A.
+- Q6 Internal storage.
+- Q7 N/A.
+- Q8 Only after compromise.
+- Q9 DiD.
+- Q10 N/A.
+- Q11 Real weakness, not a standalone vuln.
+- Q12 Kept.
+- Q13 Re-read.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -953,7 +1295,20 @@ attacker input without a separate injection. 2.2–2.3 N/A. 2.4 Only matters wit
 - 4.4 Negative PoC: without an injection, nothing runs.
 - 4.5 PoC verification: header captured (`evidence/prod-build-checks.txt`).
 
-**Phase 5.** Q1 Non-vuln: DiD only. Q2 Framework needs inline bootstraps. Q3 Lovable constraint. Q4 Pattern bias. Q5 N/A. Q6 N/A. Q7 N/A. Q8 Not alone. Q9 DiD. Q10 React escaping. Q11 Not a vuln. Q12 Kept. Q13 Header re-read.
+**Phase 5.**
+- Q1 Non-vuln: DiD only.
+- Q2 Framework needs inline bootstraps.
+- Q3 Lovable constraint.
+- Q4 Pattern bias.
+- Q5 N/A.
+- Q6 N/A.
+- Q7 N/A.
+- Q8 Not alone.
+- Q9 DiD.
+- Q10 React escaping.
+- Q11 Not a vuln.
+- Q12 Kept.
+- Q13 Header re-read.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -982,7 +1337,20 @@ scripts refuse to run with no admin.
 - 4.4 Negative PoC: with ≥ 1 admin the trigger does nothing (authz suite fixtures).
 - 4.5 PoC verification: trigger body re-read.
 
-**Phase 5.** Q1 Non-vuln: bootstrap feature. Q2 Justification: self-hosting. Q3 Context: admin exists. Q4 Pattern bias. Q5 Condition prevents it. Q6 N/A. Q7 N/A. Q8 Not practical. Q9 Design. Q10 N/A. Q11 Over-reported. Q12 Kept as advice. Q13 Re-read.
+**Phase 5.**
+- Q1 Non-vuln: bootstrap feature.
+- Q2 Justification: self-hosting.
+- Q3 Context: admin exists.
+- Q4 Pattern bias.
+- Q5 Condition prevents it.
+- Q6 N/A.
+- Q7 N/A.
+- Q8 Not practical.
+- Q9 Design.
+- Q10 N/A.
+- Q11 Over-reported.
+- Q12 Kept as advice.
+- Q13 Re-read.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -1010,7 +1378,20 @@ position inside the platform. 2.2–2.3 N/A. 2.4 Not demonstrable here.
 - 4.4 Negative PoC: on a private network no attacker sits on the path.
 - 4.5 PoC verification: configuration line re-read.
 
-**Phase 5.** Q1 Non-vuln: private network. Q2 Managed DB certificates. Q3 Context unknown. Q4 Pattern bias. Q5 N/A. Q6 N/A. Q7 N/A. Q8 Not practical. Q9 DiD. Q10 Platform isolation. Q11 Unverified. Q12 Kept as environment check. Q13 Re-read.
+**Phase 5.**
+- Q1 Non-vuln: private network.
+- Q2 Managed DB certificates.
+- Q3 Context unknown.
+- Q4 Pattern bias.
+- Q5 N/A.
+- Q6 N/A.
+- Q7 N/A.
+- Q8 Not practical.
+- Q9 DiD.
+- Q10 Platform isolation.
+- Q11 Unverified.
+- Q12 Kept as environment check.
+- Q13 Re-read.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -1037,7 +1418,20 @@ Class: information exposure.
 - 4.4 Negative PoC: no data endpoints on the pages.
 - 4.5 PoC verification: route files read.
 
-**Phase 5.** Q1 Non-vuln: harmless pages. Q2 Dev tooling. Q3 N/A. Q4 Pattern bias. Q5 N/A. Q6 N/A. Q7 N/A. Q8 No gain. Q9 Hygiene. Q10 N/A. Q11 Not a vuln. Q12 Kept. Q13 Re-read.
+**Phase 5.**
+- Q1 Non-vuln: harmless pages.
+- Q2 Dev tooling.
+- Q3 N/A.
+- Q4 Pattern bias.
+- Q5 N/A.
+- Q6 N/A.
+- Q7 N/A.
+- Q8 No gain.
+- Q9 Hygiene.
+- Q10 N/A.
+- Q11 Not a vuln.
+- Q12 Kept.
+- Q13 Re-read.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
@@ -1066,7 +1460,20 @@ controls the phone number. 2.2 Cost bound: 5 × accounts/day. 2.3 N/A. 2.4 Bound
 - 4.4 Negative PoC: without a provider, no SMS is sent (`SMS_NOT_CONFIGURED`).
 - 4.5 PoC verification: limits read in `mfa.functions.ts` and `auth.functions.ts`.
 
-**Phase 5.** Q1 Non-vuln: limits + no provider. Q2 Justification: open registration. Q3 Context: companies are admin-provisioned. Q4 Pattern bias. Q5 Limits bound it. Q6 N/A. Q7 Bound in 2.2. Q8 Low value. Q9 Abuse control. Q10 N/A. Q11 Not a vuln. Q12 Kept as advice (CAPTCHA). Q13 Re-read limits.
+**Phase 5.**
+- Q1 Non-vuln: limits + no provider.
+- Q2 Justification: open registration.
+- Q3 Context: companies are admin-provisioned.
+- Q4 Pattern bias.
+- Q5 Limits bound it.
+- Q6 N/A.
+- Q7 Bound in 2.2.
+- Q8 Low value.
+- Q9 Abuse control.
+- Q10 N/A.
+- Q11 Not a vuln.
+- Q12 Kept as advice (CAPTCHA).
+- Q13 Re-read limits.
 
 | Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
 |---|---|---|---|---|---|---|
