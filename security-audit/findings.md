@@ -1,8 +1,8 @@
 # Findings Register
 
-32 findings. Every finding that claims an exploitable bug was verified with Trail of Bits
-`fp-check` ([fp-check-verification.md](fp-check-verification.md)): 8 TRUE POSITIVES,
-8 FALSE POSITIVES (kept as hardening, severity Informational). Status vocabulary: **Confirmed** (reproduced or directly evidenced),
+32 findings. Every finding was verified with Trail of Bits `fp-check`
+([fp-check-verification.md](fp-check-verification.md)): 11 TRUE POSITIVES, 21 FALSE
+POSITIVES as vulnerabilities (kept as hardening or risk-register items, severity Informational). Status vocabulary: **Confirmed** (reproduced or directly evidenced),
 **Confirmed (advisory)** (vulnerable version present and reachable code path exists; the
 exploit itself was not reproduced), **Potential**, **Hardening (fp-check: false positive)** (not exploitable; fix kept), **Requires environment access**.
 "Conditional" severity applies only under a stated configuration.
@@ -25,30 +25,30 @@ checkout credentials, `72e224e` this report.
 | SEC-006 | zod memory exhaustion in server-function input validation | Medium | Confirmed (advisory) | Applied |
 | SEC-007 | Password change without current password; sessions not revoked | Medium | Confirmed | Applied |
 | SEC-009 | CI/CD: broad token, mutable action tags, unpinned deploy CLI, persisted credentials | Medium | Confirmed | Applied |
-| SEC-010 | Stale `package-lock.json` pins 37 known-vulnerable packages | Medium | Confirmed | Not started |
 | SEC-026 | MFA disabled by default; admin accounts are password-only | Medium | Confirmed | Proposed (config + code) |
-| SEC-011 | Container runs as root | Low | Confirmed | Proposed |
 | SEC-012 | Internal review fields in public company detail and export | Low | Confirmed | Applied |
-| SEC-016 | Missing nosniff, Referrer-Policy and HSTS headers | Low | Confirmed | Applied |
-| SEC-017 | Settings encryption key falls back to DATABASE_URL | Low | Confirmed | Proposed (config) |
-| SEC-022 | `.env` with public-by-design keys in git history | Low | Confirmed | Proposed |
 | SEC-023 | Brute-forceable initial-password hashes committed to the repo | Low | Confirmed | Proposed |
-| SEC-024 | No security audit trail for auth events and privileged actions | Low | Confirmed | Proposed |
-| SEC-025 | Known vulnerabilities in desktop and build toolchain dependencies | Low | Confirmed | Partially applied |
 | SEC-008 | Script-capable URL schemes stored in owner-editable URL fields | Informational | Hardening (fp-check: false positive) | Applied |
+| SEC-010 | Stale `package-lock.json` pins 37 known-vulnerable packages | Informational | Hardening (fp-check: false positive) | Not started |
+| SEC-011 | Container runs as root | Informational | Hardening (fp-check: false positive) | Proposed |
 | SEC-013 | Username enumeration through login response time | Informational | Hardening (fp-check: false positive) | Applied |
 | SEC-014 | Debug endpoint enabled whenever NODE_ENV is unset | Informational | Hardening (fp-check: false positive) | Applied |
 | SEC-015 | AES-GCM authentication tag length not pinned | Informational | Hardening (fp-check: false positive) | Applied |
+| SEC-016 | Missing nosniff, Referrer-Policy and HSTS headers | Informational | Hardening (fp-check: false positive) | Applied |
+| SEC-017 | Settings encryption key falls back to DATABASE_URL | Informational | Hardening (fp-check: false positive) | Proposed (config) |
 | SEC-018 | OTP code and full phone number written to logs | Informational | Hardening (fp-check: false positive) | Applied |
 | SEC-019 | No timeouts on outbound HTTP calls | Informational | Hardening (fp-check: false positive) | Applied |
 | SEC-020 | Export snapshot keys spliced into SQL as identifiers | Informational | Hardening (fp-check: false positive) | Applied |
 | SEC-021 | Indirect prompt injection via company content in assistant prompt | Informational | Hardening (fp-check: false positive) | Proposed |
-| SEC-027 | Session tokens stored unhashed | Informational | Confirmed | Proposed |
-| SEC-028 | CSP allows inline scripts | Informational | Confirmed | Not started |
-| SEC-029 | First-user-becomes-admin trigger remains active | Informational | Confirmed | Proposed |
-| SEC-030 | Database TLS without certificate verification | Informational | Requires environment access | Not started |
-| SEC-031 | Developer test pages routable in production | Informational | Confirmed | Proposed |
-| SEC-032 | Open self-registration plus SMS sending (abuse/cost surface) | Informational | Confirmed | Accepted with controls |
+| SEC-022 | `.env` with public-by-design keys in git history | Informational | Hardening (fp-check: false positive) | Proposed |
+| SEC-024 | No security audit trail for auth events and privileged actions | Informational | Hardening (fp-check: false positive) | Proposed |
+| SEC-025 | Known vulnerabilities in desktop and build toolchain dependencies | Informational | Hardening (fp-check: false positive) | Partially applied |
+| SEC-027 | Session tokens stored unhashed | Informational | Hardening (fp-check: false positive) | Proposed |
+| SEC-028 | CSP allows inline scripts | Informational | Hardening (fp-check: false positive) | Not started |
+| SEC-029 | First-user-becomes-admin trigger remains active | Informational | Hardening (fp-check: false positive) | Proposed |
+| SEC-030 | Database TLS without certificate verification | Informational | Hardening (fp-check: false positive) | Not started |
+| SEC-031 | Developer test pages routable in production | Informational | Hardening (fp-check: false positive) | Proposed |
+| SEC-032 | Open self-registration plus SMS sending (abuse/cost surface) | Informational | Hardening (fp-check: false positive) | Accepted with controls |
 
 ---
 
@@ -164,6 +164,8 @@ checkout credentials, `72e224e` this report.
 
 ### SEC-009 — CI/CD: broad token, mutable action tags, unpinned deploy CLI, persisted credentials
 
+- **fp-check verdict:** TRUE POSITIVE — CI fetched mutable third-party code while holding the deploy token (low likelihood, high impact).
+
 - **Status:** Confirmed · **Severity:** Medium · **CWE:** CWE-829, CWE-250
 - **Location:** `.github/workflows/{ci,deploy,playwright}.yml`
 - **Evidence:** no `permissions:` key (default token scope); `uses: …@v4` tags (Semgrep 7 hits); `npm install -g @liara/cli` (latest, in the job holding `LIARA_API_TOKEN`); zizmor `artipacked` ×8.
@@ -173,7 +175,9 @@ checkout credentials, `72e224e` this report.
 
 ### SEC-010 — Stale `package-lock.json` pins 37 known-vulnerable packages
 
-- **Status:** Confirmed · **Severity:** Medium (not used by Docker or CI, which use `bun.lock`; exposure is anyone running `npm install`/`npm ci`)
+- **fp-check verdict:** FALSE POSITIVE — no deployment installs from `package-lock.json` (gate 6 fails); deletion still recommended as hygiene.
+
+- **Status:** Hardening (fp-check: false positive) · **Severity:** Informational (not used by Docker or CI, which use `bun.lock`; exposure is anyone running `npm install`/`npm ci`)
 - **CWE:** CWE-1104, CWE-1395
 - **Evidence:** `evidence/npm-audit-package-lock.log` (8 Critical, 13 High, 15 Moderate, 1 Low), `evidence/trivy-fs.json`, `evidence/osv-scanner.json` (29 packages) — includes the SEC-001/002 versions.
 - **Remediation:** delete `package-lock.json` (the project builds with Bun), or regenerate it. Regeneration was attempted with npm 10.9.9 (`--package-lock-only --ignore-scripts --before=…`) and crashed in npm's resolver (`Cannot read properties of null (reading 'edgesOut')`); not forced with `--legacy-peer-deps` because that changes resolution semantics.
@@ -181,7 +185,9 @@ checkout credentials, `72e224e` this report.
 
 ### SEC-011 — Container runs as root
 
-- **Status:** Confirmed · **Severity:** Low · **CWE:** CWE-250
+- **fp-check verdict:** FALSE POSITIVE — no standalone attack path (needs a separate RCE); hardening.
+
+- **Status:** Hardening (fp-check: false positive) · **Severity:** Informational · **CWE:** CWE-250
 - **Location:** `Dockerfile:13-32` (no `USER`); Hadolint clean, Checkov CKV_DOCKER_3, Trivy DS-0002.
 - **Remediation (proposed):** `USER node` in the runtime stage after confirming the Liara disk at `/app/data/uploads` is writable by UID 1000 (e.g. `chown` in an entrypoint, or Liara disk permissions). Not applied: an unwritable uploads disk would break uploads in production.
 
@@ -219,12 +225,16 @@ checkout credentials, `72e224e` this report.
 
 ### SEC-016 — Missing nosniff, Referrer-Policy and HSTS headers
 
-- **Status:** Confirmed · **Severity:** Low · **CWE:** CWE-693
+- **fp-check verdict:** FALSE POSITIVE — defence-in-depth headers with no attack path; applied as hardening.
+
+- **Status:** Hardening (fp-check: false positive) · **Severity:** Informational · **CWE:** CWE-693
 - **Patch:** Applied — `src/server.ts:69`. **Verification:** `evidence/prod-build-checks.txt`, production build: `x-content-type-options: nosniff`, `referrer-policy: strict-origin-when-cross-origin`, `strict-transport-security: max-age=31536000` on HTML and `/assets/*` responses.
 
 ### SEC-017 — Settings encryption key falls back to DATABASE_URL
 
-- **Status:** Confirmed · **Severity:** Low · **CWE:** CWE-321
+- **fp-check verdict:** FALSE POSITIVE — decryption needs secrets that already grant equivalent access; configuration advice.
+
+- **Status:** Hardening (fp-check: false positive) · **Severity:** Informational · **CWE:** CWE-321
 - **Location:** `src/lib/app-settings.server.ts:8`.
 - **Impact:** anyone holding database credentials can also decrypt the stored OpenRouter key.
 - **Remediation:** set a separate `SETTINGS_ENCRYPTION_KEY` in Liara, then re-save the key in the admin panel (old ciphertext was made with the fallback key).
@@ -267,12 +277,16 @@ checkout credentials, `72e224e` this report.
 
 ### SEC-022 — `.env` with public-by-design keys in git history
 
-- **Status:** Confirmed · **Severity:** Low · **CWE:** CWE-540
+- **fp-check verdict:** FALSE POSITIVE — keys are public by design (`role: anon`, browser key); lock down the legacy project as advice.
+
+- **Status:** Hardening (fp-check: false positive) · **Severity:** Informational · **CWE:** CWE-540
 - **Evidence:** Gitleaks over full history (168 commits scanned; 217 in `git rev-list --all` including merges), re-run after the final commits: commit `13cd74d` (2026-07-28) `.env` — two Supabase JWTs with claim `role: anon` and a Google Maps browser key; removed from tracking in `385b0ff`. Values not reproduced here.
 - **Impact:** anon keys are publishable; risk depends on the legacy Supabase project's RLS and the Maps key's referrer restrictions.
 - **Remediation:** confirm the Maps key is HTTP-referrer restricted; delete or lock down the legacy Supabase project. History rewriting is not recommended (Lovable sync).
 
 ### SEC-023 — Brute-forceable initial-password hashes committed to the repo
+
+- **fp-check verdict:** TRUE POSITIVE — brute-forceable by an insider (~2–3 GPU-days per hash); delete after provisioning.
 
 - **Status:** Confirmed · **Severity:** Low · **CWE:** CWE-916, CWE-359
 - **Location:** `scripts/company-national-id-logins.json` (67 scrypt hashes of CEO mobile numbers), added in `d877c06` by this engagement's national-ID work. Checkov CKV_SECRET_6 ×67.
@@ -281,17 +295,23 @@ checkout credentials, `72e224e` this report.
 
 ### SEC-024 — No security audit trail for auth events and privileged actions
 
-- **Status:** Confirmed (absence) · **Severity:** Low · **CWE:** CWE-778 · **OWASP:** A09:2021
+- **fp-check verdict:** FALSE POSITIVE as a vulnerability — detection gap; stays in the risk register (R-03).
+
+- **Status:** Hardening (fp-check: false positive; risk-register item) · **Severity:** Informational · **CWE:** CWE-778 · **OWASP:** A09:2021
 - **Evidence:** no audit table; failed logins only increment `rate_limit_hits` (pruned); `grantAdmin`/`revokeAdmin`/`assignCompanyOwner` record nothing.
 - **Remediation:** append-only `security_events` table (login success/failure, role grant/revoke, owner assignment, approvals, password/phone changes) + structured log line per event.
 
 ### SEC-025 — Known vulnerabilities in desktop and build toolchain dependencies
 
-- **Status:** Confirmed · **Severity:** Low (build/desktop only)
+- **fp-check verdict:** FALSE POSITIVE — build-only, no attacker input.
+
+- **Status:** Hardening (fp-check: false positive) · **Severity:** Informational (build/desktop only)
 - **Evidence:** `evidence/bun-audit-baseline-d877c06.json` — Electron 44.0.0 (8 advisories) among 88; 59 build-tool advisories (undici, shell-quote, fast-uri, js-yaml, vite, vitest, …) cleared by `bun audit fix`.
 - **Patch:** Partially applied — Electron 44.11.3, `bun audit fix` within ranges. Remaining: `minimatch` (Moderate, GHSA-g3hv-75wg-m249) under electron-builder, fix requires a major version the parent does not accept.
 
 ### SEC-026 — MFA disabled by default; admin accounts are password-only
+
+- **fp-check verdict:** TRUE POSITIVE — single-factor admin accounts.
 
 - **Status:** Confirmed (configuration) · **Severity:** Medium · **CWE:** CWE-308 · **OWASP:** A07:2021
 - **Location:** `src/lib/auth/middleware.ts:30` — `requireMfaVerified` is a no-op unless `MFA_ENFORCED=true`; no SMS provider is configured.
@@ -300,24 +320,36 @@ checkout credentials, `72e224e` this report.
 
 ### SEC-027 — Session tokens stored unhashed
 
+- **fp-check verdict:** FALSE POSITIVE — requires prior database compromise; hardening.
+
 - **Severity:** Informational · `src/lib/auth/session.server.ts:35` — store `sha256(token)` and look up by hash (logs everyone out once).
 
 ### SEC-028 — CSP allows inline scripts
+
+- **fp-check verdict:** FALSE POSITIVE — defence-in-depth only.
 
 - **Severity:** Informational · `src/lib/csp.ts:6` — `'unsafe-inline'` in `script-src`; nonce-based CSP requires framework/Lovable support.
 
 ### SEC-029 — First-user-becomes-admin trigger remains active
 
+- **fp-check verdict:** FALSE POSITIVE — unreachable while any admin exists.
+
 - **Severity:** Informational · `db/migrations/0001_init.sql:247` (trigger; function at `:237`) — grants admin to the next inserted user whenever no admin exists. Production always has an admin and self-revocation is blocked; drop the trigger once bootstrapped.
 
 ### SEC-030 — Database TLS without certificate verification
 
-- **Status:** Requires environment access · **Severity:** Informational · `db/connection.ts:24` — `ssl: "require"` encrypts without verifying the server certificate; acceptable on Liara's private network, not over the internet.
+- **fp-check verdict:** FALSE POSITIVE — needs a platform-internal network position; environment check remains.
+
+- **Status:** Hardening (fp-check: false positive; environment check) · **Severity:** Informational · `db/connection.ts:24` — `ssl: "require"` encrypts without verifying the server certificate; acceptable on Liara's private network, not over the internet.
 
 ### SEC-031 — Developer test pages routable in production
+
+- **fp-check verdict:** FALSE POSITIVE — no data or functionality exposed.
 
 - **Severity:** Informational · `/perf` (`src/routes/perf.tsx:5`), `/dev/logo` — client-side visual tests, no data access.
 
 ### SEC-032 — Open self-registration plus SMS sending (abuse/cost surface)
+
+- **fp-check verdict:** FALSE POSITIVE — bounded abuse surface; no SMS provider configured; revisit with CAPTCHA when SMS goes live.
 
 - **Severity:** Informational · Self-registered users can set a phone and request OTP SMS. Controls: sign-up 5/hour per IP (effective after SEC-003), 60s resend cooldown, 5 SMS/day per user. Consider CAPTCHA or disabling self-registration if not needed (companies are provisioned by admins).

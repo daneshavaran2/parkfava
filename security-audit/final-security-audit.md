@@ -23,13 +23,13 @@ for the dashboard and coverage table.
 |---|---|
 | Critical | SEC-001 TanStack Start reflected XSS (patched) |
 | High | SEC-002 seroval deserialization DoS (patched) · SEC-004 MFA shared across sessions (patched, conditional on MFA) · SEC-005 verified phone replaceable (patched, conditional on MFA) |
-| Medium | SEC-003 rate-limit bypass (patched) · SEC-006 zod DoS (patched) · SEC-007 password change controls (patched) · SEC-009 CI/CD hardening (patched) · SEC-010 stale npm lockfile (open) · SEC-026 MFA off, admins password-only (open) |
-| Low | SEC-011, 012, 016, 017, 022, 023, 024, 025 |
-| Informational | SEC-027 … SEC-032, plus hardening items SEC-008, 013, 014, 015, 018, 019, 020, 021 (fp-check false positives; fixes kept) |
+| Medium | SEC-003 rate-limit bypass (patched) · SEC-006 zod DoS (patched) · SEC-007 password change controls (patched) · SEC-009 CI/CD supply chain (patched) · SEC-026 MFA off, admins password-only (open) |
+| Low | SEC-012 internal fields in public responses (patched) · SEC-023 initial-password hashes in the repo (open) |
+| Informational | 21 hardening or risk-register items judged not exploitable by fp-check: SEC-008, 010, 011, 013, 014, 015, 016, 017, 018, 019, 020, 021, 022, 024, 025, 027, 028, 029, 030, 031, 032 (fixes and recommendations kept) |
 
 Full register with evidence, root cause and remediation: [findings.md](findings.md).
 Rejected candidates: [false-positives.md](false-positives.md). Exploitability of every bug claim:
-[fp-check-verification.md](fp-check-verification.md) (8 true positives, 8 false positives).
+[fp-check-verification.md](fp-check-verification.md) (all 32: 11 true positives, 21 false positives).
 
 ## 3. Root-cause themes and variant analysis
 

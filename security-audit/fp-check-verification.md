@@ -8,20 +8,9 @@ are in [`evidence/`](evidence/).
 
 ## Scope (batch triage, Step 0 for all 32 findings)
 
-fp-check verifies *specific suspected bugs* — claims that an attacker can trigger
-something. 16 findings make such a claim and are verified below. The other 16 are not
-exploit claims and so cannot pass or fail fp-check's gates; each was verified by direct
-observation instead:
-
-| Not an exploit claim | Findings | Verified by |
-|---|---|---|
-| CI/CD configuration | SEC-009 | Workflow files + zizmor/Checkov output |
-| Supply-chain hygiene | SEC-010, SEC-025 | Lockfile audits (npm audit, OSV, bun audit) |
-| Container / platform configuration | SEC-011, SEC-030 | Dockerfile, `db/connection.ts` |
-| Missing hardening headers | SEC-016 | Production-build response headers |
-| Secret management configuration | SEC-017 | `app-settings.server.ts:8` |
-| Repository content | SEC-022, SEC-023 | Gitleaks history scan, file in repo |
-| Missing controls (absence) | SEC-024, SEC-026, SEC-027, SEC-028, SEC-029, SEC-031, SEC-032 | Code search showing the control is absent |
+All 32 register findings are verified. **Part A** covers the 16 that were raised as
+exploitable bugs. **Part B** covers the 16 first recorded as configuration,
+supply-chain or missing-control observations, with each one's threat model stated.
 
 Gate 3 interpretation used throughout: fp-check counts RCE, privilege escalation and
 information disclosure as real impact and rejects "operational robustness" issues. An
@@ -30,7 +19,7 @@ meaningful amplification** (the `bug-class-verification.md` DoS class) is treate
 real impact; failures the attacker cannot trigger (slow upstreams, crash recovery) are
 treated as robustness.
 
-## Verdict summary
+## Verdict summary — Part A
 
 | Bug | Class | Verdict | Effect on the register |
 |---|---|---|---|
@@ -51,8 +40,18 @@ treated as robustness.
 | SEC-020 | Injection (SQL identifiers) | **FALSE POSITIVE** — input is trusted | → Informational hardening |
 | SEC-021 | Prompt injection | **FALSE POSITIVE** — no security impact path | → Informational hardening |
 
-**Counts: 8 TRUE POSITIVES, 8 FALSE POSITIVES.** False positives keep their applied
-fixes; they are re-labelled as hardening, not reverted.
+Part B verdicts:
+
+| Bug | Verdict | Effect on the register |
+|---|---|---|
+| SEC-009 | **TRUE POSITIVE** — CI fetched mutable code while holding the deploy token | Unchanged (Medium) |
+| SEC-023 | **TRUE POSITIVE** — brute-forceable initial passwords in the repo (insider) | Unchanged (Low) |
+| SEC-026 | **TRUE POSITIVE** — single-factor admin accounts | Unchanged (Medium) |
+| SEC-010, 011, 016, 017, 022, 024, 025, 027, 028, 029, 030, 031, 032 | **FALSE POSITIVE** as vulnerabilities (no standalone attack path, public-by-design data, or defence-in-depth only) | → Informational hardening / risk-register items |
+
+**Counts (all 32): 11 TRUE POSITIVES, 21 FALSE POSITIVES.** False positives keep their
+applied fixes and recommendations; they are re-labelled as hardening, not reverted.
+Operational risks such as the missing audit trail stay in the risk register.
 
 **Exploit chains checked after all verdicts:** SEC-003 (spraying) + SEC-013 (timing
 enumeration) — SEC-013 adds nothing because sign-in errors are identical and the
@@ -594,3 +593,483 @@ with bold/italic only (`src/components/fava/primitives.tsx:95`) — no links or 
 | Result | Pass | Pass | **Fail** | **Fail** (not executed) | N/A | Pass |
 
 `BUG SEC-021 FALSE POSITIVE — no security impact path; prompt restructuring stays as a quality recommendation.`
+
+---
+
+# Part B — the remaining 16 findings
+
+These findings were first recorded as configuration, supply-chain or missing-control
+observations. Each is run through the same method here, with the threat model stated
+in Step 0. A FALSE POSITIVE verdict means "not an exploitable vulnerability on its
+own"; the item stays in the register as hardening or as an operational risk (the risk
+register is unaffected).
+
+## SEC-009 — CI/CD: broad token, mutable action tags, unpinned deploy CLI
+
+**Step 0.** Claim: a compromised upstream (moved action tag, malicious `@liara/cli`
+release) runs in the deploy job, which holds `LIARA_API_TOKEN`, and deploys attacker
+code to production. Threat model: supply-chain attacker who controls an upstream
+release. Class: logic / supply chain. Route: deep.
+
+**Phase 1.** 1.1 Upstream registry/GitHub → `npm install -g @liara/cli` (latest) /
+`uses: …@v4` → runner with secrets → `liara deploy`. 1.2 Tags are mutable by design;
+`npm install -g pkg` resolves "latest" at run time. 1.3 No provenance check or pinning
+existed; default `GITHUB_TOKEN` scope. 1.4 Same pattern in all three workflows.
+
+**Phase 2.** 2.1 The attacker controls the fetched code once the upstream is compromised.
+2.2 N/A. 2.3 Race: N/A. 2.4 The 24 h minimum-release-age applies to Bun installs, not to
+`npm install -g` in CI.
+
+**Phase 3.** 3.1 Real impact vs operational robustness: code execution in CI with the deploy token → arbitrary code in production (RCE-equivalent). 3.2 Primary control vs defence-in-depth: pinning is the primary control for third-party code in CI.
+
+**Phase 4.**
+- 4.1 Pseudocode PoC: attacker publishes `@liara/cli@9.7.1` with a postinstall that reads `LIARA_API_TOKEN` from the job's command line/env → push to `main` → token exfiltrated / malicious deploy.
+- 4.2 Executable PoC: **not run** — would require publishing a malicious package (out of scope and harmful).
+- 4.3 Unit-test PoC: not applicable.
+- 4.4 Negative PoC: with `@liara/cli@9.6.7` and SHA-pinned actions a new upstream release is not fetched.
+- 4.5 PoC verification: the pre-fix workflow line `npm install -g @liara/cli` and the absence of pinning were read in `.github/workflows/deploy.yml` at `d877c06`; zizmor/Semgrep findings cleared after the fix (`evidence/zizmor-postfix.json`, `semgrep-before-after.txt`).
+
+**Phase 5.** Q1 Non-vuln explanation: upstreams are reputable — compromise is rare but documented industry-wide. Q2 Justification: convenience. Q3 Missing context: branch protection unknown. Q4 Pattern bias: partly scanner-driven, but the secret exposure is concrete. Q5 Prevention: none before the fix. Q6 Attacker data: upstream code is untrusted by definition. Q7 Math: N/A. Q8 Practical: requires an upstream compromise — low likelihood, high impact. Q9 DiD vs primary: pinning is primary. Q10 Runtime: none. Q11 Hallucination: lines read in the workflow. Q12 Not dismissed for being unlikely. Q13 Re-read the pre-fix workflow.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass (given upstream compromise) | Pass | Pass (pseudocode; executable would be harmful) | N/A → Pass | Pass |
+
+`BUG SEC-009 TRUE POSITIVE — CI fetched mutable third-party code while holding the deploy token (low likelihood, high impact; fixed).`
+
+## SEC-010 — Stale package-lock.json pins vulnerable versions
+
+**Step 0.** Claim: `package-lock.json` pins 37 vulnerable packages, including SEC-001/002
+versions. Threat model: anonymous attacker against the deployed app; developer
+installing with npm. Class: supply chain.
+
+**Phase 1.** 1.1 `package-lock.json` → `npm install`/`npm ci` → node_modules. 1.2 Bun
+ignores `package-lock.json` when `bun.lock` exists. 1.3 Environment: Dockerfile, CI and
+Lovable install from `bun.lock` (`bun install --frozen-lockfile`). 1.4 No script or
+workflow references npm installs.
+
+**Phase 2.** 2.1 No attacker controls which lockfile the deployment uses. 2.2 N/A. 2.3
+N/A. 2.4 Only a developer who runs npm locally gets the old versions; local dev servers
+are not internet-facing.
+
+**Phase 3.** 3.1 Real impact vs operational robustness: no impact on the deployed app; a consistency/hygiene risk. 3.2 Primary control vs defence-in-depth: `bun.lock` is the primary control and it is clean.
+
+**Phase 4.**
+- 4.1 Pseudocode PoC: `npm ci` → vulnerable TanStack → deploy built from it → SEC-001 live. Requires a deployment that uses npm.
+- 4.2 Executable PoC: not applicable (no deployment path uses npm).
+- 4.3 Unit-test PoC: not applicable.
+- 4.4 Negative PoC: `bun install --frozen-lockfile` (Dockerfile:8) resolves the patched versions; `bun audit` shows 1 Moderate.
+- 4.5 PoC verification: Dockerfile and workflows re-read; no npm install path.
+
+**Phase 5.** Q1 Non-vuln: unused file. Q2 Justification: leftover from an earlier toolchain. Q3 Context: Lovable uses Bun (bunfig.toml). Q4 Pattern bias: scanner counts per file. Q5 Prevention: frozen Bun lockfile. Q6 N/A. Q7 N/A. Q8 Not practical against production. Q9 Hygiene. Q10 Build environment prevents it. Q11 Over-rated earlier (Medium). Q12 Not dismissed — kept as a decision item. Q13 Re-read Dockerfile and workflows.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | **Fail** | **Fail** | **Fail** | N/A | **Fail** (deployments use `bun.lock`) |
+
+`BUG SEC-010 FALSE POSITIVE — the stale lockfile is not used by any deployment; still recommended for deletion.`
+
+## SEC-011 — Container runs as root
+
+**Step 0.** Claim: the runtime container runs as root, amplifying any compromise.
+Threat model: attacker who already has code execution in the app. Class: privilege
+(configuration).
+
+**Phase 1.** 1.1 Dockerfile runtime stage → `CMD node server/cluster.mjs` as UID 0.
+1.2 Container isolation by Liara's runtime. 1.3 Environment: platform sandboxing
+unknown. 1.4 Healthcheck and copies are unaffected.
+
+**Phase 2.** 2.1 No attacker input reaches "user selection"; exploitation needs a
+separate RCE first. 2.2 N/A. 2.3 N/A. 2.4 No RCE was found in this audit.
+
+**Phase 3.** 3.1 Real impact vs operational robustness: amplification only, no standalone impact. 3.2 Primary control vs defence-in-depth: non-root user is defence-in-depth.
+
+**Phase 4.**
+- 4.1 Pseudocode PoC: RCE in app → root in container → write anywhere in the container filesystem.
+- 4.2 Executable PoC: not applicable (no RCE to chain).
+- 4.3 Unit-test PoC: not applicable.
+- 4.4 Negative PoC: without an RCE nothing can use root.
+- 4.5 PoC verification: Checkov CKV_DOCKER_3 and Trivy DS-0002 confirm the configuration; no chain exists.
+
+**Phase 5.** Q1 Non-vuln: platform isolation. Q2 Justification: uploads disk ownership. Q3 Context: Liara disk permissions. Q4 Pattern bias: scanner rule. Q5 N/A. Q6 N/A. Q7 N/A. Q8 Not exploitable alone. Q9 DiD: yes. Q10 Container runtime isolation. Q11 Configuration is real; vulnerability is not. Q12 Not dismissed — kept as hardening. Q13 Re-read Dockerfile.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | **Fail** | **Fail** | **Fail** | N/A | Pass |
+
+`BUG SEC-011 FALSE POSITIVE — defence-in-depth gap with no standalone attack path; hardening.`
+
+## SEC-016 — Missing nosniff, Referrer-Policy and HSTS
+
+**Step 0.** Claim: missing headers enable MIME sniffing of uploads, referrer leakage and
+SSL stripping. Threat model: anonymous attacker / network attacker. Class: misconfiguration.
+
+**Phase 1.** 1.1 Responses from `src/server.ts`. 1.2 Uploads: extension allowlist,
+unknown → `application/octet-stream`. 1.3 Modern browsers do not sniff `image/*` into
+HTML; Liara serves HTTPS. 1.4 CSP `frame-ancestors 'none'` already present.
+
+**Phase 2.** 2.1 Attacker could upload only allowlisted types (owners/admins). 2.2 N/A.
+2.3 N/A. 2.4 SSL stripping needs a network position on the first visit.
+
+**Phase 3.** 3.1 Real impact vs operational robustness: none demonstrated. 3.2 Primary control vs defence-in-depth: headers are defence-in-depth.
+
+**Phase 4.**
+- 4.1 Pseudocode PoC: upload `x.png` containing HTML → open directly → browser sniffs HTML. Blocked by type allowlist + browser behaviour.
+- 4.2 Executable PoC: not run (no sniffing path in current browsers for these types).
+- 4.3 Unit-test PoC: not applicable.
+- 4.4 Negative PoC: `/assets/x.png` served as `image/png`.
+- 4.5 PoC verification: headers now present (`evidence/prod-build-checks.txt`); no exploit path existed before.
+
+**Phase 5.** Q1 Non-vuln: allowlist + browser behaviour. Q2 Justification: CSP considered sufficient. Q3 Context: HTTPS-only platform. Q4 Pattern bias: header checklist. Q5 Allowlist prevents HTML uploads. Q6 N/A. Q7 N/A. Q8 Not practical. Q9 DiD. Q10 Browser protections. Q11 Not a vulnerability. Q12 Kept as hardening. Q13 Re-read `mime.ts`.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | **Fail** | **Fail** | **Fail** | N/A | **Fail** |
+
+`BUG SEC-016 FALSE POSITIVE — defence-in-depth headers; no attack path; hardening (now applied).`
+
+## SEC-017 — Settings encryption key falls back to DATABASE_URL
+
+**Step 0.** Claim: whoever has the database credentials can also decrypt the stored
+OpenRouter key. Threat model: attacker with a database dump; attacker with app env.
+Class: crypto key management.
+
+**Phase 1.** 1.1 `encryptionKey()` (`app-settings.server.ts:8`) = scrypt(`SETTINGS_ENCRYPTION_KEY || DATABASE_URL`).
+1.2 AES-256-GCM. 1.3 A dump/backup contains the ciphertext but not the env var. 1.4
+Same env holds `OPENROUTER_API_KEY` when configured there.
+
+**Phase 2.** 2.1 Decryption needs ciphertext **and** `DATABASE_URL`. A dump alone is
+insufficient; whoever has the app env typically has the other secrets too. 2.2 N/A.
+2.3 N/A. 2.4 No escalation path beyond existing env access.
+
+**Phase 3.** 3.1 Real impact vs operational robustness: No real impact beyond existing access. 3.2 Primary control vs defence-in-depth: Separate key is defence-in-depth.
+
+**Phase 4.**
+- 4.1 Pseudocode PoC: dump DB + read env → decrypt → API key.
+- 4.2 Executable PoC: not applicable (requires both secrets).
+- 4.3 Unit-test PoC: not applicable.
+- 4.4 Negative PoC: dump alone cannot decrypt.
+- 4.5 PoC verification: key derivation re-read; both inputs required.
+
+**Phase 5.** Q1 Non-vuln: dump alone is safe. Q2 Justification: zero-config default. Q3 Context: env compromise exposes everything anyway. Q4 Pattern bias: fallback-secret rule. Q5 Prevention holds for dumps. Q6 Env is trusted storage. Q7 N/A. Q8 Not practical as escalation. Q9 DiD. Q10 N/A. Q11 Over-rated. Q12 Kept as config advice. Q13 Re-read function.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | **Fail** | **Fail** | **Fail** | N/A | Pass |
+
+`BUG SEC-017 FALSE POSITIVE — requires secrets that already grant equivalent access; configuration advice.`
+
+## SEC-022 — `.env` with public-by-design keys in git history
+
+**Step 0.** Claim: secrets leaked in commit `13cd74d`. Threat model: anyone with repo
+access. Class: information disclosure.
+
+**Phase 1.** 1.1 Git history → two Supabase JWTs (`role: anon`) and a Maps browser key.
+1.2 Anon keys and `VITE_` keys are shipped to browsers by design. 1.3 Maps key
+reportedly referrer-restricted (README). 1.4 `.env` untracked since `385b0ff`.
+
+**Phase 2.** 2.1 The values are already public in client bundles of that era. 2.2–2.3
+N/A. 2.4 Abuse depends on the legacy Supabase project's RLS, outside this codebase.
+
+**Phase 3.** 3.1 Real impact vs operational robustness: No secret disclosed (public-by-design keys). 3.2 Primary control vs defence-in-depth: Hygiene.
+
+**Phase 4.**
+- 4.1 Pseudocode PoC: use anon key against legacy Supabase → limited by its RLS.
+- 4.2 Executable PoC: not run (would touch a third-party production service).
+- 4.3 Unit-test PoC: not applicable.
+- 4.4 Negative PoC: `role` claim is `anon`, not `service_role`.
+- 4.5 PoC verification: JWT claims decoded locally (values never printed).
+
+**Phase 5.** Q1 Non-vuln: publishable keys. Q2 Justification: early project setup. Q3 Context: legacy backend retired. Q4 Pattern bias: secret-scanner hit. Q5 N/A. Q6 Public data treated as secret: yes. Q7 N/A. Q8 Not practical. Q9 Hygiene. Q10 N/A. Q11 Over-reported by tool. Q12 Kept as advice (lock legacy project). Q13 Claims re-checked.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass | **Fail** | **Fail** | N/A | Pass |
+
+`BUG SEC-022 FALSE POSITIVE — keys are public by design; legacy project lock-down remains advice.`
+
+## SEC-023 — Brute-forceable initial-password hashes in the repository
+
+**Step 0.** Claim: repo readers can brute-force CEO mobile numbers from scrypt hashes
+and log in to not-yet-activated company accounts. Threat model: insider or anyone who
+obtains the repository. Class: credential exposure / information disclosure.
+
+**Phase 1.** 1.1 `scripts/company-national-id-logins.json` (git) → 67 × `salt:scrypt(mobile)`.
+1.2 scrypt N=2^14, r=8, p=1. 1.3 No pepper; search space ≈ 10^9 (Iranian mobiles).
+1.4 Provisioning sets these as live initial passwords.
+
+**Phase 2.** 2.1 The attacker has the hash and salt. 2.2 Math: 10^9 candidates ÷ ~5×10^3
+scrypt/s per GPU ≈ 2×10^5 s ≈ 2–3 days per hash per GPU (one per row, salts differ).
+2.3 Race: the window ends when the company sets its own password. 2.4 Recovered value
+= CEO mobile (PII) + valid initial password.
+
+**Phase 3.** 3.1 Real impact vs operational robustness: Real impact: personal-data disclosure and account takeover of unactivated companies. 3.2 Primary control vs defence-in-depth: Primary control: not committing credential material.
+
+**Phase 4.**
+- 4.1 Pseudocode PoC: for m in 0901…0939×10^7: if scrypt(m, salt) == hash → login(national_id, m).
+- 4.2 Executable PoC: **not run** (brute-forcing real people's numbers is inappropriate).
+- 4.3 Unit-test PoC: hash format verified compatible with `verifyPassword` (earlier check).
+- 4.4 Negative PoC: accounts that already set their own password are unaffected.
+- 4.5 PoC verification: cost estimate from scrypt parameters; hashes present in git.
+
+**Phase 5.** Q1 Non-vuln: hashes, not plaintext — but low-entropy input. Q2 Justification: needed for provisioning. Q3 Context: private repository. Q4 Not pattern-only: math done. Q5 scrypt slows but does not prevent. Q6 Repo access = insider threat model. Q7 Math in 2.2. Q8 Practical for a motivated insider. Q9 Primary. Q10 None. Q11 Real. Q12 Not dismissed. Q13 Parameters re-read.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass (insider) | Pass | Pass (pseudocode) | Pass | Pass |
+
+`BUG SEC-023 TRUE POSITIVE — brute-forceable initial passwords and CEO mobiles in the repository (delete after provisioning).`
+
+## SEC-024 — No security audit trail
+
+**Step 0.** Claim: failed logins and privileged actions are not recorded. Threat model:
+any attacker; defenders investigating. Class: detection gap (repudiation).
+
+**Phase 1.** 1.1 Auth/admin handlers → no audit write. 1.2 `rate_limit_hits` is pruned.
+1.3 Liara logs only generic request lines. 1.4 Change requests record `created_by`.
+
+**Phase 2.** 2.1 No attacker input; the gap is absence. 2.2–2.3 N/A. 2.4 Absence does
+not enable an attack; it hinders detection.
+
+**Phase 3.** 3.1 Real impact vs operational robustness: Not an exploitable vulnerability; an operational security gap. 3.2 Primary control vs defence-in-depth: Detection control (defence-in-depth).
+
+**Phase 4.**
+- 4.1 Pseudocode PoC: grant admin to an attacker account → nothing records who did it.
+- 4.2 Executable PoC: not applicable (absence).
+- 4.3 Unit-test PoC: not applicable.
+- 4.4 Negative PoC: change requests do keep `created_by`/`reviewed_by`.
+- 4.5 PoC verification: code search found no audit writes.
+
+**Phase 5.** Q1 Non-vuln: absence is not a bug. Q2 Justification: small team. Q3 Context: platform logs exist. Q4 N/A. Q5 N/A. Q6 N/A. Q7 N/A. Q8 Not exploitable. Q9 Detection is DiD. Q10 N/A. Q11 Real gap, not a vuln. Q12 Kept in the risk register. Q13 Searched for audit writes.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | **Fail** | **Fail** | **Fail** | N/A | N/A |
+
+`BUG SEC-024 FALSE POSITIVE (as a vulnerability) — detection gap; stays in the risk register (R-03).`
+
+## SEC-025 — Vulnerable desktop/build toolchain dependencies (minimatch remaining)
+
+**Step 0.** Claim: build tools carry known vulnerabilities. Threat model: attacker
+influencing build inputs. Class: supply chain / DoS.
+
+**Phase 1.** 1.1 `minimatch` via electron-builder → glob patterns from the project's
+own config. 1.2 ReDoS needs attacker-controlled patterns. 1.3 Build machines only.
+1.4 Electron runtime upgraded.
+
+**Phase 2.** 2.1 Patterns are developer-authored. 2.2 N/A. 2.3 N/A. 2.4 No external input.
+
+**Phase 3.** 3.1 Real impact vs operational robustness: No real impact. 3.2 Primary control vs defence-in-depth: Hygiene.
+
+**Phase 4.**
+- 4.1 Pseudocode PoC: malicious glob in build config → slow build. Requires repo write.
+- 4.2 Executable PoC: not applicable.
+- 4.3 Unit-test PoC: not applicable.
+- 4.4 Negative PoC: normal build completes.
+- 4.5 PoC verification: `bun pm why minimatch` traced it to the build toolchain only.
+
+**Phase 5.** Q1 Non-vuln: trusted input. Q2 Upstream constraint. Q3 Build-only. Q4 Scanner-driven. Q5 N/A. Q6 Trusted config as attacker data: yes. Q7 N/A. Q8 Not practical. Q9 Hygiene. Q10 N/A. Q11 Over-reported. Q12 Kept as upgrade item. Q13 Dependency path re-traced.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | **Fail** | **Fail** | **Fail** | N/A | Pass |
+
+`BUG SEC-025 FALSE POSITIVE — build-only, no attacker input; upgrade when the parent allows.`
+
+## SEC-026 — MFA disabled; admin accounts are password-only
+
+**Step 0.** Claim: anyone with an admin's password gets full admin access. Threat
+model: credential thief (phishing, reuse). Class: authentication weakness.
+
+**Phase 1.** 1.1 `signIn` → session → `requireMfaVerified` no-op (`middleware.ts:30`)
+→ admin functions. 1.2 No second factor configured. 1.3 Rate limits slow guessing, not
+phishing/reuse. 1.4 MFA code now fixed (SEC-004/005), but off.
+
+**Phase 2.** 2.1 The thief controls the credential. 2.2 N/A. 2.3 N/A. 2.4 Admin =
+role grants and all public content.
+
+**Phase 3.** 3.1 Real impact vs operational robustness: Real impact: full privilege with a single factor. 3.2 Primary control vs defence-in-depth: Primary control for privileged accounts is a second factor.
+
+**Phase 4.**
+- 4.1 Pseudocode PoC: phished admin password → `signIn` → `grantAdmin(attacker)`.
+- 4.2 Executable PoC: not run against real accounts; equivalent behaviour shown by the authz suite's admin fixture (password-only login reaches admin functions).
+- 4.3 Unit-test PoC: not applicable.
+- 4.4 Negative PoC: with `MFA_ENFORCED=true` and SMS configured, the session needs an OTP.
+- 4.5 PoC verification: `evidence/authz-coverage.txt` shows admin actions with a password-only session.
+
+**Phase 5.** Q1 Non-vuln: MFA is optional by design. Q2 Justification: no SMS provider yet. Q3 Context: small admin group. Q4 Not pattern-only. Q5 Rate limits don't stop phishing. Q6 Credential is attacker-held by threat model. Q7 N/A. Q8 Practical (phishing). Q9 Primary for admins. Q10 None. Q11 Real. Q12 Not dismissed. Q13 Re-read middleware.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass | Pass | Pass | N/A → Pass | Pass |
+
+`BUG SEC-026 TRUE POSITIVE — single-factor admin accounts.`
+
+## SEC-027 — Session tokens stored unhashed
+
+**Step 0.** Claim: a database read yields usable session tokens. Threat model: attacker
+with DB read (dump, backup). Class: credential storage.
+
+**Phase 1.** 1.1 `sessions.id` = raw token. 1.2 Cookie lookup by equality. 1.3 DB not
+internet-exposed. 1.4 Passwords are hashed; tokens are not.
+
+**Phase 2.** 2.1 Needs DB read. 2.2–2.3 N/A. 2.4 With a dump, the attacker can also
+read all data directly.
+
+**Phase 3.** 3.1 Real impact vs operational robustness: Escalation from read-only dump to live sessions (write capability) — limited; requires prior compromise. 3.2 Primary control vs defence-in-depth: Defence-in-depth.
+
+**Phase 4.**
+- 4.1 Pseudocode PoC: dump → set cookie `session=<id>` → act as user.
+- 4.2 Executable PoC: not applicable (requires DB access).
+- 4.3 Unit-test PoC: not applicable.
+- 4.4 Negative PoC: expired rows are rejected.
+- 4.5 PoC verification: `INSERT INTO sessions` stores the raw token (`session.server.ts:35`).
+
+**Phase 5.** Q1 Non-vuln: needs DB compromise. Q2 Justification: simplicity. Q3 Context: private DB. Q4 Pattern bias. Q5 N/A. Q6 Internal storage. Q7 N/A. Q8 Only after compromise. Q9 DiD. Q10 N/A. Q11 Real weakness, not a standalone vuln. Q12 Kept. Q13 Re-read.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | **Fail** | **Fail** | **Fail** | N/A | Pass |
+
+`BUG SEC-027 FALSE POSITIVE — requires prior database compromise; hardening.`
+
+## SEC-028 — CSP allows inline scripts
+
+**Step 0.** Claim: `'unsafe-inline'` weakens XSS protection. Threat model: XSS attacker.
+Class: misconfiguration (DiD).
+
+**Phase 1.** 1.1 CSP header from `csp.ts:6`. 1.2 Inline allowed. 1.3 React escaping is
+primary. 1.4 No stored/reflected XSS found in app code (SEC-001 was framework).
+
+**Phase 2.** 2.1 No
+attacker input without a separate injection. 2.2–2.3 N/A. 2.4 Only matters with another bug.
+
+**Phase 3.** 3.1 Real impact vs operational robustness: Amplifies other bugs only. 3.2 Primary control vs defence-in-depth: Defence-in-depth.
+
+**Phase 4.**
+- 4.1 Pseudocode PoC: injected inline script runs because CSP allows it — requires an injection bug.
+- 4.2 Executable PoC: not applicable.
+- 4.3 Unit-test PoC: not applicable.
+- 4.4 Negative PoC: without an injection, nothing runs.
+- 4.5 PoC verification: header captured (`evidence/prod-build-checks.txt`).
+
+**Phase 5.** Q1 Non-vuln: DiD only. Q2 Framework needs inline bootstraps. Q3 Lovable constraint. Q4 Pattern bias. Q5 N/A. Q6 N/A. Q7 N/A. Q8 Not alone. Q9 DiD. Q10 React escaping. Q11 Not a vuln. Q12 Kept. Q13 Header re-read.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | **Fail** | **Fail** | **Fail** | N/A | Pass |
+
+`BUG SEC-028 FALSE POSITIVE — defence-in-depth weakness only.`
+
+## SEC-029 — First-user-becomes-admin trigger
+
+**Step 0.** Claim: the next inserted user becomes admin when none exists. Threat model:
+anonymous sign-up. Class: logic (privilege bootstrap).
+
+**Phase 1.** 1.1 `INSERT INTO users` → trigger (`0001_init.sql:247`) → admin if none.
+1.2 `revokeAdmin` blocks self-revocation. 1.3 Production has an admin. 1.4 Provisioning
+scripts refuse to run with no admin.
+
+**Phase 2.** 2.1 Sign-up is attacker-controlled, but the condition (zero admins) is not.
+2.2 N/A. 2.3 Race on a fresh install only. 2.4 Requires all admins deleted at DB level.
+
+**Phase 3.** 3.1 Real impact vs operational robustness: No impact while an admin exists. 3.2 Primary control vs defence-in-depth: Bootstrap design.
+
+**Phase 4.**
+- 4.1 Pseudocode PoC: zero admins → sign up → admin.
+- 4.2 Executable PoC: not applicable to production state.
+- 4.3 Unit-test PoC: not applicable.
+- 4.4 Negative PoC: with ≥ 1 admin the trigger does nothing (authz suite fixtures).
+- 4.5 PoC verification: trigger body re-read.
+
+**Phase 5.** Q1 Non-vuln: bootstrap feature. Q2 Justification: self-hosting. Q3 Context: admin exists. Q4 Pattern bias. Q5 Condition prevents it. Q6 N/A. Q7 N/A. Q8 Not practical. Q9 Design. Q10 N/A. Q11 Over-reported. Q12 Kept as advice. Q13 Re-read.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | **Fail** | **Fail** | **Fail** | N/A | **Fail** |
+
+`BUG SEC-029 FALSE POSITIVE — unreachable while any admin exists.`
+
+## SEC-030 — Database TLS without certificate verification
+
+**Step 0.** Claim: `ssl: "require"` permits a MITM between app and DB. Threat model:
+network attacker inside Liara's network. Class: transport security.
+
+**Phase 1.** 1.1 `db/connection.ts:24`. 1.2 TLS without chain verification. 1.3 Private
+platform network (unverified). 1.4 Single connection site.
+
+**Phase 2.** 2.1 Requires a network
+position inside the platform. 2.2–2.3 N/A. 2.4 Not demonstrable here.
+
+**Phase 3.** 3.1 Real impact vs operational robustness: Not demonstrable. 3.2 Primary control vs defence-in-depth: DiD on a private network.
+
+**Phase 4.**
+- 4.1 Pseudocode PoC: MITM with self-signed cert → app accepts.
+- 4.2 Executable PoC: not applicable (no platform network access).
+- 4.3 Unit-test PoC: not applicable.
+- 4.4 Negative PoC: on a private network no attacker sits on the path.
+- 4.5 PoC verification: configuration line re-read.
+
+**Phase 5.** Q1 Non-vuln: private network. Q2 Managed DB certificates. Q3 Context unknown. Q4 Pattern bias. Q5 N/A. Q6 N/A. Q7 N/A. Q8 Not practical. Q9 DiD. Q10 Platform isolation. Q11 Unverified. Q12 Kept as environment check. Q13 Re-read.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | **Fail** | **Fail** | **Fail** | N/A | **Fail** (private network, unverified) |
+
+`BUG SEC-030 FALSE POSITIVE — needs a platform-internal network position; environment check.`
+
+## SEC-031 — Developer test pages routable in production
+
+**Step 0.** Claim: `/perf`, `/dev/logo` exposed. Threat model: anonymous visitor.
+Class: information exposure.
+
+**Phase 1.** 1.1 Client-only visual pages. 1.2 No server functions or data. 1.3 N/A.
+1.4 No secrets referenced.
+
+**Phase 2.** 2.1 Anyone can open them. 2.2–2.3 N/A. 2.4 They reveal nothing.
+
+**Phase 3.** 3.1 Real impact vs operational robustness: No impact. 3.2 Primary control vs defence-in-depth: Hygiene.
+
+**Phase 4.**
+- 4.1 Pseudocode PoC: open `/perf` → logo benchmark.
+- 4.2 Executable PoC: not needed.
+- 4.3 Unit-test PoC: not applicable.
+- 4.4 Negative PoC: no data endpoints on the pages.
+- 4.5 PoC verification: route files read.
+
+**Phase 5.** Q1 Non-vuln: harmless pages. Q2 Dev tooling. Q3 N/A. Q4 Pattern bias. Q5 N/A. Q6 N/A. Q7 N/A. Q8 No gain. Q9 Hygiene. Q10 N/A. Q11 Not a vuln. Q12 Kept. Q13 Re-read.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass | **Fail** | **Fail** | N/A | Pass |
+
+`BUG SEC-031 FALSE POSITIVE — no data or functionality exposed.`
+
+## SEC-032 — Open self-registration plus SMS sending
+
+**Step 0.** Claim: attackers can register accounts and trigger paid SMS. Threat model:
+anonymous abuser. Class: business-logic abuse.
+
+**Phase 1.** 1.1 `signUp` → `setPhone` → `requestOtp` → SMS provider. 1.2 Limits:
+sign-up 5/h per IP (effective after SEC-003), 60 s cooldown, 5 SMS/day/user. 1.3 **No
+SMS provider configured** — sending fails. 1.4 Same limits for all users.
+
+**Phase 2.** 2.1 Attacker
+controls the phone number. 2.2 Cost bound: 5 × accounts/day. 2.3 N/A. 2.4 Bounded.
+
+**Phase 3.** 3.1 Real impact vs operational robustness: Cost abuse (bounded), not a security impact today. 3.2 Primary control vs defence-in-depth: Rate limits are the primary control.
+
+**Phase 4.**
+- 4.1 Pseudocode PoC: script sign-ups from many IPs → 5 SMS each per day.
+- 4.2 Executable PoC: not run (abuse testing out of scope).
+- 4.3 Unit-test PoC: not applicable.
+- 4.4 Negative PoC: without a provider, no SMS is sent (`SMS_NOT_CONFIGURED`).
+- 4.5 PoC verification: limits read in `mfa.functions.ts` and `auth.functions.ts`.
+
+**Phase 5.** Q1 Non-vuln: limits + no provider. Q2 Justification: open registration. Q3 Context: companies are admin-provisioned. Q4 Pattern bias. Q5 Limits bound it. Q6 N/A. Q7 Bound in 2.2. Q8 Low value. Q9 Abuse control. Q10 N/A. Q11 Not a vuln. Q12 Kept as advice (CAPTCHA). Q13 Re-read limits.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass | **Fail** | **Fail** | Pass | **Fail** (no SMS provider) |
+
+`BUG SEC-032 FALSE POSITIVE — bounded abuse surface; revisit when SMS is configured.`

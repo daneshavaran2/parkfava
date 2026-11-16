@@ -30,9 +30,9 @@ misleading.
 | Metric | Value |
 |---|---|
 | Total findings | 32 |
-| Confirmed (incl. 3 advisory-confirmed) | 23 · Hardening only (fp-check false positive) 8 · Requires environment access 1 |
-| fp-check verification of the 16 exploit claims | 8 TRUE POSITIVE · 8 FALSE POSITIVE — [fp-check-verification.md](fp-check-verification.md) |
-| By severity | Critical 1 · High 3 (2 conditional on MFA) · Medium 6 · Low 8 · Informational 14 |
+| Confirmed vulnerabilities (incl. 3 advisory-confirmed) | 11 · Hardening / risk items (fp-check false positive as vulnerabilities) 21 |
+| fp-check verification of all 32 findings | 11 TRUE POSITIVE · 21 FALSE POSITIVE — [fp-check-verification.md](fp-check-verification.md) |
+| By severity | Critical 1 · High 3 (2 conditional on MFA) · Medium 5 · Low 2 · Informational 21 |
 | Rejected candidates (false positives, grouped) | 23 groups — [false-positives.md](false-positives.md) |
 | Fixes applied | 17 complete + 1 partial |
 | Fixes verified by an executed test or rescan (raw output in `evidence/`) | 13 (4 more verified by code review only) |
@@ -80,7 +80,7 @@ vulnerabilities.
 2. **SEC-004/005 — MFA bypass by design**: one OTP verified every session of the account, and a password-only session could swap the verified phone. *Reproduced and patched.*
 3. **SEC-003 — Rate-limit bypass** through a spoofed `X-Forwarded-For`, disabling per-IP brute-force and AI-cost limits. *Reproduced and patched.*
 4. **SEC-009 — CI/CD supply chain**: the deploy job installed an unpinned CLI while holding the deploy token; mutable action tags; broad token. *Patched.*
-5. **SEC-026/024 — MFA off (Medium) and no audit trail (Low)**: account takeover by password alone would be hard to detect. *Open; needs configuration and a code change.*
+5. **SEC-026 — MFA off (Medium)**, together with the missing audit trail (SEC-024, a detection gap tracked as risk R-03): account takeover by password alone would be hard to detect. *Open; needs configuration and a code change.*
 
 ## Decisions needed from you
 
