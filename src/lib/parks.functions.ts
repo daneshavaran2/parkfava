@@ -85,7 +85,7 @@ export const getInactiveParkIds = createServerFn({ method: "GET" }).handler(asyn
 
 export const upsertParkAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => parkSchema.parse(i))
+  .validator((i) => parkSchema.parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -100,7 +100,7 @@ export const upsertParkAdmin = createServerFn({ method: "POST" })
 
 export const deleteParkAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ park_id: z.string().trim().min(1).max(120) }).parse(i))
+  .validator((i) => z.object({ park_id: z.string().trim().min(1).max(120) }).parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -114,7 +114,7 @@ export const deleteParkAdmin = createServerFn({ method: "POST" })
 
 export const reorderParksAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ ids: z.array(z.string().trim().min(1).max(120)) }).parse(i))
+  .validator((i) => z.object({ ids: z.array(z.string().trim().min(1).max(120)) }).parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();

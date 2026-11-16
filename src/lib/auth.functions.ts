@@ -108,7 +108,7 @@ async function applyLimit(
 }
 
 export const signUp = createServerFn({ method: "POST" })
-  .inputValidator((i) => credentialsSchema.parse(i))
+  .validator((i) => credentialsSchema.parse(i))
   .handler(async ({ data }) => {
     const sql = getDb();
     const email = data.email.trim().toLowerCase();
@@ -129,7 +129,7 @@ export const signUp = createServerFn({ method: "POST" })
   });
 
 export const signIn = createServerFn({ method: "POST" })
-  .inputValidator((i) => signInSchema.parse(i))
+  .validator((i) => signInSchema.parse(i))
   .handler(async ({ data }) => {
     const sql = getDb();
     // Same error for "malformed username", "no such user" and "wrong
@@ -196,7 +196,7 @@ const changePasswordSchema = z.object({
 // friction for no benefit.
 export const changeMyPassword = createServerFn({ method: "POST" })
   .middleware([requireAuth])
-  .inputValidator((i) => changePasswordSchema.parse(i))
+  .validator((i) => changePasswordSchema.parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
     const newPassword = canonicalPassword(data.newPassword);

@@ -42,7 +42,7 @@ export const listUsers = createServerFn({ method: "GET" })
 
 export const grantAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ user_id: z.string().uuid() }).parse(i))
+  .validator((i) => z.object({ user_id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     assertAdmin(context);
     const sql = getDb();
@@ -55,7 +55,7 @@ export const grantAdmin = createServerFn({ method: "POST" })
 
 export const revokeAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ user_id: z.string().uuid() }).parse(i))
+  .validator((i) => z.object({ user_id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     assertAdmin(context);
     if (data.user_id === context.user.id) throw new Error("CANNOT_REVOKE_SELF");
@@ -66,7 +66,7 @@ export const revokeAdmin = createServerFn({ method: "POST" })
 
 export const assignCompanyOwner = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({
+  .validator((i) => z.object({
     company_id: z.string().min(1).max(120),
     user_id: z.string().uuid().nullable(),
   }).parse(i))

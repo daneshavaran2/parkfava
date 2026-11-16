@@ -108,7 +108,7 @@ function normalizeLatLng(patch: Record<string, unknown>) {
 
 export const saveAdminCompany = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((input) => companyPatchSchema.parse(input))
+  .validator((input) => companyPatchSchema.parse(input))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const patch: Record<string, unknown> = { ...(data as Record<string, unknown>) };
@@ -137,7 +137,7 @@ export const listAdminCompanies = createServerFn({ method: "GET" })
 
 export const saveOwnedCompany = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         company_id: z.string().trim().min(1).max(120),
@@ -205,7 +205,7 @@ export const saveOwnedCompany = createServerFn({ method: "POST" })
 
 export const submitCompanyForReview = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ company_id: z.string().trim().min(1).max(120) }).parse(i))
+  .validator((i) => z.object({ company_id: z.string().trim().min(1).max(120) }).parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
     await assertCanEditCompany(sql, context, data.company_id);
@@ -218,7 +218,7 @@ export const submitCompanyForReview = createServerFn({ method: "POST" })
 
 export const addExhibitionImage = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) =>
+  .validator((i) =>
     z
       .object({
         company_id: z.string().trim().min(1).max(120),
@@ -256,7 +256,7 @@ export const addExhibitionImage = createServerFn({ method: "POST" })
 
 export const deleteExhibitionImage = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
+  .validator((i) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
     const [img] = await sql<
@@ -300,7 +300,7 @@ const productWriteSchema = z.object({
 
 export const upsertExhibitionProduct = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => productWriteSchema.parse(i))
+  .validator((i) => productWriteSchema.parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
     const { id, change_request_id, company_id, ...payload } = data;
@@ -382,7 +382,7 @@ export const upsertExhibitionProduct = createServerFn({ method: "POST" })
 
 export const deleteExhibitionProduct = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
+  .validator((i) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
     const [prod] = await sql<
@@ -408,7 +408,7 @@ export const deleteExhibitionProduct = createServerFn({ method: "POST" })
 
 export const deleteExhibitionCompanyAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ company_id: z.string().trim().min(1).max(120) }).parse(i))
+  .validator((i) => z.object({ company_id: z.string().trim().min(1).max(120) }).parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -423,7 +423,7 @@ export const deleteExhibitionCompanyAdmin = createServerFn({ method: "POST" })
 
 export const reorderExhibitionCompaniesAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ ids: z.array(z.string().trim().min(1).max(120)) }).parse(i))
+  .validator((i) => z.object({ ids: z.array(z.string().trim().min(1).max(120)) }).parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -437,7 +437,7 @@ export const reorderExhibitionCompaniesAdmin = createServerFn({ method: "POST" }
 
 export const approveCompanyAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ company_id: z.string().trim().min(1).max(120) }).parse(i))
+  .validator((i) => z.object({ company_id: z.string().trim().min(1).max(120) }).parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -452,7 +452,7 @@ export const approveCompanyAdmin = createServerFn({ method: "POST" })
 
 export const rejectCompanyAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) =>
+  .validator((i) =>
     z
       .object({ company_id: z.string().trim().min(1).max(120), note: z.string().trim().max(2000) })
       .parse(i),
@@ -482,7 +482,7 @@ export const rejectCompanyAdmin = createServerFn({ method: "POST" })
 
 export const approveChangeRequestAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
+  .validator((i) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -560,7 +560,7 @@ export const approveChangeRequestAdmin = createServerFn({ method: "POST" })
 
 export const rejectChangeRequestAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ id: z.string().uuid(), note: z.string().trim().max(2000) }).parse(i))
+  .validator((i) => z.object({ id: z.string().uuid(), note: z.string().trim().max(2000) }).parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -575,7 +575,7 @@ export const rejectChangeRequestAdmin = createServerFn({ method: "POST" })
 
 export const updateExhibitionImage = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) =>
+  .validator((i) =>
     z.object({ id: z.string().uuid(), caption: nullableText, caption_en: nullableText }).parse(i),
   )
   .handler(async ({ data, context }) => {
@@ -593,7 +593,7 @@ export const updateExhibitionImage = createServerFn({ method: "POST" })
 
 export const reorderExhibitionImages = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ ids: z.array(z.string().uuid()).min(1) }).parse(i))
+  .validator((i) => z.object({ ids: z.array(z.string().uuid()).min(1) }).parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
     const rows = await sql<{ id: string; company_id: string }[]>`
@@ -611,7 +611,7 @@ export const reorderExhibitionImages = createServerFn({ method: "POST" })
 
 export const reorderExhibitionProducts = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ ids: z.array(z.string().uuid()).min(1) }).parse(i))
+  .validator((i) => z.object({ ids: z.array(z.string().uuid()).min(1) }).parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
     const rows = await sql<{ id: string; company_id: string }[]>`
@@ -653,7 +653,7 @@ export const getExhibitionCompanies = createServerFn({ method: "GET" }).handler(
 });
 
 export const getPublicExhibitionProducts = createServerFn({ method: "GET" })
-  .inputValidator((i) => z.object({ companyIds: z.array(z.string()) }).parse(i))
+  .validator((i) => z.object({ companyIds: z.array(z.string()) }).parse(i))
   .handler(async ({ data }) => {
     if (!data.companyIds.length || !hasDb()) return [] as ExhibitionProduct[];
     const sql = getDb();
@@ -670,7 +670,7 @@ export const getPublicExhibitionProducts = createServerFn({ method: "GET" })
   });
 
 export const getExhibitionCompanyDetail = createServerFn({ method: "GET" })
-  .inputValidator((i) => z.object({ id: z.string().trim().min(1).max(120) }).parse(i))
+  .validator((i) => z.object({ id: z.string().trim().min(1).max(120) }).parse(i))
   .handler(async ({ data }) => {
     if (!hasDb()) return { company: null, images: [] as ExhibitionImage[], products: [] as ExhibitionProduct[] };
     const sql = getDb();
@@ -730,7 +730,7 @@ export const getMyCompany = createServerFn({ method: "GET" })
 // approve/reject, not cancel.
 export const cancelOwnPendingChange = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
+  .validator((i) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
     const [cr] = await sql<{ created_by: string; status: string }[]>`
@@ -750,7 +750,7 @@ export const cancelOwnPendingChange = createServerFn({ method: "POST" })
 // lookup or an extra query it doesn't need.
 export const getCompanyChangeRequests = createServerFn({ method: "GET" })
   .middleware([requireAuth])
-  .inputValidator((i) => z.object({ company_id: z.string().trim().min(1).max(120) }).parse(i))
+  .validator((i) => z.object({ company_id: z.string().trim().min(1).max(120) }).parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
     if (!isAdmin(context)) {
@@ -770,7 +770,7 @@ export const getCompanyChangeRequests = createServerFn({ method: "GET" })
 
 export const uploadExhibitionAssetFn = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((raw) => {
+  .validator((raw) => {
     if (!(raw instanceof FormData)) throw new Error("INVALID_UPLOAD");
     const file = raw.get("file");
     const company_id = raw.get("company_id");

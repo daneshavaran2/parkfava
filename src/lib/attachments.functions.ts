@@ -21,7 +21,7 @@ const kindSchema = z.enum([
 
 /** Public-facing: only rows marked active — mirrors the old "attachments public read" RLS policy. */
 export const getAttachments = createServerFn({ method: "GET" })
-  .inputValidator((i) =>
+  .validator((i) =>
     z.object({ ownerType: ownerTypeSchema, ownerId: z.string().min(1) }).parse(i),
   )
   .handler(async ({ data }) => {
@@ -37,7 +37,7 @@ export const getAttachments = createServerFn({ method: "GET" })
 /** Admin-facing: every row for one owner, active or not. */
 export const getAttachmentsAdmin = createServerFn({ method: "GET" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) =>
+  .validator((i) =>
     z.object({ ownerType: ownerTypeSchema, ownerId: z.string().min(1) }).parse(i),
   )
   .handler(async ({ data, context }) => {
@@ -52,7 +52,7 @@ export const getAttachmentsAdmin = createServerFn({ method: "GET" })
 
 export const getAllAttachmentsAdmin = createServerFn({ method: "GET" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) =>
+  .validator((i) =>
     z
       .object({
         ownerType: ownerTypeSchema.optional(),
@@ -77,7 +77,7 @@ export const getAllAttachmentsAdmin = createServerFn({ method: "GET" })
 
 export const updateAttachmentAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) =>
+  .validator((i) =>
     z
       .object({
         id: z.string().uuid(),
@@ -101,7 +101,7 @@ export const updateAttachmentAdmin = createServerFn({ method: "POST" })
 
 export const deleteAttachmentAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
+  .validator((i) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -118,7 +118,7 @@ export const deleteAttachmentAdmin = createServerFn({ method: "POST" })
 
 export const reorderAttachmentsAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ ids: z.array(z.string().uuid()) }).parse(i))
+  .validator((i) => z.object({ ids: z.array(z.string().uuid()) }).parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -132,7 +132,7 @@ export const reorderAttachmentsAdmin = createServerFn({ method: "POST" })
 
 export const uploadAttachmentFn = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((raw) => {
+  .validator((raw) => {
     if (!(raw instanceof FormData)) throw new Error("INVALID_UPLOAD");
     const file = raw.get("file");
     const ownerType = raw.get("ownerType");

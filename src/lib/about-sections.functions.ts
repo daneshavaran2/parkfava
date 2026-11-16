@@ -33,7 +33,7 @@ export const getAboutSections = createServerFn({ method: "GET" }).handler(async 
 
 export const upsertAboutSectionAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => aboutSectionSchema.parse(i))
+  .validator((i) => aboutSectionSchema.parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -49,7 +49,7 @@ export const upsertAboutSectionAdmin = createServerFn({ method: "POST" })
 
 export const deleteAboutSectionAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
+  .validator((i) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -59,7 +59,7 @@ export const deleteAboutSectionAdmin = createServerFn({ method: "POST" })
 
 export const uploadAboutAssetFn = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((raw) => {
+  .validator((raw) => {
     if (!(raw instanceof FormData)) throw new Error("INVALID_UPLOAD");
     const file = raw.get("file");
     if (!(file instanceof File)) throw new Error("INVALID_UPLOAD");

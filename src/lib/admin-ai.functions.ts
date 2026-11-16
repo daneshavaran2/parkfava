@@ -10,7 +10,7 @@ export const getAdminAiSettings = createServerFn({ method: "GET" })
 
 export const saveAdminAiSettings = createServerFn({ method: "POST" })
   .middleware([requireAdmin])
-  .inputValidator((input) => z.object({
+  .validator((input) => z.object({
     apiKey: z.string().trim().max(500).optional(),
     model: z.string().trim().min(1).max(200),
     enabled: z.boolean(),

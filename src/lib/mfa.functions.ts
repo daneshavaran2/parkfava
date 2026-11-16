@@ -47,7 +47,7 @@ export const getMfaStatus = createServerFn({ method: "GET" })
 
 export const setPhone = createServerFn({ method: "POST" })
   .middleware([requireAuth])
-  .inputValidator((i) => z.object({ phone: z.string().min(1) }).parse(i))
+  .validator((i) => z.object({ phone: z.string().min(1) }).parse(i))
   .handler(async ({ data, context }) => {
     const phone = normalizePhone(data.phone);
     if (!phone) throw new Error("INVALID_PHONE");
@@ -105,7 +105,7 @@ export const requestOtp = createServerFn({ method: "POST" })
 
 export const verifyOtp = createServerFn({ method: "POST" })
   .middleware([requireAuth])
-  .inputValidator((i) => z.object({ code: z.string().min(4).max(8) }).parse(i))
+  .validator((i) => z.object({ code: z.string().min(4).max(8) }).parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
     const row = await loadMfaRow(sql, context.user.id);

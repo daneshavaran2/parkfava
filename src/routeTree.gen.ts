@@ -9,72 +9,37 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as RegisterCompanyRouteImport } from './routes/register-company'
-import { Route as PerfRouteImport } from './routes/perf'
-import { Route as ParksRouteImport } from './routes/parks'
-import { Route as MyCompanyRouteImport } from './routes/my-company'
-import { Route as KioskRouteImport } from './routes/kiosk'
-import { Route as ExhibitionRouteImport } from './routes/exhibition'
-import { Route as CategoriesRouteImport } from './routes/categories'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DevLogoRouteImport } from './routes/dev.logo'
-import { Route as AssetsSplatRouteImport } from './routes/assets.$'
-import { Route as AdminUsersRouteImport } from './routes/admin.users'
-import { Route as AdminParksRouteImport } from './routes/admin.parks'
-import { Route as AdminOfflineSyncRouteImport } from './routes/admin.offline-sync'
-import { Route as AdminKahkeshanRouteImport } from './routes/admin.kahkeshan'
-import { Route as AdminExhibitionRouteImport } from './routes/admin.exhibition'
-import { Route as AdminAttachmentsRouteImport } from './routes/admin.attachments'
-import { Route as AdminAiRouteImport } from './routes/admin.ai'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CategoriesRouteImport } from './routes/categories'
+import { Route as ExhibitionRouteImport } from './routes/exhibition'
+import { Route as KioskRouteImport } from './routes/kiosk'
+import { Route as MyCompanyRouteImport } from './routes/my-company'
+import { Route as ParksRouteImport } from './routes/parks'
+import { Route as PerfRouteImport } from './routes/perf'
+import { Route as RegisterCompanyRouteImport } from './routes/register-company'
 import { Route as AdminAboutRouteImport } from './routes/admin.about'
-import { Route as CompanyIdIndexRouteImport } from './routes/company.$id.index'
-import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
-import { Route as ApiPublicExportRouteImport } from './routes/api/public/export'
-import { Route as ApiPublicDebugEchoRouteImport } from './routes/api/public/debug-echo'
-import { Route as ApiPublicCspReportRouteImport } from './routes/api/public/csp-report'
+import { Route as AdminAiRouteImport } from './routes/admin.ai'
+import { Route as AdminAttachmentsRouteImport } from './routes/admin.attachments'
+import { Route as AdminExhibitionRouteImport } from './routes/admin.exhibition'
+import { Route as AdminKahkeshanRouteImport } from './routes/admin.kahkeshan'
+import { Route as AdminOfflineSyncRouteImport } from './routes/admin.offline-sync'
+import { Route as AdminParksRouteImport } from './routes/admin.parks'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AssetsSplatRouteImport } from './routes/assets.$'
+import { Route as DevLogoRouteImport } from './routes/dev.logo'
 import { Route as ApiPublicAssetAuditRouteImport } from './routes/api/public/asset-audit'
+import { Route as ApiPublicCspReportRouteImport } from './routes/api/public/csp-report'
+import { Route as ApiPublicDebugEchoRouteImport } from './routes/api/public/debug-echo'
+import { Route as ApiPublicExportRouteImport } from './routes/api/public/export'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as CompanyIdIndexRouteImport } from './routes/company.$id.index'
 import { Route as CompanyIdProductPidRouteImport } from './routes/company.$id.product.$pid'
 
-const RegisterCompanyRoute = RegisterCompanyRouteImport.update({
-  id: '/register-company',
-  path: '/register-company',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PerfRoute = PerfRouteImport.update({
-  id: '/perf',
-  path: '/perf',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ParksRoute = ParksRouteImport.update({
-  id: '/parks',
-  path: '/parks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MyCompanyRoute = MyCompanyRouteImport.update({
-  id: '/my-company',
-  path: '/my-company',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const KioskRoute = KioskRouteImport.update({
-  id: '/kiosk',
-  path: '/kiosk',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExhibitionRoute = ExhibitionRouteImport.update({
-  id: '/exhibition',
-  path: '/exhibition',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CategoriesRoute = CategoriesRouteImport.update({
-  id: '/categories',
-  path: '/categories',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -82,54 +47,44 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DevLogoRoute = DevLogoRouteImport.update({
-  id: '/dev/logo',
-  path: '/dev/logo',
+const CategoriesRoute = CategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AssetsSplatRoute = AssetsSplatRouteImport.update({
-  id: '/assets/$',
-  path: '/assets/$',
+const ExhibitionRoute = ExhibitionRouteImport.update({
+  id: '/exhibition',
+  path: '/exhibition',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/admin/users',
-  path: '/admin/users',
+const KioskRoute = KioskRouteImport.update({
+  id: '/kiosk',
+  path: '/kiosk',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminParksRoute = AdminParksRouteImport.update({
-  id: '/admin/parks',
-  path: '/admin/parks',
+const MyCompanyRoute = MyCompanyRouteImport.update({
+  id: '/my-company',
+  path: '/my-company',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminOfflineSyncRoute = AdminOfflineSyncRouteImport.update({
-  id: '/admin/offline-sync',
-  path: '/admin/offline-sync',
+const ParksRoute = ParksRouteImport.update({
+  id: '/parks',
+  path: '/parks',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminKahkeshanRoute = AdminKahkeshanRouteImport.update({
-  id: '/admin/kahkeshan',
-  path: '/admin/kahkeshan',
+const PerfRoute = PerfRouteImport.update({
+  id: '/perf',
+  path: '/perf',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminExhibitionRoute = AdminExhibitionRouteImport.update({
-  id: '/admin/exhibition',
-  path: '/admin/exhibition',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminAttachmentsRoute = AdminAttachmentsRouteImport.update({
-  id: '/admin/attachments',
-  path: '/admin/attachments',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminAiRoute = AdminAiRouteImport.update({
-  id: '/admin/ai',
-  path: '/admin/ai',
+const RegisterCompanyRoute = RegisterCompanyRouteImport.update({
+  id: '/register-company',
+  path: '/register-company',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminAboutRoute = AdminAboutRouteImport.update({
@@ -137,24 +92,54 @@ const AdminAboutRoute = AdminAboutRouteImport.update({
   path: '/admin/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CompanyIdIndexRoute = CompanyIdIndexRouteImport.update({
-  id: '/company/$id/',
-  path: '/company/$id/',
+const AdminAiRoute = AdminAiRouteImport.update({
+  id: '/admin/ai',
+  path: '/admin/ai',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
-  id: '/api/public/health',
-  path: '/api/public/health',
+const AdminAttachmentsRoute = AdminAttachmentsRouteImport.update({
+  id: '/admin/attachments',
+  path: '/admin/attachments',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicExportRoute = ApiPublicExportRouteImport.update({
-  id: '/api/public/export',
-  path: '/api/public/export',
+const AdminExhibitionRoute = AdminExhibitionRouteImport.update({
+  id: '/admin/exhibition',
+  path: '/admin/exhibition',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicDebugEchoRoute = ApiPublicDebugEchoRouteImport.update({
-  id: '/api/public/debug-echo',
-  path: '/api/public/debug-echo',
+const AdminKahkeshanRoute = AdminKahkeshanRouteImport.update({
+  id: '/admin/kahkeshan',
+  path: '/admin/kahkeshan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminOfflineSyncRoute = AdminOfflineSyncRouteImport.update({
+  id: '/admin/offline-sync',
+  path: '/admin/offline-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminParksRoute = AdminParksRouteImport.update({
+  id: '/admin/parks',
+  path: '/admin/parks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssetsSplatRoute = AssetsSplatRouteImport.update({
+  id: '/assets/$',
+  path: '/assets/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevLogoRoute = DevLogoRouteImport.update({
+  id: '/dev/logo',
+  path: '/dev/logo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAssetAuditRoute = ApiPublicAssetAuditRouteImport.update({
+  id: '/api/public/asset-audit',
+  path: '/api/public/asset-audit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicCspReportRoute = ApiPublicCspReportRouteImport.update({
@@ -162,9 +147,24 @@ const ApiPublicCspReportRoute = ApiPublicCspReportRouteImport.update({
   path: '/api/public/csp-report',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicAssetAuditRoute = ApiPublicAssetAuditRouteImport.update({
-  id: '/api/public/asset-audit',
-  path: '/api/public/asset-audit',
+const ApiPublicDebugEchoRoute = ApiPublicDebugEchoRouteImport.update({
+  id: '/api/public/debug-echo',
+  path: '/api/public/debug-echo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicExportRoute = ApiPublicExportRouteImport.update({
+  id: '/api/public/export',
+  path: '/api/public/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompanyIdIndexRoute = CompanyIdIndexRouteImport.update({
+  id: '/company/$id/',
+  path: '/company/$id/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompanyIdProductPidRoute = CompanyIdProductPidRouteImport.update({
@@ -383,60 +383,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/register-company': {
-      id: '/register-company'
-      path: '/register-company'
-      fullPath: '/register-company'
-      preLoaderRoute: typeof RegisterCompanyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/perf': {
-      id: '/perf'
-      path: '/perf'
-      fullPath: '/perf'
-      preLoaderRoute: typeof PerfRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/parks': {
-      id: '/parks'
-      path: '/parks'
-      fullPath: '/parks'
-      preLoaderRoute: typeof ParksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/my-company': {
-      id: '/my-company'
-      path: '/my-company'
-      fullPath: '/my-company'
-      preLoaderRoute: typeof MyCompanyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/kiosk': {
-      id: '/kiosk'
-      path: '/kiosk'
-      fullPath: '/kiosk'
-      preLoaderRoute: typeof KioskRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/exhibition': {
-      id: '/exhibition'
-      path: '/exhibition'
-      fullPath: '/exhibition'
-      preLoaderRoute: typeof ExhibitionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/categories': {
-      id: '/categories'
-      path: '/categories'
-      fullPath: '/categories'
-      preLoaderRoute: typeof CategoriesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -446,74 +397,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dev/logo': {
-      id: '/dev/logo'
-      path: '/dev/logo'
-      fullPath: '/dev/logo'
-      preLoaderRoute: typeof DevLogoRouteImport
+    '/categories': {
+      id: '/categories'
+      path: '/categories'
+      fullPath: '/categories'
+      preLoaderRoute: typeof CategoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/assets/$': {
-      id: '/assets/$'
-      path: '/assets/$'
-      fullPath: '/assets/$'
-      preLoaderRoute: typeof AssetsSplatRouteImport
+    '/exhibition': {
+      id: '/exhibition'
+      path: '/exhibition'
+      fullPath: '/exhibition'
+      preLoaderRoute: typeof ExhibitionRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/users': {
-      id: '/admin/users'
-      path: '/admin/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
+    '/kiosk': {
+      id: '/kiosk'
+      path: '/kiosk'
+      fullPath: '/kiosk'
+      preLoaderRoute: typeof KioskRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/parks': {
-      id: '/admin/parks'
-      path: '/admin/parks'
-      fullPath: '/admin/parks'
-      preLoaderRoute: typeof AdminParksRouteImport
+    '/my-company': {
+      id: '/my-company'
+      path: '/my-company'
+      fullPath: '/my-company'
+      preLoaderRoute: typeof MyCompanyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/offline-sync': {
-      id: '/admin/offline-sync'
-      path: '/admin/offline-sync'
-      fullPath: '/admin/offline-sync'
-      preLoaderRoute: typeof AdminOfflineSyncRouteImport
+    '/parks': {
+      id: '/parks'
+      path: '/parks'
+      fullPath: '/parks'
+      preLoaderRoute: typeof ParksRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/kahkeshan': {
-      id: '/admin/kahkeshan'
-      path: '/admin/kahkeshan'
-      fullPath: '/admin/kahkeshan'
-      preLoaderRoute: typeof AdminKahkeshanRouteImport
+    '/perf': {
+      id: '/perf'
+      path: '/perf'
+      fullPath: '/perf'
+      preLoaderRoute: typeof PerfRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/exhibition': {
-      id: '/admin/exhibition'
-      path: '/admin/exhibition'
-      fullPath: '/admin/exhibition'
-      preLoaderRoute: typeof AdminExhibitionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/attachments': {
-      id: '/admin/attachments'
-      path: '/admin/attachments'
-      fullPath: '/admin/attachments'
-      preLoaderRoute: typeof AdminAttachmentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/ai': {
-      id: '/admin/ai'
-      path: '/admin/ai'
-      fullPath: '/admin/ai'
-      preLoaderRoute: typeof AdminAiRouteImport
+    '/register-company': {
+      id: '/register-company'
+      path: '/register-company'
+      fullPath: '/register-company'
+      preLoaderRoute: typeof RegisterCompanyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/about': {
@@ -523,32 +460,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/company/$id/': {
-      id: '/company/$id/'
-      path: '/company/$id'
-      fullPath: '/company/$id/'
-      preLoaderRoute: typeof CompanyIdIndexRouteImport
+    '/admin/ai': {
+      id: '/admin/ai'
+      path: '/admin/ai'
+      fullPath: '/admin/ai'
+      preLoaderRoute: typeof AdminAiRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/health': {
-      id: '/api/public/health'
-      path: '/api/public/health'
-      fullPath: '/api/public/health'
-      preLoaderRoute: typeof ApiPublicHealthRouteImport
+    '/admin/attachments': {
+      id: '/admin/attachments'
+      path: '/admin/attachments'
+      fullPath: '/admin/attachments'
+      preLoaderRoute: typeof AdminAttachmentsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/export': {
-      id: '/api/public/export'
-      path: '/api/public/export'
-      fullPath: '/api/public/export'
-      preLoaderRoute: typeof ApiPublicExportRouteImport
+    '/admin/exhibition': {
+      id: '/admin/exhibition'
+      path: '/admin/exhibition'
+      fullPath: '/admin/exhibition'
+      preLoaderRoute: typeof AdminExhibitionRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/debug-echo': {
-      id: '/api/public/debug-echo'
-      path: '/api/public/debug-echo'
-      fullPath: '/api/public/debug-echo'
-      preLoaderRoute: typeof ApiPublicDebugEchoRouteImport
+    '/admin/kahkeshan': {
+      id: '/admin/kahkeshan'
+      path: '/admin/kahkeshan'
+      fullPath: '/admin/kahkeshan'
+      preLoaderRoute: typeof AdminKahkeshanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/offline-sync': {
+      id: '/admin/offline-sync'
+      path: '/admin/offline-sync'
+      fullPath: '/admin/offline-sync'
+      preLoaderRoute: typeof AdminOfflineSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/parks': {
+      id: '/admin/parks'
+      path: '/admin/parks'
+      fullPath: '/admin/parks'
+      preLoaderRoute: typeof AdminParksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assets/$': {
+      id: '/assets/$'
+      path: '/assets/$'
+      fullPath: '/assets/$'
+      preLoaderRoute: typeof AssetsSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/logo': {
+      id: '/dev/logo'
+      path: '/dev/logo'
+      fullPath: '/dev/logo'
+      preLoaderRoute: typeof DevLogoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/asset-audit': {
+      id: '/api/public/asset-audit'
+      path: '/api/public/asset-audit'
+      fullPath: '/api/public/asset-audit'
+      preLoaderRoute: typeof ApiPublicAssetAuditRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/csp-report': {
@@ -558,11 +537,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCspReportRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/asset-audit': {
-      id: '/api/public/asset-audit'
-      path: '/api/public/asset-audit'
-      fullPath: '/api/public/asset-audit'
-      preLoaderRoute: typeof ApiPublicAssetAuditRouteImport
+    '/api/public/debug-echo': {
+      id: '/api/public/debug-echo'
+      path: '/api/public/debug-echo'
+      fullPath: '/api/public/debug-echo'
+      preLoaderRoute: typeof ApiPublicDebugEchoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/export': {
+      id: '/api/public/export'
+      path: '/api/public/export'
+      fullPath: '/api/public/export'
+      preLoaderRoute: typeof ApiPublicExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/company/$id/': {
+      id: '/company/$id/'
+      path: '/company/$id'
+      fullPath: '/company/$id/'
+      preLoaderRoute: typeof CompanyIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/company/$id/product/$pid': {

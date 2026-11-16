@@ -9,7 +9,7 @@ function assertIsAdmin(context: { user: { roles: string[] } }) {
 }
 
 export const getParkContent = createServerFn({ method: "GET" })
-  .inputValidator((i) => z.object({ parkId: z.string().trim().min(1).max(120) }).parse(i))
+  .validator((i) => z.object({ parkId: z.string().trim().min(1).max(120) }).parse(i))
   .handler(async ({ data }) => {
     // Preview/local runs without DATABASE_URL fall back to bundled park data
     // instead of crashing the route with a database error.
@@ -29,7 +29,7 @@ export const getParkContent = createServerFn({ method: "GET" })
 
 export const upsertParkContentAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) =>
+  .validator((i) =>
     z
       .object({
         park_id: z.string().trim().min(1).max(120),
@@ -54,7 +54,7 @@ export const upsertParkContentAdmin = createServerFn({ method: "POST" })
 
 export const addParkImageAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) =>
+  .validator((i) =>
     z
       .object({
         park_id: z.string().trim().min(1).max(120),
@@ -75,7 +75,7 @@ export const addParkImageAdmin = createServerFn({ method: "POST" })
 
 export const deleteParkImageAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
+  .validator((i) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -85,7 +85,7 @@ export const deleteParkImageAdmin = createServerFn({ method: "POST" })
 
 export const upsertParkNewsAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) =>
+  .validator((i) =>
     z
       .object({
         id: z.string().uuid().optional(),
@@ -117,7 +117,7 @@ export const upsertParkNewsAdmin = createServerFn({ method: "POST" })
 
 export const deleteParkNewsAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
+  .validator((i) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -127,7 +127,7 @@ export const deleteParkNewsAdmin = createServerFn({ method: "POST" })
 
 export const uploadParkAssetFn = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .inputValidator((raw) => {
+  .validator((raw) => {
     if (!(raw instanceof FormData)) throw new Error("INVALID_UPLOAD");
     const file = raw.get("file");
     const park_id = raw.get("park_id");

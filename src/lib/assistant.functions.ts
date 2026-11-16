@@ -97,7 +97,7 @@ async function suggestedCompanies(): Promise<ExhibitionCompany[]> {
 }
 
 export const askAssistant = createServerFn({ method: "POST" })
-  .inputValidator((i) => askSchema.parse(i))
+  .validator((i) => askSchema.parse(i))
   .handler(async ({ data }) => {
     // Public, unauthenticated, and it spends money on every call — so the
     // throttle comes first, before any database or OpenRouter work. Two
