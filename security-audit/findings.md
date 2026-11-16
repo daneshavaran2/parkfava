@@ -1,8 +1,10 @@
 # Findings Register
 
-32 findings. Status vocabulary: **Confirmed** (reproduced or directly evidenced),
+32 findings. Every finding that claims an exploitable bug was verified with Trail of Bits
+`fp-check` ([fp-check-verification.md](fp-check-verification.md)): 8 TRUE POSITIVES,
+8 FALSE POSITIVES (kept as hardening, severity Informational). Status vocabulary: **Confirmed** (reproduced or directly evidenced),
 **Confirmed (advisory)** (vulnerable version present and reachable code path exists; the
-exploit itself was not reproduced), **Potential**, **Requires environment access**.
+exploit itself was not reproduced), **Potential**, **Hardening (fp-check: false positive)** (not exploitable; fix kept), **Requires environment access**.
 "Conditional" severity applies only under a stated configuration.
 
 CVSS v4.0 vectors are given where the information supports them; numeric scores were
@@ -16,7 +18,7 @@ checkout credentials, `72e224e` this report.
 | ID | Title | Severity | Status | Patch |
 |---|---|---|---|---|
 | SEC-001 | Reflected XSS in TanStack Start server-function responses | Critical | Confirmed (advisory) | Applied |
-| SEC-002 | seroval deserialization invokes attacker-chosen callables / DoS | Critical | Confirmed (advisory) | Applied |
+| SEC-002 | seroval deserialization invokes attacker-chosen callables / DoS | High | Confirmed (advisory) | Applied |
 | SEC-004 | MFA verification shared by every session of an account | High (conditional) | Confirmed | Applied |
 | SEC-005 | Verified MFA phone replaceable without passing MFA | High (conditional) | Confirmed | Applied |
 | SEC-003 | Per-IP rate limits keyed on attacker-controlled X-Forwarded-For | Medium | Confirmed | Applied |
@@ -25,22 +27,22 @@ checkout credentials, `72e224e` this report.
 | SEC-009 | CI/CD: broad token, mutable action tags, unpinned deploy CLI, persisted credentials | Medium | Confirmed | Applied |
 | SEC-010 | Stale `package-lock.json` pins 37 known-vulnerable packages | Medium | Confirmed | Not started |
 | SEC-026 | MFA disabled by default; admin accounts are password-only | Medium | Confirmed | Proposed (config + code) |
-| SEC-008 | Script-capable URL schemes stored in owner-editable URL fields | Low | Confirmed | Applied |
 | SEC-011 | Container runs as root | Low | Confirmed | Proposed |
 | SEC-012 | Internal review fields in public company detail and export | Low | Confirmed | Applied |
-| SEC-013 | Username enumeration through login response time | Low | Potential | Applied |
-| SEC-014 | Debug endpoint enabled whenever NODE_ENV is unset | Low | Confirmed | Applied |
-| SEC-015 | AES-GCM authentication tag length not pinned | Low | Confirmed | Applied |
 | SEC-016 | Missing nosniff, Referrer-Policy and HSTS headers | Low | Confirmed | Applied |
 | SEC-017 | Settings encryption key falls back to DATABASE_URL | Low | Confirmed | Proposed (config) |
-| SEC-018 | OTP code and full phone number written to logs | Low | Confirmed | Applied |
-| SEC-019 | No timeouts on outbound HTTP calls | Low | Confirmed | Applied |
-| SEC-020 | Export snapshot keys spliced into SQL as identifiers | Low | Confirmed | Applied |
-| SEC-021 | Indirect prompt injection via company content in assistant prompt | Low | Potential | Proposed |
 | SEC-022 | `.env` with public-by-design keys in git history | Low | Confirmed | Proposed |
 | SEC-023 | Brute-forceable initial-password hashes committed to the repo | Low | Confirmed | Proposed |
 | SEC-024 | No security audit trail for auth events and privileged actions | Low | Confirmed | Proposed |
 | SEC-025 | Known vulnerabilities in desktop and build toolchain dependencies | Low | Confirmed | Partially applied |
+| SEC-008 | Script-capable URL schemes stored in owner-editable URL fields | Informational | Hardening (fp-check: false positive) | Applied |
+| SEC-013 | Username enumeration through login response time | Informational | Hardening (fp-check: false positive) | Applied |
+| SEC-014 | Debug endpoint enabled whenever NODE_ENV is unset | Informational | Hardening (fp-check: false positive) | Applied |
+| SEC-015 | AES-GCM authentication tag length not pinned | Informational | Hardening (fp-check: false positive) | Applied |
+| SEC-018 | OTP code and full phone number written to logs | Informational | Hardening (fp-check: false positive) | Applied |
+| SEC-019 | No timeouts on outbound HTTP calls | Informational | Hardening (fp-check: false positive) | Applied |
+| SEC-020 | Export snapshot keys spliced into SQL as identifiers | Informational | Hardening (fp-check: false positive) | Applied |
+| SEC-021 | Indirect prompt injection via company content in assistant prompt | Informational | Hardening (fp-check: false positive) | Proposed |
 | SEC-027 | Session tokens stored unhashed | Informational | Confirmed | Proposed |
 | SEC-028 | CSP allows inline scripts | Informational | Confirmed | Not started |
 | SEC-029 | First-user-becomes-admin trigger remains active | Informational | Confirmed | Proposed |
@@ -51,6 +53,8 @@ checkout credentials, `72e224e` this report.
 ---
 
 ### SEC-001 — Reflected XSS in TanStack Start server-function responses
+
+- **fp-check verdict:** TRUE POSITIVE — reflected XSS reachable through unauthenticated GET server functions.
 
 - **Status:** Confirmed (advisory) · **Severity:** Critical (advisory rating)
 - **CVSS v4.0:** not computed; advisory GHSA-qx66-fv34-fjm8 rates it Critical.
@@ -68,7 +72,9 @@ checkout credentials, `72e224e` this report.
 
 ### SEC-002 — seroval deserialization invokes attacker-chosen callables / DoS
 
-- **Status:** Confirmed (advisory) · **Severity:** Critical
+- **fp-check verdict:** TRUE POSITIVE for unauthenticated DoS; the advisory's critical callable-invocation impact was not demonstrated (no gadget found), so severity is **High**, not Critical.
+
+- **Status:** Confirmed (advisory) · **Severity:** High (advisory: Critical; see fp-check verdict)
 - **CWE:** CWE-502, CWE-400 · **OWASP:** A08:2021
 - **Location:** transitive `seroval@1.5.4` (via `@tanstack/router-core`)
 - **Evidence:** GHSA-p6vx-979v-rg4c (Critical), GHSA-7rv5-mrxv-xcr9, GHSA-97r2-qh9m-474h, GHSA-wp97-x4hv-qvhp, GHSA-jp82-f5mq-hwhp; seroval is the serializer for server-function payloads.
@@ -78,6 +84,8 @@ checkout credentials, `72e224e` this report.
 - **Verification:** `bun audit` clean for seroval. **Residual:** none known.
 
 ### SEC-003 — Per-IP rate limits keyed on attacker-controlled X-Forwarded-For
+
+- **fp-check verdict:** TRUE POSITIVE — reproduced against the pre-fix code.
 
 - **Status:** Confirmed · **Severity:** Medium
 - **CVSS v4.0:** `AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:L/SI:N/SA:N` — assumes the per-account login limit still holds and the assistant's global cap bounds cost.
@@ -95,6 +103,8 @@ checkout credentials, `72e224e` this report.
 
 ### SEC-004 — MFA verification shared by every session of an account
 
+- **fp-check verdict:** TRUE POSITIVE when `MFA_ENFORCED=true` — reproduced.
+
 - **Status:** Confirmed · **Severity:** High (conditional on `MFA_ENFORCED=true`; today MFA is off, see SEC-026)
 - **CVSS v4.0 (when MFA enforced):** `AV:N/AC:L/AT:P/PR:L/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N` — PR:L = attacker holds the password; AT:P = the real user verified within the last 24h.
 - **CWE:** CWE-287, CWE-613 · **OWASP:** A07:2021
@@ -109,6 +119,8 @@ checkout credentials, `72e224e` this report.
 
 ### SEC-005 — Verified MFA phone replaceable without passing MFA
 
+- **fp-check verdict:** TRUE POSITIVE when `MFA_ENFORCED=true` — reproduced.
+
 - **Status:** Confirmed · **Severity:** High (conditional on `MFA_ENFORCED=true`)
 - **CVSS v4.0 (when MFA enforced):** `AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N` — PR:L = password known.
 - **CWE:** CWE-620 (Unverified Password Change, analogous for the second factor), CWE-308
@@ -121,12 +133,16 @@ checkout credentials, `72e224e` this report.
 
 ### SEC-006 — zod memory exhaustion in server-function input validation
 
+- **fp-check verdict:** TRUE POSITIVE — reachable by any signed-in user (open sign-up) through the `reorder*` POST validators, which run before the admin/ownership check; the unauthenticated GET path is limited by URL size. Variant fix: all six array validators now have `.max()` caps.
+
 - **Status:** Confirmed (advisory) · **Severity:** Medium (advisory rates it High) · **CWE:** CWE-400
 - **Severity rationale:** availability-only impact (memory exhaustion of one worker; the cluster restarts it), no confidentiality or integrity effect, and per-IP rate limits apply to the expensive public functions. Rated one level below the advisory for this deployment.
 - **Location:** `zod@3.25.76` (direct dependency) — GHSA-mrhx-c7xc-m3w5 (fixed only in 4.6.6).
-- **Patch:** Applied (`763c1c6`, zod 4.6.7). **Verification:** `bun audit` clean; all suites pass; one pre-existing type bug surfaced and fixed (`founded_at` arrives as `Date`).
+- **Patch:** Applied (`763c1c6`, zod 4.6.7) plus `.max()` caps on all six array validators (review follow-up commit). **Verification:** `bun audit` clean; all suites pass; one pre-existing type bug surfaced and fixed (`founded_at` arrives as `Date`).
 
 ### SEC-007 — Password change without current password; sessions not revoked
+
+- **fp-check verdict:** TRUE POSITIVE — stolen session → permanent account takeover (baseline not executed; pseudocode + post-fix test).
 
 - **Status:** Confirmed · **Severity:** Medium
 - **CVSS v4.0:** `AV:N/AC:L/AT:P/PR:L/UI:N/VC:L/VI:H/VA:N/SC:N/SI:N/SA:N` — AT:P = attacker already holds a session (stolen cookie).
@@ -137,7 +153,9 @@ checkout credentials, `72e224e` this report.
 
 ### SEC-008 — Script-capable URL schemes stored in owner-editable URL fields
 
-- **Status:** Confirmed (storage) · **Severity:** Low — React 19 blocks `javascript:` URLs in JSX `href`/`src`, so no executable sink was found.
+- **fp-check verdict:** FALSE POSITIVE — React 19 neutralises `javascript:` URLs in every sink found (gates 3, 4, 6 fail). Fix kept as hardening.
+
+- **Status:** Hardening (fp-check: false positive) · **Severity:** Informational — React 19 blocks `javascript:` URLs in JSX `href`/`src`, so no executable sink was found.
 - **CWE:** CWE-79 (stored, mitigated), CWE-20
 - **Location (pre-fix):** `src/lib/exhibition-api.functions.ts:9` (`nullableUrlText` length-only) and park content URL fields.
 - **Patch:** Applied — `src/lib/safe-url.ts:17` rejects `javascript:`, `vbscript:`, `data:`, `file:` after removing whitespace/control characters; used for company, product, image and park URL fields.
@@ -169,6 +187,8 @@ checkout credentials, `72e224e` this report.
 
 ### SEC-012 — Internal review fields in public company detail and export
 
+- **fp-check verdict:** TRUE POSITIVE — real but low-value information disclosure.
+
 - **Status:** Confirmed · **Severity:** Low · **CWE:** CWE-213 · **OWASP:** API3:2023
 - **Location:** `getExhibitionCompanyDetail` returned `SELECT *` incl. `owner_user_id`, `reviewed_by`, `rejection_note`; `/api/public/export` included `rejection_note`.
 - **Patch:** Applied (`2377040`) — nulled on the public path (`src/lib/exhibition-api.functions.ts:706`, `src/routes/api/public/export.ts:65`).
@@ -176,19 +196,25 @@ checkout credentials, `72e224e` this report.
 
 ### SEC-013 — Username enumeration through login response time
 
-- **Status:** Potential (timing not measured) · **Severity:** Low · **CWE:** CWE-208
+- **fp-check verdict:** FALSE POSITIVE — not measured; negligible value since sign-up discloses emails and national IDs are public (gates 3, 4 fail). Fix kept.
+
+- **Status:** Hardening (fp-check: false positive) · **Severity:** Informational · **CWE:** CWE-208
 - **Location:** `signIn` skipped scrypt for unknown usernames.
 - **Patch:** Applied — dummy scrypt verification (`src/lib/auth.functions.ts:171`, helper `dummyHash()` at `:138`). **Verification:** code review only.
 
 ### SEC-014 — Debug endpoint enabled whenever NODE_ENV is unset
 
-- **Status:** Confirmed · **Severity:** Low · **CWE:** CWE-489
+- **fp-check verdict:** FALSE POSITIVE — deployed builds always run with `NODE_ENV=production` (the build inlines it; gate 6 fails). Fix kept.
+
+- **Status:** Hardening (fp-check: false positive) · **Severity:** Informational · **CWE:** CWE-489
 - **Location (pre-fix):** `src/routes/api/public/debug-echo.ts` — enabled if `NODE_ENV !== "production"`; drains the in-memory log buffer.
 - **Patch:** Applied — opt-in for `development`/`test` only (`:12`). **Verification:** `evidence/prod-build-checks.txt` — 404 with `NODE_ENV=production` and with it unset; CI job sets `NODE_ENV=development`.
 
 ### SEC-015 — AES-GCM authentication tag length not pinned
 
-- **Status:** Confirmed · **Severity:** Low · **CWE:** CWE-325
+- **fp-check verdict:** FALSE POSITIVE — supplying a truncated tag needs database write access (gate 2 fails). Fix kept.
+
+- **Status:** Hardening (fp-check: false positive) · **Severity:** Informational · **CWE:** CWE-325
 - **Location:** `src/lib/app-settings.server.ts:24` pre-fix (decipher now at `:26`). **Patch:** Applied — `authTagLength: 16`. **Verification:** Semgrep `gcm-no-tag-length` 1 → 0.
 
 ### SEC-016 — Missing nosniff, Referrer-Policy and HSTS headers
@@ -205,26 +231,34 @@ checkout credentials, `72e224e` this report.
 
 ### SEC-018 — OTP code and full phone number written to logs
 
-- **Status:** Confirmed · **Severity:** Low · **CWE:** CWE-532
+- **fp-check verdict:** FALSE POSITIVE — the logged code is never stored, so it is never valid (gate 4 fails). Fix kept as hygiene.
+
+- **Status:** Hardening (fp-check: false positive) · **Severity:** Informational · **CWE:** CWE-532
 - **Location (pre-fix):** `src/lib/sms/send-sms.server.ts:19`.
 - **Evidence:** dev log contained `OTP for 0912… (code: NNNNNN)`. The logged code was not usable in reproduction (send failure aborts before the hash is stored).
 - **Patch:** Applied (`97d4db0`) — no code, last 4 digits only (`:29`).
 
 ### SEC-019 — No timeouts on outbound HTTP calls
 
-- **Status:** Confirmed · **Severity:** Low · **CWE:** CWE-400
+- **fp-check verdict:** FALSE POSITIVE — not attacker-triggerable; operational robustness (gates 2, 3 fail). Fix kept for resilience.
+
+- **Status:** Hardening (fp-check: false positive) · **Severity:** Informational · **CWE:** CWE-400
 - **Location:** `src/lib/assistant-ai.server.ts` (3 calls), `src/lib/sms/send-sms.server.ts` (3), `src/lib/offline-sync.functions.ts` (1).
 - **Patch:** Applied (`97d4db0`) — `AbortSignal.timeout` 45s / 15s / 120s. **Verification:** code review + build; not fault-injected.
 
 ### SEC-020 — Export snapshot keys spliced into SQL as identifiers
 
-- **Status:** Confirmed (code) · **Severity:** Low (needs a compromised live site or a hostile `OFFLINE_SYNC_SOURCE`) · **CWE:** CWE-89
+- **fp-check verdict:** FALSE POSITIVE — the snapshot is the project's own export over HTTPS (trusted input; gate 2 fails). Fix kept.
+
+- **Status:** Hardening (fp-check: false positive) · **Severity:** Informational (needs a compromised live site or a hostile `OFFLINE_SYNC_SOURCE`) · **CWE:** CWE-89
 - **Location:** `src/lib/offline-import.server.ts` — `sql.unsafe` with `"${c}"` from `Object.keys(row)`.
 - **Patch:** Applied (`97d4db0`) — `SAFE_IDENTIFIER` allowlist (`:63`). The other `unsafe()` use (`src/lib/db/auto-migrate.server.ts:52`) runs the repository's own migration files (not attacker-controlled).
 
 ### SEC-021 — Indirect prompt injection via company content in assistant prompt
 
-- **Status:** Potential · **Severity:** Low · **CWE:** CWE-1427 · **OWASP LLM:** LLM01
+- **fp-check verdict:** FALSE POSITIVE — no tools, public data only, plain-text output: no security impact (gate 3 fails). Kept as a quality recommendation.
+
+- **Status:** Hardening (fp-check: false positive) · **Severity:** Informational · **CWE:** CWE-1427 · **OWASP LLM:** LLM01
 - **Location:** `src/lib/assistant.functions.ts:176` — owner-authored descriptions, products and links are placed in the system prompt.
 - **Mitigations present:** only approved content (admin review); no tools or function calling; replies rendered as plain text with bold/italic only (`src/components/fava/primitives.tsx:95`), so no clickable links or HTML; rate limits.
 - **Impact:** misleading or promotional answers, phishing URLs shown as text.

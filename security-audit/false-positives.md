@@ -1,6 +1,9 @@
 # Rejected Findings (False Positives and Non-Issues)
 
-Each item was checked against the code; none is in the findings register.
+Each item was checked against the code; none is in the findings register. Separately,
+eight register entries (SEC-008, 013, 014, 015, 018, 019, 020, 021) were judged **false
+positives as exploitable bugs** by fp-check and kept only as hardening — see
+[fp-check-verification.md](fp-check-verification.md).
 
 | Source | Rule / item | Location | Reason rejected |
 |---|---|---|---|

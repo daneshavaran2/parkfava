@@ -10,7 +10,7 @@ local instance. Production was not tested.
 The application's core access control is sound: every admin-only and owner-scoped
 function rejects unauthorised callers (51/51 automated checks), uploads and file
 serving are well protected, and SQL is parameterised. The serious problems were in
-**third-party framework code** (two Critical advisories in the server-function layer),
+**third-party framework code** (a Critical and a High advisory in the server-function layer),
 in **abuse controls** (rate limits that a header could bypass), and in the **dormant
 MFA feature**, which would not have protected anyone if switched on. All of these are
 patched on the branch. The code-level flaws were reproduced against the pre-fix code and
@@ -30,8 +30,9 @@ misleading.
 | Metric | Value |
 |---|---|
 | Total findings | 32 |
-| Confirmed (incl. advisory-confirmed) | 29 · Potential 2 · Requires environment access 1 |
-| By severity | Critical 2 · High 2 (conditional on MFA) · Medium 6 · Low 16 · Informational 6 |
+| Confirmed (incl. 3 advisory-confirmed) | 23 · Hardening only (fp-check false positive) 8 · Requires environment access 1 |
+| fp-check verification of the 16 exploit claims | 8 TRUE POSITIVE · 8 FALSE POSITIVE — [fp-check-verification.md](fp-check-verification.md) |
+| By severity | Critical 1 · High 3 (2 conditional on MFA) · Medium 6 · Low 8 · Informational 14 |
 | Rejected candidates (false positives, grouped) | 23 groups — [false-positives.md](false-positives.md) |
 | Fixes applied | 17 complete + 1 partial |
 | Fixes verified by an executed test or rescan (raw output in `evidence/`) | 13 (4 more verified by code review only) |
@@ -75,7 +76,7 @@ vulnerabilities.
 
 ## Top five risks (before patching)
 
-1. **SEC-001/002 — Critical framework vulnerabilities** in TanStack Start and seroval (reflected XSS, unsafe deserialization), reachable without login. Confirmed by version against vendor advisories; not exploited here. *Patched by upgrade.*
+1. **SEC-001 (Critical) / SEC-002 (High) — framework vulnerabilities** in TanStack Start and seroval: reflected XSS, and unauthenticated denial of service in deserialization (the advisory's critical callable-invocation impact was not demonstrated). Confirmed by version against vendor advisories and by tracing the reachable code path; not exploited here. *Patched by upgrade.*
 2. **SEC-004/005 — MFA bypass by design**: one OTP verified every session of the account, and a password-only session could swap the verified phone. *Reproduced and patched.*
 3. **SEC-003 — Rate-limit bypass** through a spoofed `X-Forwarded-For`, disabling per-IP brute-force and AI-cost limits. *Reproduced and patched.*
 4. **SEC-009 — CI/CD supply chain**: the deploy job installed an unpinned CLI while holding the deploy token; mutable action tags; broad token. *Patched.*

@@ -7,7 +7,7 @@ merged to `main` and deployed.**
 | ID | Severity | Title | Status | Action still required |
 |---|---|---|---|---|
 | SEC-001 | Critical | Reflected XSS in TanStack Start server-function responses | Patched (upgrade) | Deploy |
-| SEC-002 | Critical | seroval deserialization (unauthenticated) | Patched (upgrade) | Deploy |
+| SEC-002 | High (advisory: Critical; fp-check confirmed DoS only) | seroval deserialization (unauthenticated) | Patched (upgrade) | Deploy |
 | SEC-004 | High (conditional) | MFA verification shared by every session | Patched, regression-tested | Deploy before enabling MFA |
 | SEC-005 | High (conditional) | Verified phone replaceable without MFA | Patched, regression-tested | Deploy before enabling MFA |
 

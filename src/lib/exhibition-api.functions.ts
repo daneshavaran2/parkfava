@@ -430,7 +430,7 @@ export const deleteExhibitionCompanyAdmin = createServerFn({ method: "POST" })
 
 export const reorderExhibitionCompaniesAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .validator((i) => z.object({ ids: z.array(z.string().trim().min(1).max(120)) }).parse(i))
+  .validator((i) => z.object({ ids: z.array(z.string().trim().min(1).max(120)).max(2000) }).parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
@@ -600,7 +600,7 @@ export const updateExhibitionImage = createServerFn({ method: "POST" })
 
 export const reorderExhibitionImages = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .validator((i) => z.object({ ids: z.array(z.string().uuid()).min(1) }).parse(i))
+  .validator((i) => z.object({ ids: z.array(z.string().uuid()).min(1).max(1000) }).parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
     const rows = await sql<{ id: string; company_id: string }[]>`
@@ -618,7 +618,7 @@ export const reorderExhibitionImages = createServerFn({ method: "POST" })
 
 export const reorderExhibitionProducts = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .validator((i) => z.object({ ids: z.array(z.string().uuid()).min(1) }).parse(i))
+  .validator((i) => z.object({ ids: z.array(z.string().uuid()).min(1).max(1000) }).parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
     const rows = await sql<{ id: string; company_id: string }[]>`
@@ -660,7 +660,9 @@ export const getExhibitionCompanies = createServerFn({ method: "GET" }).handler(
 });
 
 export const getPublicExhibitionProducts = createServerFn({ method: "GET" })
-  .validator((i) => z.object({ companyIds: z.array(z.string()) }).parse(i))
+  // Bounded: an unbounded array let one request make the validator allocate
+  // an issue object per bad element (GHSA-mrhx-c7xc-m3w5, SEC-006).
+  .validator((i) => z.object({ companyIds: z.array(z.string().max(120)).max(2000) }).parse(i))
   .handler(async ({ data }) => {
     if (!data.companyIds.length || !hasDb()) return [] as ExhibitionProduct[];
     const sql = getDb();

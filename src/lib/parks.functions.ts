@@ -114,7 +114,7 @@ export const deleteParkAdmin = createServerFn({ method: "POST" })
 
 export const reorderParksAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .validator((i) => z.object({ ids: z.array(z.string().trim().min(1).max(120)) }).parse(i))
+  .validator((i) => z.object({ ids: z.array(z.string().trim().min(1).max(120)).max(500) }).parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();

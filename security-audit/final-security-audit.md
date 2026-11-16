@@ -10,8 +10,8 @@
 ## 1. Overall assessment
 
 Access control, upload handling and SQL usage are well engineered and backed by an
-existing authorization test suite. Before this audit the application carried two
-Critical framework vulnerabilities, a bypassable rate limiter, and an MFA design that
+existing authorization test suite. Before this audit the application carried a
+Critical and a High framework vulnerability, a bypassable rate limiter, and an MFA design that
 would not have stopped a password thief. These are patched and verified on the branch.
 What remains is mainly configuration and operations: MFA enforcement, an audit trail,
 backups, and a stale npm lockfile. See [executive-summary.md](executive-summary.md)
@@ -21,14 +21,15 @@ for the dashboard and coverage table.
 
 | Severity | Findings |
 |---|---|
-| Critical | SEC-001 TanStack Start reflected XSS (patched) · SEC-002 seroval deserialization (patched) |
-| High (conditional on MFA) | SEC-004 MFA shared across sessions (patched) · SEC-005 verified phone replaceable (patched) |
+| Critical | SEC-001 TanStack Start reflected XSS (patched) |
+| High | SEC-002 seroval deserialization DoS (patched) · SEC-004 MFA shared across sessions (patched, conditional on MFA) · SEC-005 verified phone replaceable (patched, conditional on MFA) |
 | Medium | SEC-003 rate-limit bypass (patched) · SEC-006 zod DoS (patched) · SEC-007 password change controls (patched) · SEC-009 CI/CD hardening (patched) · SEC-010 stale npm lockfile (open) · SEC-026 MFA off, admins password-only (open) |
-| Low | SEC-008, 011, 012, 013, 014, 015, 016, 017, 018, 019, 020, 021, 022, 023, 024, 025 |
-| Informational | SEC-027 … SEC-032 |
+| Low | SEC-011, 012, 016, 017, 022, 023, 024, 025 |
+| Informational | SEC-027 … SEC-032, plus hardening items SEC-008, 013, 014, 015, 018, 019, 020, 021 (fp-check false positives; fixes kept) |
 
 Full register with evidence, root cause and remediation: [findings.md](findings.md).
-Rejected candidates: [false-positives.md](false-positives.md).
+Rejected candidates: [false-positives.md](false-positives.md). Exploitability of every bug claim:
+[fp-check-verification.md](fp-check-verification.md) (8 true positives, 8 false positives).
 
 ## 3. Root-cause themes and variant analysis
 

@@ -19,6 +19,7 @@ Start with the [executive summary](executive-summary.md), then the
 | 10 | [findings.md](findings.md) | Vulnerability register (SEC-001 … SEC-032) |
 | 11 | [critical-findings.md](critical-findings.md) | Critical/High items and immediate actions |
 | 12 | [false-positives.md](false-positives.md) | Rejected candidates |
+| — | [fp-check-verification.md](fp-check-verification.md) | fp-check verdicts for the 16 exploit claims (phases, 13 questions, 6 gates) |
 | 13 | [dependency-report.md](dependency-report.md) | Dependencies, advisories, SBOM |
 | 14 | [cloud-security.md](cloud-security.md) | Hosting and container |
 | 15 | [api-security.md](api-security.md) | OWASP API Top 10 |
@@ -39,6 +40,7 @@ Start with the [executive summary](executive-summary.md), then the
 4. **Validation** — SEC-003, SEC-004 and SEC-005 reproduced against the pre-fix code on a disposable database; SEC-007 verified after the fix only; dependency findings verified by version and re-audit.
 5. **Patching** — commits `763c1c6`, `5e9dc7c`, `2377040`, `97d4db0` on `claude/epic-meitner-ctcy12`; nothing deployed; nothing pushed to `main`.
 6. **Regression** — existing suites plus 19 unit tests and an 11-check auth hardening script.
+7. **fp-check** — the 16 findings that claim an exploitable bug were verified with Trail of Bits fp-check: 8 true positives, 8 false positives (kept as hardening). Variant fix for SEC-006: length caps on all array validators.
 
 ## Re-running the evidence
 

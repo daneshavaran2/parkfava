@@ -118,7 +118,7 @@ export const deleteAttachmentAdmin = createServerFn({ method: "POST" })
 
 export const reorderAttachmentsAdmin = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
-  .validator((i) => z.object({ ids: z.array(z.string().uuid()) }).parse(i))
+  .validator((i) => z.object({ ids: z.array(z.string().uuid()).max(1000) }).parse(i))
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const sql = getDb();
