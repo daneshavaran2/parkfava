@@ -83,6 +83,7 @@ const MFA_ERROR_KEYS: Record<string, string> = {
   OTP_EXPIRED: "auth.otp_expired",
   OTP_MAX_ATTEMPTS: "auth.otp_max_attempts",
   OTP_INCORRECT: "auth.otp_incorrect",
+  PHONE_CHANGE_REQUIRES_MFA: "auth.phone_change_requires_mfa",
 };
 
 function mfaErrorMessage(e: any, t: (key: string) => string, fallbackKey: string): string {

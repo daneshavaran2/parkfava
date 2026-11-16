@@ -25,7 +25,7 @@ export const refreshFromLiveSite = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
   .handler(async ({ context }) => {
     assertIsAdmin(context);
-    const res = await fetch(`${LIVE_SITE_URL}/api/public/export`);
+    const res = await fetch(`${LIVE_SITE_URL}/api/public/export`, { signal: AbortSignal.timeout(120_000) });
     if (!res.ok) {
       throw new Error(`LIVE_SITE_UNREACHABLE (${res.status})`);
     }

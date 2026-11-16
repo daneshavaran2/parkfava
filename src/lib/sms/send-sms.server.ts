@@ -10,19 +10,29 @@
 // once you have credentials, before flipping MFA_ENFORCED=true (see
 // src/lib/auth/middleware.ts). Until SMS_PROVIDER/SMS_API_KEY are set, this
 // throws instead of pretending a code was sent.
+
+// A provider that stops answering must not hold a request (and a server
+// worker) open indefinitely.
+const SMS_TIMEOUT_MS = 15_000;
+function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
+  return fetch(url, { ...init, signal: AbortSignal.timeout(SMS_TIMEOUT_MS) });
+}
+
 export async function sendOtpSms(phone: string, code: string): Promise<void> {
   const provider = process.env.SMS_PROVIDER;
   const apiKey = process.env.SMS_API_KEY;
   const text = `کد تایید اطلس شرکت‌های پارک فاوا: ${code}`;
 
   if (!provider || !apiKey) {
-    console.error(`[sms] SMS_PROVIDER/SMS_API_KEY not set — OTP for ${phone} was NOT sent (code: ${code})`);
+    // Never the code itself, and only the end of the number: server logs are
+    // read by more people, and kept longer, than an OTP should ever be.
+    console.error(`[sms] SMS_PROVIDER/SMS_API_KEY not set — OTP for ***${phone.slice(-4)} was NOT sent`);
     throw new Error("SMS_NOT_CONFIGURED");
   }
 
   switch (provider) {
     case "kavenegar": {
-      const res = await fetch(`https://api.kavenegar.com/v1/${apiKey}/sms/send.json`, {
+      const res = await fetchWithTimeout(`https://api.kavenegar.com/v1/${apiKey}/sms/send.json`, {
         method: "POST",
         headers: { "content-type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
@@ -35,7 +45,7 @@ export async function sendOtpSms(phone: string, code: string): Promise<void> {
       return;
     }
     case "melipayamak": {
-      const res = await fetch(`https://console.melipayamak.com/api/send/simple/${apiKey}`, {
+      const res = await fetchWithTimeout(`https://console.melipayamak.com/api/send/simple/${apiKey}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ from: process.env.SMS_SENDER_LINE ?? "", to: phone, text }),
@@ -44,7 +54,7 @@ export async function sendOtpSms(phone: string, code: string): Promise<void> {
       return;
     }
     case "ghasedak": {
-      const res = await fetch("https://api.ghasedak.me/v2/sms/send/simple", {
+      const res = await fetchWithTimeout("https://api.ghasedak.me/v2/sms/send/simple", {
         method: "POST",
         headers: { "content-type": "application/x-www-form-urlencoded", apikey: apiKey },
         body: new URLSearchParams({

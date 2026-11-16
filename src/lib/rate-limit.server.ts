@@ -8,6 +8,7 @@
 // OpenRouter call that takes seconds and costs money).
 import { getRequestIP, getRequestHeader } from "@tanstack/react-start/server";
 import { getDb } from "../../db/connection";
+import { clientIpFromForwardedFor } from "./client-ip";
 
 export class RateLimitError extends Error {
   constructor() {
@@ -42,11 +43,8 @@ function trustedProxyHops(): number {
  */
 export function clientKey(): string {
   try {
-    const fwd = getRequestHeader("x-forwarded-for");
-    if (fwd) {
-      const chain = fwd.split(",").map((s) => s.trim()).filter(Boolean);
-      if (chain.length) return chain[Math.max(0, chain.length - trustedProxyHops())]!;
-    }
+    const ip = clientIpFromForwardedFor(getRequestHeader("x-forwarded-for"), trustedProxyHops());
+    if (ip) return ip;
   } catch {
     /* no request context (e.g. called outside a server fn) */
   }

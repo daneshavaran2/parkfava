@@ -63,6 +63,14 @@ export async function destroySession(): Promise<void> {
   deleteCookie(COOKIE_NAME, { path: "/" });
 }
 
+/** Marks the session making this request as MFA-verified until `until`. */
+export async function markSessionMfaVerified(userId: string, until: Date): Promise<void> {
+  const token = getCookie(COOKIE_NAME);
+  if (!token) throw new Error("Unauthorized: not signed in");
+  const sql = getDb();
+  await sql`UPDATE sessions SET mfa_verified_until = ${until} WHERE id = ${token} AND user_id = ${userId}`;
+}
+
 /** Ends every session of `userId` except the one making this request. */
 export async function destroyOtherSessions(userId: string): Promise<void> {
   const token = getCookie(COOKIE_NAME) ?? "";
@@ -82,12 +90,12 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       email: string | null;
       national_id: string | null;
       phone: string | null;
-      mfa_token_expires_at: Date | null;
+      mfa_verified_until: Date | null;
       must_change_password: boolean;
       role: string | null;
     }[]
   >`
-    SELECT u.id, u.email, u.national_id, u.phone, u.mfa_token_expires_at, u.must_change_password, r.role
+    SELECT u.id, u.email, u.national_id, u.phone, s.mfa_verified_until, u.must_change_password, r.role
     FROM sessions s
     JOIN users u ON u.id = s.user_id
     LEFT JOIN user_roles r ON r.user_id = u.id
@@ -96,7 +104,8 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   if (!rows.length) return null;
 
   const roles = rows.map((r) => r.role).filter((r): r is string => !!r);
-  const mfaVerified = !!rows[0].mfa_token_expires_at && rows[0].mfa_token_expires_at > new Date();
+  // Per session: see db/migrations/0022_sessions_mfa_verified.sql.
+  const mfaVerified = !!rows[0].mfa_verified_until && rows[0].mfa_verified_until > new Date();
   return {
     id: rows[0].id,
     email: rows[0].email,

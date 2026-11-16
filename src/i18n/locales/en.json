@@ -200,6 +200,7 @@
     "otp_expired": "The code has expired, request a new one",
     "otp_max_attempts": "Too many incorrect attempts, request a new code",
     "otp_incorrect": "The code you entered is incorrect",
+    "phone_change_requires_mfa": "To change a verified mobile number, first sign in with the SMS code sent to the current number, or contact the administrator.",
     "phone_not_set": "Register your phone number first",
     "confirm": "Confirm",
     "resend_otp": "Resend code",

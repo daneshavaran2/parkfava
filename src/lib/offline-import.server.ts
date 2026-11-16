@@ -45,6 +45,7 @@ export type ImportResult = {
 // export as-is fails every single row with "cannot insert a non-DEFAULT
 // value into column \"search_text\"".
 const GENERATED_COLUMNS = new Set(["search_text"]);
+export const SAFE_IDENTIFIER = /^[a-z_][a-z0-9_]{0,62}$/;
 
 async function upsertTable(
   sql: ReturnType<typeof getDb>,
@@ -56,7 +57,10 @@ async function upsertTable(
   const result: ImportResult = { table, ok: 0, failed: 0 };
   if (!rows?.length) return result;
   for (const row of rows) {
-    const cols = Object.keys(row).filter((c) => !GENERATED_COLUMNS.has(c));
+    // Column names come from the downloaded snapshot's keys and are spliced
+    // into the statement as identifiers, which parameters cannot cover; only
+    // plain lower_snake_case names (every real column here) may get through.
+    const cols = Object.keys(row).filter((c) => SAFE_IDENTIFIER.test(c) && !GENERATED_COLUMNS.has(c));
     const updateCols = cols.filter((c) => !pkCols.includes(c));
     try {
       await sql.unsafe(

@@ -15,6 +15,10 @@ import { getAssistantRuntimeConfig } from "./app-settings.server";
 // src/lib/sms/send-sms.server.ts.
 type ChatTurn = { role: "user" | "assistant"; content: string };
 
+// Upper bound on one model call, so a stalled provider fails the request
+// instead of tying up a server worker until the client gives up.
+const AI_TIMEOUT_MS = 45_000;
+
 const LOVABLE_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const LOVABLE_DEFAULT_MODEL = "google/gemini-2.5-flash";
 const OPENAI_DEFAULT_MODEL = "gpt-4o-mini";
@@ -41,6 +45,7 @@ async function askLovableAi(
   maxTokens: number,
 ): Promise<string> {
   const res = await fetch(LOVABLE_GATEWAY_URL, {
+    signal: AbortSignal.timeout(AI_TIMEOUT_MS),
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -76,6 +81,7 @@ async function askOpenAiWith(
   maxTokens: number,
 ): Promise<string> {
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    signal: AbortSignal.timeout(AI_TIMEOUT_MS),
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -106,6 +112,7 @@ async function askOpenRouterWith(
   maxTokens: number,
 ): Promise<string> {
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    signal: AbortSignal.timeout(AI_TIMEOUT_MS),
     method: "POST",
     headers: {
       "content-type": "application/json",

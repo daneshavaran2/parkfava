@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getDb } from "../../db/connection";
 import { requireAuth } from "./auth/middleware";
+import { markSessionMfaVerified } from "./auth/session.server";
 import { normalizePhone } from "@/lib/mfa/phone";
 
 function isMfaEnforced() {
@@ -33,15 +34,15 @@ export const getMfaStatus = createServerFn({ method: "GET" })
   .middleware([requireAuth])
   .handler(async ({ context }) => {
     const sql = getDb();
-    const [row] = await sql<{ phone: string | null; phone_verified: boolean; mfa_token_expires_at: Date | null }[]>`
-      SELECT phone, phone_verified, mfa_token_expires_at FROM users WHERE id = ${context.user.id}
+    const [row] = await sql<{ phone: string | null; phone_verified: boolean }[]>`
+      SELECT phone, phone_verified FROM users WHERE id = ${context.user.id}
     `;
-    const satisfied = !!row?.mfa_token_expires_at && row.mfa_token_expires_at.getTime() > Date.now();
     return {
       enforced: isMfaEnforced(),
       phone: row?.phone ?? null,
       phoneVerified: !!row?.phone_verified,
-      satisfied,
+      // This session's own verification, not any other session's.
+      satisfied: context.user.mfaVerified,
     };
   });
 
@@ -52,6 +53,14 @@ export const setPhone = createServerFn({ method: "POST" })
     const phone = normalizePhone(data.phone);
     if (!phone) throw new Error("INVALID_PHONE");
     const sql = getDb();
+    // A verified phone is the second factor itself. Letting a session that
+    // has only the password replace it would let whoever stole the password
+    // point the OTP at their own number and pass MFA. Replacing it needs a
+    // session that already passed MFA (or an admin resetting the account).
+    const [current] = await sql<{ phone_verified: boolean }[]>`
+      SELECT phone_verified FROM users WHERE id = ${context.user.id}
+    `;
+    if (current?.phone_verified && !context.user.mfaVerified) throw new Error("PHONE_CHANGE_REQUIRES_MFA");
     await sql`UPDATE users SET phone = ${phone}, phone_verified = false WHERE id = ${context.user.id}`;
     return { ok: true };
   });
@@ -135,6 +144,7 @@ export const verifyOtp = createServerFn({ method: "POST" })
     }
 
     const mfaToken = generateMfaToken();
+    const until = new Date(Date.now() + MFA_TOKEN_TTL_MS);
     await sql`
       UPDATE users SET
         phone_verified = true,
@@ -142,8 +152,10 @@ export const verifyOtp = createServerFn({ method: "POST" })
         mfa_otp_expires_at = null,
         mfa_otp_attempts = 0,
         mfa_token = ${mfaToken},
-        mfa_token_expires_at = ${new Date(Date.now() + MFA_TOKEN_TTL_MS)}
+        mfa_token_expires_at = ${until}
       WHERE id = ${context.user.id}
     `;
+    // What requireMfaVerified actually checks: this session only.
+    await markSessionMfaVerified(context.user.id, until);
     return { ok: true };
   });
