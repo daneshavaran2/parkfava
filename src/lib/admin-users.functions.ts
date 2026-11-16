@@ -10,6 +10,7 @@ function assertAdmin(context: { user: { roles: string[] } }) {
 export type AdminUserRow = {
   id: string;
   email: string | null;
+  national_id: string | null;
   created_at: string;
   roles: string[];
   owned_company_ids: string[];
@@ -21,7 +22,9 @@ export const listUsers = createServerFn({ method: "GET" })
     assertAdmin(context);
     const sql = getDb();
     const [users, roles, comps] = await Promise.all([
-      sql<{ id: string; email: string; created_at: Date }[]>`SELECT id, email, created_at FROM users ORDER BY created_at ASC`,
+      sql<{ id: string; email: string | null; national_id: string | null; created_at: Date }[]>`
+        SELECT id, email, national_id, created_at FROM users ORDER BY created_at ASC
+      `,
       sql<{ user_id: string; role: string }[]>`SELECT user_id, role FROM user_roles`,
       sql<{ company_id: string; owner_user_id: string }[]>`
         SELECT company_id, owner_user_id FROM exhibition_companies WHERE owner_user_id IS NOT NULL
@@ -30,6 +33,7 @@ export const listUsers = createServerFn({ method: "GET" })
     return users.map((u) => ({
       id: u.id,
       email: u.email ?? null,
+      national_id: u.national_id ?? null,
       created_at: u.created_at.toISOString(),
       roles: roles.filter((r) => r.user_id === u.id).map((r) => r.role),
       owned_company_ids: comps.filter((c) => c.owner_user_id === u.id).map((c) => c.company_id),

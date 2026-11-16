@@ -47,7 +47,8 @@ function AdminUsersPage() {
   const filtered = useMemo(() => {
     const f = filter.trim().toLowerCase();
     if (!f) return users;
-    return (users as any[]).filter((u) => (u.email ?? "").toLowerCase().includes(f) || u.id.includes(f));
+    return (users as any[]).filter((u) =>
+      (u.email ?? "").toLowerCase().includes(f) || (u.national_id ?? "").includes(f) || u.id.includes(f));
   }, [users, filter]);
 
   async function run(key: string, fn: () => Promise<any>) {
@@ -99,6 +100,7 @@ function AdminUsersPage() {
             <thead>
               <tr style={{ textAlign: "start", background: "var(--panel-2)" }}>
                 <th style={th}>{t("adminUsers.col_email")}</th>
+                <th style={th}>{t("adminUsers.col_national_id")}</th>
                 <th style={th}>{t("adminUsers.col_id")}</th>
                 <th style={th}>{t("adminUsers.col_roles")}</th>
                 <th style={th}>{t("adminUsers.col_company")}</th>
@@ -112,6 +114,7 @@ function AdminUsersPage() {
                 return (
                   <tr key={u.id} style={{ borderTop: "1px solid var(--stroke)" }}>
                     <td style={td}>{u.email ?? "—"}</td>
+                    <td style={{ ...td, fontFamily: "monospace" }}>{u.national_id ?? "—"}</td>
                     <td style={{ ...td, fontFamily: "monospace", fontSize: 12, color: "var(--ink-soft)" }}>{u.id.slice(0, 8)}…</td>
                     <td style={td}>
                       {u.roles.length ? u.roles.join(t("adminUsers.list_separator")) : <span style={{ color: "var(--ink-soft)" }}>{t("adminUsers.no_role")}</span>}

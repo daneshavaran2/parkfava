@@ -41,6 +41,7 @@ function MyCompanyPage() {
 
   const [notAssigned, setNotAssigned] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
 
   async function loadCompany() {
     const mine = await fetchMyCompany();
@@ -53,7 +54,12 @@ function MyCompanyPage() {
     (async () => {
       const user = await getCurrentUser();
       if (!user) { navigate({ to: "/auth", search: { next: "/my-company" } as any }); return; }
-      if (user.mustChangePassword) { setMustChangePassword(true); setChecking(false); return; }
+      if (user.mustChangePassword) {
+        setUsername(user.nationalId ?? user.email);
+        setMustChangePassword(true);
+        setChecking(false);
+        return;
+      }
       await loadCompany();
     })();
   }, [navigate]);
@@ -64,6 +70,7 @@ function MyCompanyPage() {
   if (mustChangePassword) {
     return (
       <ForcePasswordChange
+        username={username}
         onDone={() => { setMustChangePassword(false); setChecking(true); loadCompany(); }}
         onSignOut={async () => { await signOutFn(); navigate({ to: "/" }); }}
       />
@@ -92,10 +99,11 @@ function MyCompanyPage() {
 
 // Shown instead of the company editor when the session's must_change_password
 // flag is set (see src/routes/my-company.tsx's MyCompanyPage effect) —
-// bulk-provisioned accounts (scripts/provision-company-owners.ts) start with
-// their contact mobile number as the password, which is only ever meant to
-// be a one-time bootstrap credential.
-function ForcePasswordChange({ onDone, onSignOut }: { onDone: () => void; onSignOut: () => void }) {
+// bulk-provisioned accounts (scripts/provision-national-id-logins.ts and the
+// older scripts/provision-company-owners.ts) start with a mobile number on
+// file as the password, which is only ever meant to be a one-time bootstrap
+// credential. The company picks its own password here on first sign-in.
+function ForcePasswordChange({ username, onDone, onSignOut }: { username: string | null; onDone: () => void; onSignOut: () => void }) {
   const { t } = useTranslation();
   const changeMyPasswordFn = useServerFn(changeMyPassword);
   const [password, setPassword] = useState("");
@@ -112,7 +120,9 @@ function ForcePasswordChange({ onDone, onSignOut }: { onDone: () => void; onSign
       await changeMyPasswordFn({ data: { newPassword: password } });
       onDone();
     } catch (e: any) {
-      setMsg(`${t("common.error")}: ${e?.message ?? e}`);
+      setMsg(e?.message === "PASSWORD_UNCHANGED"
+        ? t("myCompany.password_unchanged")
+        : `${t("common.error")}: ${e?.message ?? e}`);
     }
     setBusy(false);
   }
@@ -122,12 +132,18 @@ function ForcePasswordChange({ onDone, onSignOut }: { onDone: () => void; onSign
       <div className="shell" style={{ padding: 40, maxWidth: 480 }}>
         <h2 className="h2">{t("myCompany.force_password_title")}</h2>
         <p className="lead" style={{ marginTop: 8 }}>{t("myCompany.force_password_lead")}</p>
+        {username && (
+          <p style={{ marginTop: 12, fontSize: 14 }}>
+            {t("myCompany.your_username")}{" "}
+            <bdi style={{ fontFamily: "monospace", fontWeight: 700 }}>{username}</bdi>
+          </p>
+        )}
         <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 20 }}>
           <F label={t("myCompany.field_new_password")}>
-            <input type="password" style={inp} value={password} onChange={(e) => setPassword(e.target.value)} />
+            <input type="password" autoComplete="new-password" style={inp} value={password} onChange={(e) => setPassword(e.target.value)} />
           </F>
           <F label={t("myCompany.field_confirm_password")}>
-            <input type="password" style={inp} value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+            <input type="password" autoComplete="new-password" style={inp} value={confirm} onChange={(e) => setConfirm(e.target.value)} />
           </F>
           {msg && <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{msg}</div>}
           <div style={{ display: "flex", gap: 8, marginTop: 4 }}>

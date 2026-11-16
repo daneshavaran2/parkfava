@@ -1,0 +1,538 @@
+[
+  {
+    "name": "اتصال صنعت میانه",
+    "national_id": "10320506910",
+    "website": "www.esmcell.com",
+    "email": "p.abolhoseini@esmcell.com",
+    "ceo_mobile_masked": "0912***1997",
+    "initial_password_hash": "293096d77c32474d0755999543109c97:7e080230d06bc94830d7317e2e9c733224acca5c61580ba07b686c61d96cbc9bd2f270c187b93dc82cb2c8901a876ffbabf03fc912bf7174273cd24c934a76ea"
+  },
+  {
+    "name": "ارتباطات فن کام کیش",
+    "national_id": "14003829844",
+    "website": "www.fancomkish.com",
+    "email": "rashnavad@vaf-co.com",
+    "ceo_mobile_masked": "0912***9919",
+    "initial_password_hash": "d7fc8849999c4e3cd9386382923d6504:40f494fec5b34056376347a2f867ec86e803c17eb6e326c5ade76a4be37275e2adcd8ccdd36e9501431325c0cfbedd0b5b05469b78252469f200174a0b724755"
+  },
+  {
+    "name": "اندیشه های فرانگر برسام",
+    "national_id": "10103902001",
+    "website": "www.bgsco.net",
+    "email": "amir.sofi@bgsco.net",
+    "ceo_mobile_masked": "0912***4349",
+    "initial_password_hash": "69169ef1988162564c7098213445ca6a:ac3769295b95ae464eefd5922b216e4af704a6b47d2d38f34753503f7ab13ed843a6d9b76d8ec444e25e42dd52632168a825152fe03ca04f3f6993f204c493d3"
+  },
+  {
+    "name": "ایده بکر مبین",
+    "national_id": "10320506720",
+    "website": "www.ibm.co.ir",
+    "email": "info@ibm.co.ir",
+    "ceo_mobile_masked": "0912***0325",
+    "initial_password_hash": "d264de6208dd64f975d3558be39d2fc3:da4f03e3c4ac6efd15fec0bbbd2668df904c79fd9daebf2293b4e092c2cbc418fa2a0127d961657108bf85bd731dc7fe478bdafb78c12487ca55064eddd806fb"
+  },
+  {
+    "name": "ایده گستر پوریا",
+    "national_id": "10102514634",
+    "website": "www.7soft.biz",
+    "email": "info@7soft.biz",
+    "ceo_mobile_masked": "0912***1519",
+    "initial_password_hash": "6cb5b6d722a4f6903800b021659b5e1c:b1754e27f87079f308824d5907480adb926c848be91a70118190bad794cd4615d4232e8e411c246b52150fffad4bb8bfd92401cc954be3d930b1cd3054a550c7"
+  },
+  {
+    "name": "آرا الکترونیک افزار",
+    "national_id": "10102709340",
+    "website": "www.araafzar.com",
+    "email": "secretary.araafzar@gmail.com",
+    "ceo_mobile_masked": "0912***9456",
+    "initial_password_hash": "dca234cc96683bcd28f0c8a244d7de41:e2c86a9a4476e641d8d2084a8cb76a6c5adc15cf1aa5ea7b335a2f1330a4c366b73f4cc95388801b72a09a042b24631fc7ee95623b72b62547965a1359658c97"
+  },
+  {
+    "name": "آرشین آذرمهر فن آور",
+    "national_id": "14003742500",
+    "website": "www.arshinco.com",
+    "email": "official@arshinco.com",
+    "ceo_mobile_masked": "0912***9430",
+    "initial_password_hash": "8aec3f7f58c09bfe48ca765df3a790cc:ed57b9ee481358413b8fdd88a66a27d23f824a17beaee1f0409c0dc5345e389c622e075b85ec63fd87b4090bef4fbcf264f4d02d477fa0838be2423567590403"
+  },
+  {
+    "name": "آرمان درخشان پایا",
+    "national_id": "14006583810",
+    "website": "www.payasoft.com",
+    "email": "saeid.garshasby@gmail.com",
+    "ceo_mobile_masked": "0912***7106",
+    "initial_password_hash": "f62176a661c8e8c0afb02cd5a39a7779:ffbb57cc6e5f4221a8f009ee8d2e69b0b57ff5c70c33acd9c5f3a99730531c21370e85ddc0ad31804bac322d0e1c600ac0a9d33e3b4afdc60a3c663bc7f50040"
+  },
+  {
+    "name": "آژند پردازش بامن",
+    "national_id": "14007176307",
+    "website": "www.baman.pro",
+    "email": "smmjazayeri.39@gmail.com",
+    "ceo_mobile_masked": "0912***8467",
+    "initial_password_hash": "b5eeae361efc1fa9e9a5c2b2ddd75517:fa1c3d05b95a14f4a0e191f0e3464880898107d1b31b3de2b40a1dcd539b9f95167361f6b1f0335aa1b2a01b6f794f5a079cd896172fee519b259f5d15b61a53"
+  },
+  {
+    "name": "بهینه پردازان ریزموج صنعت",
+    "national_id": "14003707870",
+    "website": null,
+    "email": null,
+    "ceo_mobile_masked": "0912***8302",
+    "initial_password_hash": "0568156a3986c953e01b8a63dd2d11fe:eb0f8dd66720287e7a6a39ae8a7fd9e5ca9d6b76e1708467ee4fa057e4b15efe1e709bd9417e3a52eee0fae146b41f544cd34d94e1e65b0d7dd2d99885d69f30"
+  },
+  {
+    "name": "پارس پویش فناور",
+    "national_id": "10530258213",
+    "website": "www.parspooyesh.com",
+    "email": "kazemi@parspooyesh.net",
+    "ceo_mobile_masked": "0912***8897",
+    "initial_password_hash": "d008a29a9e728ff5a0a32cf4d44e1bf8:765fed80077448a966f8325470c88bd63747ba33b00a6ab64bac41fbe5866406997f4332c7df4beb9b395978a0bae999d71c56842566e8c10b0ad06985fd7134"
+  },
+  {
+    "name": "پایا افزار گستر صدرا",
+    "national_id": "14005234642",
+    "website": "www.pss.ir",
+    "email": "handsoft@gmail.com",
+    "ceo_mobile_masked": "0912***6190",
+    "initial_password_hash": "4c24d60f319f91593409bfc1aeb6755a:253c6e95200f30f490fb6d78474c8350f1eeabfc3db798d5d09fd697f00e14ae2791750b45eef43872560a1cfb7c611c32d8a0ca649bf0ea900771751a829437"
+  },
+  {
+    "name": "پایا تدبیر هوشمند",
+    "national_id": "14006958377",
+    "website": "www.sls.ir",
+    "email": "s.zoghi@sls.ir",
+    "ceo_mobile_masked": "0912***1035",
+    "initial_password_hash": "3feb612303c6eac3ef91e758aeebe3be:c8cf546021fa721a459aa2f223bd2ddbe6d3fb25cbde95b73194c5d3ed53023bed1c1e368e79f1eb7db7081efff36a1b1781edc507f03c30b2fd9210b1a6f65c"
+  },
+  {
+    "name": "پرتو ارتباط صبا",
+    "national_id": "10103882170",
+    "website": "www.pesaba.com",
+    "email": "sajjad.afshar4635@gmail.com",
+    "ceo_mobile_masked": "0912***3950",
+    "initial_password_hash": "8d4093d5e3775032199c2e47910d5746:82289c9404be0816e6de5f3d09324bc4283a15dcc7b629a22797776da6209777963c3a94758170af044b67844aeb7e9d8afbc86252e2577e187c2d22f3914c09"
+  },
+  {
+    "name": "پرتو تاپ رایان",
+    "national_id": "10104086753",
+    "website": "www.partotaprayan.ir",
+    "email": "protop.prpr@gmail.com",
+    "ceo_mobile_masked": "0912***4945",
+    "initial_password_hash": "a6ea85b1b8cf4fdaeedbef3d896e1cdf:559680ba4e1478c2dff09f6f24d4cfebc0b98ddb5837b346a26199d3e7b696989c35904fdbc9fef04ca108104bc1594234fc8f7ca68e03ac03f91c80a05a166b"
+  },
+  {
+    "name": "پگاه آفتاب",
+    "national_id": "10102024466",
+    "website": "www.pegaheaftab.com",
+    "email": "apegahe@gmail.com",
+    "ceo_mobile_masked": "0912***5671",
+    "initial_password_hash": "06b69d7ae084f2279a2d9738591ce17d:26f4355a14418a78957418c5267225c2d471138a974b961bff65f8e6ed3c163e9d230bf37deabab159a89d93493f7d4ccd425aa21921543a464c8a4cde8b1e46"
+  },
+  {
+    "name": "پگاه داده کاوان شریف",
+    "national_id": "14004385554",
+    "website": "www.tapsell.ir",
+    "email": "m.aghaee@tapsell.ir",
+    "ceo_mobile_masked": "0936***8842",
+    "initial_password_hash": "bdb05e8f7d9e51eb0f2b23c421ceecef:679aec89e199bce9052f2a45735f875dee36bbfae76d52656daea6a43a7f24a0ab2e49f3e0f06170f223e9f6f75457100839dfc65085d6a7ed423b1a1a5a3fa7"
+  },
+  {
+    "name": "پیام گستر فاوا",
+    "national_id": "10320486884",
+    "website": "www.payamgostar.ir",
+    "email": "info@payamgostar.ir",
+    "ceo_mobile_masked": "0912***0255",
+    "initial_password_hash": "c56bf43015c767de0f5707d4c242c0e8:aa6a37027dc845758793b0aad5724b8736eb1da6990e639e8a042cc6388d20450b5d64420417e3e128480b69c5799f3b17b35c5ba89594d565c3f3f76ac2f742"
+  },
+  {
+    "name": "پیشگامان سراج منیر",
+    "national_id": "14003859088",
+    "website": "www.seraj-kntu.ir",
+    "email": "m_mokhtari@tvu.ac.ir",
+    "ceo_mobile_masked": "0910***8981",
+    "initial_password_hash": "e9f6692651214c7e44eb01b6f73dea42:564dc0aa3feb805d0c58fa9688019fd83e3aeaef68f308d15c1b0111cf96d6515f9bd07bc1eaf494daaf077892e2feea27c8af9377778431faed3e30494c3ce4"
+  },
+  {
+    "name": "تجارت الکترونیک عرش گستر",
+    "national_id": "10102632507",
+    "website": "www.etagco.com",
+    "email": "ceo@etagco.com",
+    "ceo_mobile_masked": "0912***8571",
+    "initial_password_hash": "7e6c4c67873a21f272716e82d92f6241:eaa3a131fd76a69723b131c8953f8088ba7e73f6b82a6b5914b9e4f8bbcb50ba05b0c780569c18d3a4989a4a10eca5021d0ceae0fbcbe4aceb83f0c7e3e29682"
+  },
+  {
+    "name": "ترسیم داده نرم‏افزار",
+    "national_id": "14007373252",
+    "website": "www.tarsimdadeh.com",
+    "email": "moojan.soobhani@gmail.com",
+    "ceo_mobile_masked": "0912***7577",
+    "initial_password_hash": "30adc8ca1510292dbbffe0e5b7ed76a7:95b33ef5dbec80aeb406612f3b8c4bb6b861a3d21dd422207f3700b4c6b76121f1f90f63898a42867ecf2992744180b35abd87e641c301676ea88afdfe4251b8"
+  },
+  {
+    "name": "توسعه زیرساخت های فناوری اطلاعات سیگما",
+    "national_id": "10102736511",
+    "website": "www.sigma.ir",
+    "email": "dm@sigma.ir",
+    "ceo_mobile_masked": "0912***4610",
+    "initial_password_hash": "cef92e322a89c418b7f81c21e01f056a:9d971f84fedcb4324b2c3335301c4e7b02c28af561b540cf31028f70ae44245ac7ad96168b93f8f8688a3e33a020d9b380fbbf238c5d418c521c5382d02cf3e7"
+  },
+  {
+    "name": "توسعه علوم ژئوماتیک رهپویان",
+    "national_id": "10104016810",
+    "website": "www.geoit.ir",
+    "email": "mahyar.soltani@gmail.com",
+    "ceo_mobile_masked": "0912***6118",
+    "initial_password_hash": "46e4ec6ac65a01647e1bada4690487ee:6650da14ca4f219257782ec94b18f4d0647d24afb0bc6dd3bc2f0aad7e2ac3f5740cec9749abf75c532fc8144ca1e7f9bd0e1afcc1fcbcdeeeb23e9799d85675"
+  },
+  {
+    "name": "توسعه فن آوری لوتوس شبکه",
+    "national_id": "14004796249",
+    "website": "www.lotusnet.ir",
+    "email": "arminashrafi64@gmail.com",
+    "ceo_mobile_masked": "0912***2842",
+    "initial_password_hash": "6f7dfb5a8a156db9c073cd7849081a3f:4ae5baa2f9d6e95068d8e5f1f7c140a01a5b7dcda1ac0ad372c8934e6215d2dc53f121b03a7267741daf2bceab2b28d7df45092dda36abd401d8b2a09c36c626"
+  },
+  {
+    "name": "توسعه نرم افزار تنب",
+    "national_id": "14011207949",
+    "website": "www.tonbsoft.com",
+    "email": "vahid.mehrab.ir@gmail.com",
+    "ceo_mobile_masked": "0912***6870",
+    "initial_password_hash": "d7e4d43eced523fdc183e9c8c0c2e4fb:543135f49227c619ad4ff2622346b1fb5002bbad541e9cc110bb4be42af84868b77030c8f0da06808cdaedb6e7465561cb4afeb6f4961a309bf07ee5e9a1471e"
+  },
+  {
+    "name": "تولیدی مهندسی ایده آل مهدبان",
+    "national_id": "10320497229",
+    "website": "www.mahdban.com",
+    "email": "zohrehbani@yahoo.com",
+    "ceo_mobile_masked": "0910***6679",
+    "initial_password_hash": "690c26ef042625674d9e39596b67be9c:4eae516fa4f5e751d5382fce4928ddaf0b9065f78bdba84d5d37512ea0e1bb6020e598d2f0d714a2aa00da2cead47118ff9b0764cfe425a1f25d6a87a6dbfaa4"
+  },
+  {
+    "name": "تیم یار کیش",
+    "national_id": "10861577128",
+    "website": "www.teamyar.com",
+    "email": "selles@teamyar.com",
+    "ceo_mobile_masked": "0912***4747",
+    "initial_password_hash": "9a2a36a5f6c119568cc21176ab20a4ae:b07bcc46025f86f9a783779574d45dd067bc4a536380201ba46000bf331550f934a4d92f0a879a96abe4562b748760e6e23647f9799c6ecfeaaebcb7df105751"
+  },
+  {
+    "name": "خبره پرداز پارس",
+    "national_id": "10101674860",
+    "website": "www.kpp.ir",
+    "email": "shahabi@kpp.ir",
+    "ceo_mobile_masked": "0912***9241",
+    "initial_password_hash": "8ee6db217c1bb5ec36fbb4b2455c49c8:a3d29438cf1a5639d0744af853b1da2236a4630ddd7677124e116df652315d770e15e01754b2683b2bdfcc0966f7da43c91350bcdcd46f8f8399064851b871a6"
+  },
+  {
+    "name": "خدمات مخابراتی ارگ جدید",
+    "national_id": "10102331963",
+    "website": "www.argtelecom.com",
+    "email": "mousavi@argtelecom.com",
+    "ceo_mobile_masked": "0912***8665",
+    "initial_password_hash": "7b5cf426ba99fef577988f54fdf9b107:1b6acf5dc1d8d67b11c41670f583e4d89662d625c7f5449fc436a79d2ee481a84ce3b79d4f3aac8645a9cdc35b8f7b8e39ae0238218f812699734a44e1430600"
+  },
+  {
+    "name": "خوارزم ارتباط خاورمیانه",
+    "national_id": "10101560184",
+    "website": "www.algocom.net",
+    "email": "idea@algocom.net",
+    "ceo_mobile_masked": "0912***5815",
+    "initial_password_hash": "4008dd3528cb3de09337e58d0d63c5a1:f0bcd2c85698e7302ee0a3e1ad8301c7ad3a00ffdb75ffa16a6018cbce393d14e4e0a9bb9568d67a6f7f0749be6cae62e4d637a19632fa09fa798d5b0d56adb0"
+  },
+  {
+    "name": "راهبران فناوری پاسارگاد",
+    "national_id": "10104037450",
+    "website": "WWW.IRANDNN.IR",
+    "email": "rahbaran.office@gmail.com",
+    "ceo_mobile_masked": "0912***0399",
+    "initial_password_hash": "75b3a9656ca4f8c33011eb4d7d7147aa:ef092a20d92f6fe4d7bbfd338551922e63472e9d314ae643618ac2b838d9138450c274790d4ccfe023788ba1284880c8931b630acf870bd6cea5c5d684be5785"
+  },
+  {
+    "name": "روماک ارتباط پایدار",
+    "national_id": "14008984418",
+    "website": "romaak.net",
+    "email": "yazdi@romaak.net",
+    "ceo_mobile_masked": "0912***9778",
+    "initial_password_hash": "05061572fd84fb67514319a7484bda60:ff68ac9d549024eeaa5d58020785aed1a8fe3d8908097a3ebff3d8a3cca92f01a33ac3c458b307d295b45fad6e02259fd77aba244125a422da86af4001d0c04f"
+  },
+  {
+    "name": "رهیاب فن آوا",
+    "national_id": "10102247120",
+    "website": "www.rahyabtelecom.com",
+    "email": "a.rahyabtelecom@gmail.com",
+    "ceo_mobile_masked": "0912***1384",
+    "initial_password_hash": "386843efff7ed4fa123d362d183aacf1:67f63c59b0d38501fc8aff878c05ded84e2aa09b48fb42899140fc01514e461c8deb288c478ad2e67fcdd9e3ea1c0c89c1f9cd2365ba5318e11defcbc0c36f1a"
+  },
+  {
+    "name": "ژرف اندیشان صنعت شرق",
+    "national_id": "14004383436",
+    "website": "www.zharfandishan.co.com",
+    "email": "zharfandishan2206@gmail.com",
+    "ceo_mobile_masked": "0912***4200",
+    "initial_password_hash": "818818e2292b85f6b324b3a22195ac03:cb01419c9e4aa1eb7220cb7ef56375b4c5d442a7021e62897b62e7fe4bbee7da7f0fd32bf1d56d50e65a3b1b9133b91dd9830688a2ff96d80206f96464b67ae5"
+  },
+  {
+    "name": "سلامت الکترونیکی تامین",
+    "national_id": "14004555553",
+    "website": "www.satahis.ir",
+    "email": "yosefitahere@yahoo.com",
+    "ceo_mobile_masked": "0912***2561",
+    "initial_password_hash": "77246242a70d7353f9940d3db7fc900f:b3d489d56908bef05d8a19a54c695b856bbba214fd1fd60fb14d38215a8518d29054103dc7061a3780092388f82171fa223c0ff3c07aad9aba561e6f8436b96e"
+  },
+  {
+    "name": "شبکه افزار",
+    "national_id": "10101382942",
+    "website": "www.shabakehafzar.com",
+    "email": "info@shabakehafzar.ir",
+    "ceo_mobile_masked": "0912***6236",
+    "initial_password_hash": "95e19bbf3d20a6ed31f2a46ffc6a9cf8:be3f4e1552428360b3f32ca6ff33bf3acf482a852e2d6461283a6b5811acb9551cde1d6d267928ff6e3d16b8af396eeab9a4202ce23fa53090aab4530049a460"
+  },
+  {
+    "name": "شتابدهنده فناوری های مالی نوآفرین",
+    "national_id": "14010017356",
+    "website": "www.noafarinfa.com",
+    "email": "emadd.baaa@gmail.com",
+    "ceo_mobile_masked": "0912***4319",
+    "initial_password_hash": "b87f9aaf0f0b696b17e9122929913898:e82b355954f22ad427a486b318872ca661831f833a3c4c640521f98c30a3316fb55d7af2c9f423b2547127171d58ca9f0b2de85d6acea2c7a51848b003b6f1b5"
+  },
+  {
+    "name": "صبا ارتباط شریف",
+    "national_id": "10320706401",
+    "website": "www.honorwave.com",
+    "email": "info@honorwave.com",
+    "ceo_mobile_masked": "0912***2344",
+    "initial_password_hash": "d2a83ceb7c05ded57604fe684d8495f7:f9ac972b4d5e8ac1d84fe4d80b3af548b9319a3e1b6390ee8783e829399cad632f79b234b0af9dfcf1d5a5817bc199c171108ea81de0fc768ba5e7dd8df8be8f"
+  },
+  {
+    "name": "عصر فناوری دانش",
+    "national_id": "10102535195",
+    "website": "www.farabar.net",
+    "email": "info@kte.ir",
+    "ceo_mobile_masked": "0912***6719",
+    "initial_password_hash": "30e1ea38859596422ce1b9e7dace63e2:3dc5bde33be3bc7cb93a9d2c0fc8927fc3e4351386a19d43707a344f42409c7470bc0afaf5d21fb26ed7d6af1c038afb4f877c570d9c693a400bb608fab725b0"
+  },
+  {
+    "name": "فناوران به آفرین ترنج",
+    "national_id": "10630129819",
+    "website": "www.toranjinotec.com",
+    "email": "y.ghanbarzadeh@gmail.com",
+    "ceo_mobile_masked": "0912***4053",
+    "initial_password_hash": "6940d4d20c8bd1ac24eb82122f338476:ab2338e78c0c2f74e292c146ee5ea6bc34904bd175b14289f9bf8ab25b6a17af347318b3238d2eec6b7b0b0c1f636462b84150b923e313d57ce49da02545dac5"
+  },
+  {
+    "name": "فن آوری ارتباطات نوری امین",
+    "national_id": "10320148116",
+    "website": "www.fananet.com",
+    "email": "mahdi@fananet.com",
+    "ceo_mobile_masked": "0912***5147",
+    "initial_password_hash": "40ad006a02eaedee188cde5cf34aa0b5:8630c2ea2fa434391e847eea0f444eb2fc04e898bd246c7f867aa9c9efe1a0300ee2043e353c083a50834d8d8c35d1f17585a6be2f61bb4bf9ef0b726ac46f83"
+  },
+  {
+    "name": "فناوری ارتباطات نوری دانیال موج",
+    "national_id": "14003737460",
+    "website": "www.danialmoj.com",
+    "email": "rahahashemzade2000@gmail.com",
+    "ceo_mobile_masked": "0912***8316",
+    "initial_password_hash": "292bfcaf2c6c6ff65932b2ee4dded8d3:0655b8ff0b6107c93bf128b2709a5286e8193d6df02b63876c2c34d2c173af704c091d70b31374bc01781424d91318ad758176a24f5dd7b8989f6186eba52158"
+  },
+  {
+    "name": "فناوری اطلاعات تسنیم",
+    "national_id": "10102732537",
+    "website": "www.tict.ir",
+    "email": "leilikazemi87@gmail.com",
+    "ceo_mobile_masked": "0912***7292",
+    "initial_password_hash": "a792c5e5781eb88008474acf5314c83d:f32abefe06c2ef0d412c1f8ffa46685cdd82dfa57945e4cac94892329c6f3f1d4fa8c702b8743060b731866aad3b5ae85c490336736eacf3acea6c75cf2f3a0b"
+  },
+  {
+    "name": "فناوری اطلاعات مادیکام سامانه",
+    "national_id": "10103272218",
+    "website": "www.madycom.com",
+    "email": "yac.ndri@gmail.com",
+    "ceo_mobile_masked": "0912***1844",
+    "initial_password_hash": "c83c68d1866225074448255b75a009b2:0b260996b3a7f354f5da60a98e944095fd0d2d36607a9ed013091a1b2224df42ad0be49afe7c54a5d64f7947893dbc41a541d47b4034ceaa07906263825e353b"
+  },
+  {
+    "name": "فن تدبیر سبز ویرا",
+    "national_id": "14005234550",
+    "website": "https://www.ftsv.ir",
+    "email": "info@ftsv.ir",
+    "ceo_mobile_masked": "0912***9706",
+    "initial_password_hash": "b6ac825a908b37e63e4df7de85c1fd80:c5a755d0806ac616e9ce8db29495b8b26bf9ea07618fc4287344f5137b63d649733858a33d3f567e3da9f195b8969aada565d43af12485c23866e8b32e27b810"
+  },
+  {
+    "name": "فنون داده پروری بسامد",
+    "national_id": "10103099092",
+    "website": "https://fdpbco.com/",
+    "email": "info@fdpbco.com",
+    "ceo_mobile_masked": "0912***4971",
+    "initial_password_hash": "cd01deb891f8d8dcd8497c6e0238773d:de2e20e743d80d0c5cfc483df2170712fc42778146fb7c1f5173acb0bac368a11237e0a314f8b309b91e9b09bf89be240fd774bd3d4c1ea175ed57b624ceb988"
+  },
+  {
+    "name": "فنی و اقتصادی فراکستر لیدوما",
+    "national_id": "10500090262",
+    "website": "fglidoma.ir",
+    "email": "info@fglidoma.ir",
+    "ceo_mobile_masked": "0912***9285",
+    "initial_password_hash": "4df4ec1369152190fb7379f18d59ec73:72161ac1d5eeb670e29570327ce1ddec9d1b3ef3d48f898dbc8667d36fe7e09dd4a5e3c3f84d91d84c7fab127144469ccfb8631cb7e71785f80ef3262c1b1a15"
+  },
+  {
+    "name": "فنی و مهندسی امن پردازان کویر",
+    "national_id": "10860062461",
+    "website": "kianertebat.com",
+    "email": "mahdi.alishahi@gmail.com",
+    "ceo_mobile_masked": "0939***1937",
+    "initial_password_hash": "8ded784e48e007146742f5c7f3cfc75a:a0a24a79b49da2faeabfac48f1286af89194a48042707ad6551683fd39f1398953747491c2f34cf01b0287fa6a2188b0bdb2854a406ecd1c6abe0b2f759e7bb1"
+  },
+  {
+    "name": "کیان ارتباط آروند",
+    "national_id": "14003229958",
+    "website": "kianertebat.com",
+    "email": "mahdi.alishahi@gmail.com",
+    "ceo_mobile_masked": "0939***1937",
+    "initial_password_hash": "b6a802705c6980dbbab42c4d427501c4:9f6f0ef883a805f89c06f9c0e78935df3ee9ee556e1df3c4cabfc9fc3f4fc40a49103f979923a8f92c5d3dcfc3190b5279415505b2d06b01d14dc91676183488"
+  },
+  {
+    "name": "کیان الکترونیک سپاهان",
+    "national_id": "10260423314",
+    "website": "www.kiansep.com",
+    "email": "info@kiansep.com",
+    "ceo_mobile_masked": "0913***9030",
+    "initial_password_hash": "036a2bafa601b059ceca426ffe3cab8c:211c34e3ffe039e972833743b44d9392a35c89dad42ca9d12bf39131b9f0f71a46af211e393cffb39cecae51bd4f4485232a80e8eda8538f0d3e69d7866f6d87"
+  },
+  {
+    "name": "گروه صنعتی آراد کنترل",
+    "national_id": "10103086188",
+    "website": "www.aradcontrol.com",
+    "email": "aradcontrol@yahoo.com",
+    "ceo_mobile_masked": "0912***5457",
+    "initial_password_hash": "d40d3261c0ba6f8f51f2215cba6e6a85:bbba64e225ffc249b9740ea4fd515cf9de9169e3dff62e55653153803b106e31b003d6a464df93c66cfee8dc24a5a6c192c69b947b1f905fc674211e84c36166"
+  },
+  {
+    "name": "گسترش ارتباطات بیستون تلکام",
+    "national_id": "10660103246",
+    "website": "www.btel.ir",
+    "email": "m_safari16@yahoo.com",
+    "ceo_mobile_masked": "0912***4221",
+    "initial_password_hash": "2f7c2f53c5febb8279d20d4992ae4de8:75b5299f8653494570302c8b60bf98616ac23e8815b5ff818cd191b55d8150859d2e55b088397cec01f204e11df57950c88fcb0165f88c28d8adec7d16a66699"
+  },
+  {
+    "name": "گسترش خدمات کاراتلفن",
+    "national_id": "10102616501",
+    "website": "WWW.gkkt.ir",
+    "email": "f.nghshnahad@gmail.com",
+    "ceo_mobile_masked": "0912***0274",
+    "initial_password_hash": "fbd75af6d52b6bfe2036706d0b9f97bf:b97e85ed23e35c511f0377cb3c535e582f033eebf69923aa7936cd04b8c2a35efa89009494864d8dc35708b86349566acbf56fd54f6c08f9e24c5ba6df9f3082"
+  },
+  {
+    "name": "مایا رایانه رواق",
+    "national_id": "14008646465",
+    "website": null,
+    "email": null,
+    "ceo_mobile_masked": "0920***1844",
+    "initial_password_hash": "61995cdd6e9c8d0459fc15e8a50f6065:569898d8c1b424ff7a57b985c119b23d3f56a8a29927b688602c0be81e11dc16df75c461c87535ca65dd893873c8de0d62e95303349e51d4aa5ba92f2e0b4afb"
+  },
+  {
+    "name": "مرکز پژوهش کیفیت و بهره‌وری پارسیان",
+    "national_id": "10320279991",
+    "website": "https://pqprc.ac.ir",
+    "email": "farbodmotadel@gmail.com",
+    "ceo_mobile_masked": "0912***0751",
+    "initial_password_hash": "547bb6e4f3b8bb59092d2155f4bb72b4:45bb8ab70c66f1cbfad0618d30212581448132fe44db59d1ab4caf9a22a36d44c7c65cc121c22a2cf9cb41c6721c1b1b7fb94afbf8f242e71dcc2d29410beb95"
+  },
+  {
+    "name": "موج آینده فرافن",
+    "national_id": "10320281380",
+    "website": "www.fwutech.com",
+    "email": "m.hasanzadeh@fwutech.com",
+    "ceo_mobile_masked": "0912***2045",
+    "initial_password_hash": "d417ac86a106a21c7071f2f468539df9:0989494dd8dfae214114d295251f07ed58cfe5bb80e1785e068b3577063c2a862bd8a66bf4f4de41873ecbfa5777331514480a60429c171cbb0e318f4ca3f7cd"
+  },
+  {
+    "name": "مهر البرز",
+    "national_id": "10102776543",
+    "website": "mehralborz.ac.ir",
+    "email": "rahmani@mehralborz.ac.ir",
+    "ceo_mobile_masked": "0910***3291",
+    "initial_password_hash": "bf208b998e5f572f7420175c4e0b9275:7e22f7ec17bcc58b777b81c1e7ba93292b7a8974c53af0329d8ba00edf211fb1dfb86f8be10aafbdf796269dbd962fc16e02beae66880c6c525575075346df37"
+  },
+  {
+    "name": "نرم افزاري امن پرداز",
+    "national_id": "10102781714",
+    "website": "www.amnpardaz.com",
+    "email": "info@amnpardaz.com",
+    "ceo_mobile_masked": "0912***4897",
+    "initial_password_hash": "c0432c3216de743c66387541ccfea8de:663c25bc9f912d560a9f395f9efc9ed1ebe4dd268ae603ceb057124891b4131933fb83571e443d473bf0557b2a029c21a0b597ddeba575d73abbfb487166b9e1"
+  },
+  {
+    "name": "نسیم فدک ایرانیان",
+    "national_id": "14005209740",
+    "website": "www.nasimfadak.com",
+    "email": "info@nasimfadak.com",
+    "ceo_mobile_masked": "0912***9557",
+    "initial_password_hash": "11f588a4667f8ddff84db6600719823c:d566766973292ce09a60d8c5e5195cd4a68f9e45de9ca46cbf99b23e077895f1e911965636225636760e2e74204d7844f8f25fada89b0fa31184f34a5ab7c7e0"
+  },
+  {
+    "name": "نوآوران توزیع سریع ارزش",
+    "national_id": "14012079356",
+    "website": "netsafund.ir",
+    "email": "alirezayounesi0@gmail.com",
+    "ceo_mobile_masked": "0912***5598",
+    "initial_password_hash": "165fb62ada97956230774fe4a6cea435:3285b52c45823c05079f9aa102d7d4e9ba5fcaecfa8c4bf5163dabf956552e9792fc0625c05c53ad8f3c88572c532ed991f5626a16e6c8abb272e090f9026684"
+  },
+  {
+    "name": "نور بهینه گستر خاورمیانه",
+    "national_id": "10102810800",
+    "website": "www.nbgme.com",
+    "email": "info@nbgme.net",
+    "ceo_mobile_masked": "0912***6202",
+    "initial_password_hash": "b406de59c242e5d4bd7325394c6257ef:5c7c8ba602e74724cabfb7b814d32796c6bb1076e887d373210bc8fb423639af98098daaa0134ca00b12ab259131fc8c5d18514a441a673babb842b315d33f3d"
+  },
+  {
+    "name": "واف",
+    "national_id": "10100978264",
+    "website": "www.vaf-co.com",
+    "email": "rashnavad@vaf-co.com",
+    "ceo_mobile_masked": "0912***6775",
+    "initial_password_hash": "d157a09dae62a096f18d507d1e9ccecf:c26bfe1f63af521653c488f1350af1d9543e275e22f9bf14f764aecb4434b5e668e4c900e35e35816e008c869b483ab6cb6ee48dceb2c0cdf55331d0ebd959e4"
+  },
+  {
+    "name": "ونداد ویرا هومان",
+    "national_id": "14007618696",
+    "website": "www.vandadvira.com",
+    "email": "info@vandadvira.com",
+    "ceo_mobile_masked": "0935***0663",
+    "initial_password_hash": "a7429fabcf29d0743c7609f8dda077cc:ea55d59283ad5764bab64d0d224905a0a44fda036e23941414bd12509bca3fb278235e211e529b606fbc0b3d85bbbb7f7c7669637b6add2abde4445909abb613"
+  },
+  {
+    "name": "همیان فن",
+    "national_id": "10101325553",
+    "website": "www.hamianfan.com",
+    "email": "info@hamianfan.com",
+    "ceo_mobile_masked": "0912***4388",
+    "initial_password_hash": "934ffd5fa6095c824f48d83ed866fcb2:0a7c315e67084dfc1e2130a2a50eb027578985eafe74a528ef9c8af46f97b0464f88ec205da9169c8b728f3c3db89ec5d7c310ddfabd53d423d4f2c91a8c8dc2"
+  },
+  {
+    "name": "هونام ارتباط نیروی ایرانیان",
+    "national_id": "14004553659",
+    "website": "www.hoonamtel.ir",
+    "email": "info@hoonamtel.ir",
+    "ceo_mobile_masked": "0912***4538",
+    "initial_password_hash": "b5ddb02440fac759c19fe37ab3573d26:d84edafad4bac09ad4d74ed951c0b7fcca62232f9734c3067dd1c42261e25ba9fbcc39a3a9095b0063e6b45c31b79b711411bf12557c9da3a59e4816ea49576d"
+  },
+  {
+    "name": "هوشمند افزار باوی",
+    "national_id": "14008785528",
+    "website": null,
+    "email": null,
+    "ceo_mobile_masked": "0917***0082",
+    "initial_password_hash": "a6987b515a02a027e46bb5cb4b06ba42:30bfe177fceb0118dc7c1ddf9c4f6e521e6a34ce1f0a6a8df06e9224dbe63b7edd2ef4996a72d0cb0165fd5a1842dd374d7cb10db09ff23e19e11b92d1522e4a"
+  },
+  {
+    "name": "هوشمندسازان بی تا",
+    "national_id": "10100276249",
+    "website": "www.hsbco.ir",
+    "email": "hsbkaraj@gmail.com",
+    "ceo_mobile_masked": "0912***1926",
+    "initial_password_hash": "d7e0eabd4885fc2c3588c8ffce27292a:8219056c1a2915df22eb8c9bce9a87b2fcc9530705f85d4a2a8c19cebabbd7038bc1248da8ce002dcb0deac46e35737ddbead7c7d6e447546592b9c5585028f9"
+  }
+]

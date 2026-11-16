@@ -1,13 +1,15 @@
 /**
  * Self-hosted replacement for Supabase Auth's signUp/signInWithPassword/
- * signOut. Email/password only for now — Google OAuth is deliberately out
- * of scope for this phase (per user decision) and can be layered on later
- * without touching this shape.
+ * signOut. Sign-up is email/password; sign-in also accepts a company's
+ * national ID as the username (src/lib/auth/login-id.ts). Google OAuth is
+ * deliberately out of scope for this phase (per user decision) and can be
+ * layered on later without touching this shape.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getDb } from "../../db/connection";
 import { hashPassword, verifyPassword } from "./auth/password.server";
+import { parseLoginId, toAsciiDigits } from "./auth/login-id";
 import { createSession, destroySession, getSessionUser } from "./auth/session.server";
 import { requireAuth } from "./auth/middleware";
 import { clientKey, enforceRateLimit, RateLimitError } from "./rate-limit.server";
@@ -20,6 +22,36 @@ const credentialsSchema = z.object({
   // login-page checkbox expected.
   remember: z.boolean().optional(),
 });
+
+// Sign-in takes a username that is either an email or a company national ID,
+// so it cannot be validated as an email here — parseLoginId() classifies it.
+const signInSchema = z.object({
+  identifier: z.string().min(1).max(254),
+  password: z.string().min(1).max(256),
+  remember: z.boolean().optional(),
+});
+
+/**
+ * Passwords are stored with Persian/Arabic-Indic digits folded to ASCII, so
+ * the same numeric password matches whichever keyboard layout it is typed on
+ * (companies' initial password is a mobile number). Applied when a password
+ * is set; verifyLoginPassword() covers the other side.
+ */
+function canonicalPassword(password: string): string {
+  return toAsciiDigits(password);
+}
+
+/**
+ * Tries the password exactly as typed first — that is how every password set
+ * before canonicalPassword() existed was stored — and only then its folded
+ * form. The second scrypt runs only when the input actually contained
+ * non-ASCII digits, so ordinary failed logins cost no more than before.
+ */
+async function verifyLoginPassword(password: string, stored: string): Promise<boolean> {
+  if (await verifyPassword(password, stored)) return true;
+  const folded = canonicalPassword(password);
+  return folded !== password && (await verifyPassword(folded, stored));
+}
 
 /**
  * Throttles for the credential endpoints.
@@ -87,7 +119,7 @@ export const signUp = createServerFn({ method: "POST" })
     const existing = await sql`SELECT id FROM users WHERE email = ${email}`;
     if (existing.length) throw new Error("EMAIL_ALREADY_REGISTERED");
 
-    const password_hash = await hashPassword(data.password);
+    const password_hash = await hashPassword(canonicalPassword(data.password));
     const [user] = await sql<{ id: string }[]>`
       INSERT INTO users (email, password_hash) VALUES (${email}, ${password_hash})
       RETURNING id
@@ -97,25 +129,32 @@ export const signUp = createServerFn({ method: "POST" })
   });
 
 export const signIn = createServerFn({ method: "POST" })
-  .inputValidator((i) => credentialsSchema.parse(i))
+  .inputValidator((i) => signInSchema.parse(i))
   .handler(async ({ data }) => {
     const sql = getDb();
-    const email = data.email.trim().toLowerCase();
+    // Same error for "malformed username", "no such user" and "wrong
+    // password" — don't leak which one it was.
+    const invalid = () => new Error("INVALID_CREDENTIALS");
+    const loginId = parseLoginId(data.identifier);
+    if (!loginId) throw invalid();
+    const accountKey = `${loginId.kind === "email" ? "" : "nid:"}${loginId.value}`;
 
-    // Counted before the lookup, so an attempt against an address that has no
-    // account still consumes allowance. Checking only real accounts would let
-    // the throttle itself confirm which addresses are registered.
-    await applyLimit(`signin:${email}`, LOGIN_LIMITS.perAccount);
+    // Counted before the lookup, so an attempt against a username that has
+    // no account still consumes allowance. Checking only real accounts would
+    // let the throttle itself confirm which usernames are registered.
+    await applyLimit(`signin:${accountKey}`, LOGIN_LIMITS.perAccount);
     await applyLimit(`signin-ip:${clientKey()}`, LOGIN_LIMITS.perClient);
 
-    const rows = await sql<{ id: string; password_hash: string }[]>`
-      SELECT id, password_hash FROM users WHERE email = ${email}
-    `;
-    // Same error for "no such user" and "wrong password" — don't leak
-    // which one it was.
-    const invalid = () => new Error("INVALID_CREDENTIALS");
+    const rows =
+      loginId.kind === "email"
+        ? await sql<{ id: string; password_hash: string }[]>`
+            SELECT id, password_hash FROM users WHERE email = ${loginId.value}
+          `
+        : await sql<{ id: string; password_hash: string }[]>`
+            SELECT id, password_hash FROM users WHERE national_id = ${loginId.value}
+          `;
     if (!rows.length) throw invalid();
-    const ok = await verifyPassword(data.password, rows[0].password_hash);
+    const ok = await verifyLoginPassword(data.password, rows[0].password_hash);
     if (!ok) throw invalid();
 
     // A correct password clears the account's counter, so a user who fumbles
@@ -123,7 +162,7 @@ export const signIn = createServerFn({ method: "POST" })
     // failures keeps the limit in force. Housekeeping, so it cannot be the
     // thing that fails an otherwise successful login.
     try {
-      await sql`DELETE FROM rate_limit_hits WHERE bucket = ${`signin:${email}`}`;
+      await sql`DELETE FROM rate_limit_hits WHERE bucket = ${`signin:${accountKey}`}`;
     } catch {
       /* the counter simply expires on its own instead */
     }
@@ -160,7 +199,17 @@ export const changeMyPassword = createServerFn({ method: "POST" })
   .inputValidator((i) => changePasswordSchema.parse(i))
   .handler(async ({ data, context }) => {
     const sql = getDb();
-    const password_hash = await hashPassword(data.newPassword);
+    const newPassword = canonicalPassword(data.newPassword);
+    // The forced first-login change exists to replace a bootstrap password
+    // (a mobile number on file with the park) with one only the company
+    // knows; "changing" it to the same value would defeat that silently.
+    const [current] = await sql<{ password_hash: string }[]>`
+      SELECT password_hash FROM users WHERE id = ${context.user.id}
+    `;
+    if (current && (await verifyPassword(newPassword, current.password_hash))) {
+      throw new Error("PASSWORD_UNCHANGED");
+    }
+    const password_hash = await hashPassword(newPassword);
     await sql`
       UPDATE users SET password_hash = ${password_hash}, must_change_password = false
       WHERE id = ${context.user.id}

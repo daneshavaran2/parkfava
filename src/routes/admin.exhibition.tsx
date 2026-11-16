@@ -119,7 +119,7 @@ function AdminExhibitionPage() {
         <h2 className="h2">{t("adminExhibition.no_admin_access_title")}</h2>
         <p className="lead">{t("adminExhibition.no_admin_access_lead")}</p>
         <p style={{ fontSize: 13, color: "var(--ink-soft)", marginTop: 8, fontFamily: "monospace" }}>User ID: {user.id}</p>
-        <p style={{ fontSize: 13, color: "var(--ink-soft)", marginTop: 4 }}>Email: {user.email}</p>
+        <p style={{ fontSize: 13, color: "var(--ink-soft)", marginTop: 4 }}>Email: {user.email ?? user.nationalId ?? "—"}</p>
         <p style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 16 }}>
           {t("adminExhibition.make_admin_instructions")}<br/>
           <code style={{ background: "var(--panel-2)", padding: "4px 6px", borderRadius: 4, display: "inline-block", marginTop: 4 }}>

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
-import { Eye, EyeOff, Home, Lock, Mail, Moon, Sun } from "lucide-react";
+import { Eye, EyeOff, Home, Lock, Mail, Moon, Sun, User } from "lucide-react";
 import { signUp, signIn, signOutFn, getCurrentUser } from "@/lib/auth.functions";
 import { getMyRoles } from "@/lib/admin-users.functions";
 import { getMfaStatus, setPhone as setPhoneFn, requestOtp, verifyOtp } from "@/lib/mfa.functions";
@@ -16,6 +16,13 @@ async function resolveDestination(fallback: string): Promise<string> {
   // the server too, where there is no origin to resolve against, and this is
   // the last step before window.location.assign actually navigates.
   const requested = safeNext(fallback);
+  // An account still on its provisioned bootstrap password (a company's
+  // first sign-in) has to choose its own before going anywhere else, and
+  // /my-company is where that screen lives.
+  try {
+    const user = await getCurrentUser();
+    if (user?.mustChangePassword) return "/my-company";
+  } catch { /* ignore */ }
   if (requested && requested !== "/") return requested;
   try {
     const info = await getMyRoles();
@@ -132,6 +139,7 @@ function AuthPage() {
   const signInFn = useServerFn(signIn);
   const signOutFnRpc = useServerFn(signOutFn);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  // Email for sign-up; for sign-in, an email or a company national ID.
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
@@ -193,7 +201,7 @@ function AuthPage() {
       if (mode === "signup") {
         await signUpFn({ data: { email, password, remember } });
       } else {
-        await signInFn({ data: { email, password, remember } });
+        await signInFn({ data: { identifier: email, password, remember } });
       }
       await proceedAfterAuth();
     } catch (e: any) {
@@ -332,28 +340,46 @@ function AuthPage() {
       <h1 className="auth-title">
         {mode === "signin" ? t("auth.signin_title") : t("auth.signup_title")}
       </h1>
-      <p className="auth-lead">{t("auth.lead")}</p>
+      <p className="auth-lead">{mode === "signin" ? t("auth.signin_lead") : t("auth.lead")}</p>
 
       <form className="auth-form" onSubmit={handleSubmit}>
-        <label className="auth-field">
-          <Mail size={18} aria-hidden="true" />
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={t("auth.email")}
-            aria-label={t("auth.email")}
-            autoComplete="email"
-          />
-        </label>
+        {mode === "signin" ? (
+          <label className="auth-field">
+            <User size={18} aria-hidden="true" />
+            <input
+              type="text"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={t("auth.username")}
+              aria-label={t("auth.username")}
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              data-testid="identifier-input"
+            />
+          </label>
+        ) : (
+          <label className="auth-field">
+            <Mail size={18} aria-hidden="true" />
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={t("auth.email")}
+              aria-label={t("auth.email")}
+              autoComplete="email"
+            />
+          </label>
+        )}
 
         <label className="auth-field">
           <Lock size={18} aria-hidden="true" />
           <input
             type={showPassword ? "text" : "password"}
             required
-            minLength={8}
+            minLength={mode === "signup" ? 8 : undefined}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder={t("auth.password")}

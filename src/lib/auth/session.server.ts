@@ -17,7 +17,10 @@ const SHORT_SESSION_DAYS = 1;
 
 export type SessionUser = {
   id: string;
-  email: string;
+  // Null for a company account that signs in with its national ID only
+  // (db/migrations/0021); every account has at least one of the two.
+  email: string | null;
+  nationalId: string | null;
   phone: string | null;
   roles: string[];
   mfaVerified: boolean;
@@ -69,14 +72,15 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   const rows = await sql<
     {
       id: string;
-      email: string;
+      email: string | null;
+      national_id: string | null;
       phone: string | null;
       mfa_token_expires_at: Date | null;
       must_change_password: boolean;
       role: string | null;
     }[]
   >`
-    SELECT u.id, u.email, u.phone, u.mfa_token_expires_at, u.must_change_password, r.role
+    SELECT u.id, u.email, u.national_id, u.phone, u.mfa_token_expires_at, u.must_change_password, r.role
     FROM sessions s
     JOIN users u ON u.id = s.user_id
     LEFT JOIN user_roles r ON r.user_id = u.id
@@ -89,6 +93,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   return {
     id: rows[0].id,
     email: rows[0].email,
+    nationalId: rows[0].national_id,
     phone: rows[0].phone,
     roles,
     mfaVerified,
