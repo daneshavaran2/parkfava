@@ -148,6 +148,7 @@ Every `test:*` above except `test:unit` needs a dev server on `:8080`; see
 | `CSP_ENFORCE`                   | server  | Send `content-security-policy` instead of the report-only header (`src/lib/csp.ts`). |
 | `VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY` | client | Managed Maps JS key; valid only on `*.lovable.app` / `*.lovableproject.com` |
 | `VITE_GOOGLE_MAPS_DEV_KEY`      | client  | Optional developer key so Google Maps also renders on `localhost`   |
+| `TRUSTED_PROXY_HOPS`            | server  | Reverse proxies in front of the app that append to `X-Forwarded-For` (default `1`, Liara's router). Rate limits key on the client address the outermost one saw; see `src/lib/rate-limit.server.ts` |
 | `MFA_ENFORCED`                  | server  | Set to `true` to require SMS-OTP on every login (all users). Unset/anything else = off. See `src/lib/auth/middleware.ts` |
 | `SMS_PROVIDER`                  | server  | `kavenegar` \| `melipayamak` \| `ghasedak` — required for `MFA_ENFORCED=true` to actually deliver codes; see `src/lib/sms/send-sms.server.ts` |
 | `SMS_API_KEY`                   | server  | API key for the chosen `SMS_PROVIDER`                                |

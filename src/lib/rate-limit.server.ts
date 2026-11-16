@@ -17,21 +17,42 @@ export class RateLimitError extends Error {
 }
 
 /**
+ * How many reverse proxies in front of the app append to X-Forwarded-For.
+ * Liara's router is one. Set TRUSTED_PROXY_HOPS if another proxy (a CDN,
+ * say) is ever put in front of it.
+ */
+function trustedProxyHops(): number {
+  const n = Number.parseInt(process.env.TRUSTED_PROXY_HOPS ?? "", 10);
+  return Number.isInteger(n) && n >= 1 ? n : 1;
+}
+
+/**
  * Best-effort client identity. Behind Liara's proxy the socket address is the
- * proxy's, so the forwarded headers are what actually distinguish callers.
+ * proxy's, so the forwarded header is what actually distinguishes callers.
  * Falls back to a shared "unknown" bucket — which throttles collectively
  * rather than failing open.
+ *
+ * Only the entries our own proxies appended can be trusted. A client can send
+ * any X-Forwarded-For it likes and the proxy appends the real address after
+ * it, so the *leftmost* entry is attacker-chosen: keying on it (as
+ * getRequestIP({ xForwardedFor: true }) does) gave every request a fresh
+ * bucket and disabled every per-IP limit here — login spraying, sign-up, and
+ * the paid assistant. The entry `hops` from the right is the address the
+ * outermost trusted proxy actually received the connection from.
  */
 export function clientKey(): string {
   try {
-    const ip = getRequestIP({ xForwardedFor: true });
-    if (ip) return ip;
+    const fwd = getRequestHeader("x-forwarded-for");
+    if (fwd) {
+      const chain = fwd.split(",").map((s) => s.trim()).filter(Boolean);
+      if (chain.length) return chain[Math.max(0, chain.length - trustedProxyHops())]!;
+    }
   } catch {
     /* no request context (e.g. called outside a server fn) */
   }
   try {
-    const fwd = getRequestHeader("x-forwarded-for");
-    if (fwd) return fwd.split(",")[0]!.trim();
+    const ip = getRequestIP();
+    if (ip) return ip;
   } catch {
     /* ignore */
   }

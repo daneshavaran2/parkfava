@@ -1,11 +1,16 @@
 // Debug endpoint for x-request-id propagation e2e testing.
-// Guarded: returns 404 in production. Never rely on this in real clients.
+// Guarded: returns 404 unless NODE_ENV is explicitly development or test.
+// Never rely on this in real clients.
 import { createFileRoute } from "@tanstack/react-router";
 import { getRequestId } from "@/lib/request-context";
 import { _drainLogs, logError, logInfo } from "@/lib/log-envelope";
 
+// Opt-in, not opt-out: a server started without NODE_ENV (a bare `node
+// .output/server/index.mjs`, the offline desktop build) must not expose the
+// in-memory log buffer, which holds other requests' log lines. CI starts the
+// e2e server with NODE_ENV=development.
 function isEnabled(): boolean {
-  return process.env.NODE_ENV !== "production" || process.env.LOG_SINK === "memory";
+  return process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
 }
 
 // Simulate a nested serverFn stack: outer -> inner -> PostgREST 42501.

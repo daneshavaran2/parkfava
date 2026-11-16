@@ -63,6 +63,13 @@ export async function destroySession(): Promise<void> {
   deleteCookie(COOKIE_NAME, { path: "/" });
 }
 
+/** Ends every session of `userId` except the one making this request. */
+export async function destroyOtherSessions(userId: string): Promise<void> {
+  const token = getCookie(COOKIE_NAME) ?? "";
+  const sql = getDb();
+  await sql`DELETE FROM sessions WHERE user_id = ${userId} AND id <> ${token}`;
+}
+
 /** Returns the logged-in user (with roles) for the current request, or null. */
 export async function getSessionUser(): Promise<SessionUser | null> {
   const token = getCookie(COOKIE_NAME);

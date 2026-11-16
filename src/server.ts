@@ -64,6 +64,15 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 function withStandardHeaders(response: Response, requestId: string): Response {
   const headers = new Headers(response.headers);
   headers.set(REQUEST_ID_HEADER, requestId);
+  // Every response, not just HTML: /assets serves user uploads, and without
+  // nosniff a browser may second-guess their declared type.
+  if (!headers.has("x-content-type-options")) headers.set("x-content-type-options", "nosniff");
+  if (!headers.has("referrer-policy")) headers.set("referrer-policy", "strict-origin-when-cross-origin");
+  // Production is HTTPS-only behind Liara; dev and the offline desktop build
+  // run on plain http://127.0.0.1 and must not be pinned to HTTPS.
+  if (process.env.NODE_ENV === "production" && !headers.has("strict-transport-security")) {
+    headers.set("strict-transport-security", "max-age=31536000");
+  }
 
   const ct = headers.get("content-type") ?? "";
   if (ct.includes("text/html")) {

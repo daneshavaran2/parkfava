@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { safeUrlString } from "./safe-url";
 import { getDb, hasDb } from "../../db/connection";
 import { requireMfaVerified } from "./auth/middleware";
 import type { ParkContent, ParkImage, ParkNews } from "@/lib/park-content-api";
@@ -35,8 +36,8 @@ export const upsertParkContentAdmin = createServerFn({ method: "POST" })
         park_id: z.string().trim().min(1).max(120),
         display_name: z.string().trim().max(255).nullable().optional(),
         description: z.string().trim().max(20000).nullable().optional(),
-        logo_url: z.string().trim().max(1000).nullable().optional(),
-        video_url: z.string().trim().max(1000).nullable().optional(),
+        logo_url: safeUrlString(1000).nullable().optional(),
+        video_url: safeUrlString(1000).nullable().optional(),
       })
       .parse(i),
   )
@@ -58,7 +59,7 @@ export const addParkImageAdmin = createServerFn({ method: "POST" })
     z
       .object({
         park_id: z.string().trim().min(1).max(120),
-        image_url: z.string().trim().min(1).max(1000),
+        image_url: safeUrlString(1000).pipe(z.string().min(1)),
         caption: z.string().trim().max(1000).nullable().optional(),
       })
       .parse(i),
@@ -92,7 +93,7 @@ export const upsertParkNewsAdmin = createServerFn({ method: "POST" })
         park_id: z.string().trim().min(1).max(120),
         title: z.string().trim().min(1).max(255),
         body: z.string().trim().max(20000).nullable().optional(),
-        video_url: z.string().trim().max(1000).nullable().optional(),
+        video_url: safeUrlString(1000).nullable().optional(),
       })
       .parse(i),
   )

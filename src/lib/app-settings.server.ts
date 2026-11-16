@@ -21,7 +21,11 @@ export function encryptSecret(value: string) {
 function decryptSecret(payload: string) {
   const [version, ivRaw, tagRaw, ciphertextRaw] = payload.split(".");
   if (version !== "v1" || !ivRaw || !tagRaw || !ciphertextRaw) throw new Error("INVALID_ENCRYPTED_SECRET");
-  const decipher = createDecipheriv("aes-256-gcm", encryptionKey(), Buffer.from(ivRaw, "base64url"));
+  // authTagLength pins the tag to the full 16 bytes encryptSecret() writes;
+  // without it GCM also accepts a truncated tag, which is far easier to forge.
+  const decipher = createDecipheriv("aes-256-gcm", encryptionKey(), Buffer.from(ivRaw, "base64url"), {
+    authTagLength: 16,
+  });
   decipher.setAuthTag(Buffer.from(tagRaw, "base64url"));
   return Buffer.concat([
     decipher.update(Buffer.from(ciphertextRaw, "base64url")),

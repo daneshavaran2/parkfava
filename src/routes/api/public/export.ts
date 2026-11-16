@@ -61,6 +61,8 @@ export const Route = createFileRoute("/api/public/export")({
             ...c,
             owner_user_id: null,
             reviewed_by: null,
+            // An admin's review note is internal, and this endpoint is public.
+            rejection_note: null,
           }));
           const sanitizedParkContent = (parkContent as Record<string, unknown>[]).map((pc) => ({
             ...pc,

@@ -1,12 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { safeUrlString } from "./safe-url";
 import { getDb, hasDb } from "../../db/connection";
 import { requireAuth, requireMfaVerified } from "./auth/middleware";
 import { parseLatLngValue } from "@/lib/geo";
 import type { ExhibitionCompany, ExhibitionImage, ExhibitionProduct, ExhibitionChangeRequest } from "@/lib/exhibition-api";
 
 const nullableText = z.string().trim().max(4000).nullable().optional();
-const nullableUrlText = z.string().trim().max(1000).nullable().optional();
+const nullableUrlText = safeUrlString(1000).nullable().optional();
 
 const companyPatchSchema = z.object({
   company_id: z.string().trim().min(1).max(120),
@@ -30,7 +31,13 @@ const companyPatchSchema = z.object({
   is_active: z.boolean().optional(),
   catalog_url: nullableUrlText,
   video_url: nullableUrlText,
-  founded_at: z.string().trim().max(80).nullable().optional(),
+  // A `date` column comes back from Postgres as a Date, and the edit forms
+  // send the loaded row straight back — so a Date has to be accepted here
+  // too, or every company with a founding date could never be saved.
+  founded_at: z
+    .union([z.date().transform((d) => d.toISOString().slice(0, 10)), z.string().trim().max(80)])
+    .nullable()
+    .optional(),
   intro: nullableText,
   intro_en: nullableText,
   founders: nullableText,
@@ -222,7 +229,7 @@ export const addExhibitionImage = createServerFn({ method: "POST" })
     z
       .object({
         company_id: z.string().trim().min(1).max(120),
-        image_url: z.string().trim().min(1).max(1000),
+        image_url: safeUrlString(1000).pipe(z.string().min(1)),
         caption: nullableText,
         caption_en: nullableText,
       })
@@ -693,6 +700,12 @@ export const getExhibitionCompanyDetail = createServerFn({ method: "GET" })
       allowed = !!user && (user.roles.includes("admin") || company.owner_user_id === user.id);
     }
     if (!allowed) return { company: null, images: [], products: [] };
+    // Review bookkeeping is not public. The owner and admins reach it through
+    // this same call for a non-public company; for an approved one nothing
+    // on any page reads it (the note is only shown while rejected).
+    if (isPublic) {
+      Object.assign(company, { owner_user_id: null, reviewed_by: null, rejection_note: null });
+    }
 
     const [images, products] = await Promise.all([
       sql<

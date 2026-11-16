@@ -10,7 +10,7 @@ import { z } from "zod";
 import { getDb } from "../../db/connection";
 import { hashPassword, verifyPassword } from "./auth/password.server";
 import { parseLoginId, toAsciiDigits } from "./auth/login-id";
-import { createSession, destroySession, getSessionUser } from "./auth/session.server";
+import { createSession, destroyOtherSessions, destroySession, getSessionUser } from "./auth/session.server";
 import { requireAuth } from "./auth/middleware";
 import { clientKey, enforceRateLimit, RateLimitError } from "./rate-limit.server";
 import { logWarn } from "./log-envelope";
@@ -25,11 +25,16 @@ const credentialsSchema = z.object({
 
 // Sign-in takes a username that is either an email or a company national ID,
 // so it cannot be validated as an email here — parseLoginId() classifies it.
-const signInSchema = z.object({
-  identifier: z.string().min(1).max(254),
-  password: z.string().min(1).max(256),
-  remember: z.boolean().optional(),
-});
+// `email` is still accepted as the field name: pages loaded before the
+// national-ID login shipped, and the authz test script, send it that way.
+const signInSchema = z
+  .object({
+    identifier: z.string().min(1).max(254).optional(),
+    email: z.string().min(1).max(254).optional(),
+    password: z.string().min(1).max(256),
+    remember: z.boolean().optional(),
+  })
+  .transform(({ identifier, email, ...rest }) => ({ ...rest, identifier: identifier ?? email ?? "" }));
 
 /**
  * Passwords are stored with Persian/Arabic-Indic digits folded to ASCII, so
@@ -128,6 +133,13 @@ export const signUp = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+let dummyHashPromise: Promise<string> | null = null;
+/** A valid hash of a random password, made once per process. */
+function dummyHash(): Promise<string> {
+  dummyHashPromise ??= hashPassword(crypto.randomUUID());
+  return dummyHashPromise;
+}
+
 export const signIn = createServerFn({ method: "POST" })
   .validator((i) => signInSchema.parse(i))
   .handler(async ({ data }) => {
@@ -153,7 +165,12 @@ export const signIn = createServerFn({ method: "POST" })
         : await sql<{ id: string; password_hash: string }[]>`
             SELECT id, password_hash FROM users WHERE national_id = ${loginId.value}
           `;
-    if (!rows.length) throw invalid();
+    if (!rows.length) {
+      // Pay the same scrypt cost as a real account would, so the response
+      // time does not reveal which usernames exist.
+      await verifyPassword(data.password, await dummyHash());
+      throw invalid();
+    }
     const ok = await verifyLoginPassword(data.password, rows[0].password_hash);
     if (!ok) throw invalid();
 
@@ -187,7 +204,11 @@ export const whoAmI = createServerFn({ method: "GET" })
   .handler(async ({ context }) => context.user);
 
 const changePasswordSchema = z.object({
-  newPassword: z.string().min(8, "Password must be at least 8 characters"),
+  // Required unless the account is on its bootstrap password (the forced
+  // first-login change), so a stolen session alone cannot lock the real
+  // owner out by changing the password.
+  currentPassword: z.string().min(1).max(256).optional(),
+  newPassword: z.string().min(8, "Password must be at least 8 characters").max(256),
 });
 
 // requireAuth, not requireMfaVerified: this is the one action a
@@ -203,10 +224,17 @@ export const changeMyPassword = createServerFn({ method: "POST" })
     // The forced first-login change exists to replace a bootstrap password
     // (a mobile number on file with the park) with one only the company
     // knows; "changing" it to the same value would defeat that silently.
-    const [current] = await sql<{ password_hash: string }[]>`
-      SELECT password_hash FROM users WHERE id = ${context.user.id}
+    const [current] = await sql<{ password_hash: string; must_change_password: boolean }[]>`
+      SELECT password_hash, must_change_password FROM users WHERE id = ${context.user.id}
     `;
-    if (current && (await verifyPassword(newPassword, current.password_hash))) {
+    if (!current) throw new Error("Unauthorized: not signed in");
+    if (!current.must_change_password) {
+      const ok =
+        data.currentPassword !== undefined &&
+        (await verifyLoginPassword(data.currentPassword, current.password_hash));
+      if (!ok) throw new Error("INVALID_CURRENT_PASSWORD");
+    }
+    if (await verifyPassword(newPassword, current.password_hash)) {
       throw new Error("PASSWORD_UNCHANGED");
     }
     const password_hash = await hashPassword(newPassword);
@@ -214,5 +242,8 @@ export const changeMyPassword = createServerFn({ method: "POST" })
       UPDATE users SET password_hash = ${password_hash}, must_change_password = false
       WHERE id = ${context.user.id}
     `;
+    // Anyone else signed in with the old password — the bootstrap mobile
+    // number included — is signed out; this browser stays signed in.
+    await destroyOtherSessions(context.user.id);
     return { ok: true };
   });
