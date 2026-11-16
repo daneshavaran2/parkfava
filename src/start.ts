@@ -1,4 +1,4 @@
-import { createStart, createMiddleware } from "@tanstack/react-start";
+import { createStart, createMiddleware, createCsrfMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
 import { i18nGuardMiddleware } from "@/lib/i18n-guard";
@@ -11,9 +11,7 @@ import { getRequestId, runWithRequestContext } from "@/lib/request-context";
 const attachRequestId = createMiddleware({ type: "function" }).client(async ({ next }) => {
   const existing =
     typeof document !== "undefined"
-      ? document
-          .querySelector('meta[name="x-request-id"]')
-          ?.getAttribute("content") ?? undefined
+      ? (document.querySelector('meta[name="x-request-id"]')?.getAttribute("content") ?? undefined)
       : undefined;
   const id = existing ?? (typeof crypto !== "undefined" ? crypto.randomUUID() : `${Date.now()}`);
   return next({ headers: { [REQUEST_ID_HEADER]: id } });
@@ -53,7 +51,38 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
   }
 });
 
+/**
+ * True when `url`'s host is the host this request was addressed to. Behind
+ * Liara's proxy `request.url` carries the internal scheme and address, so the
+ * forwarded/public Host is the only reliable thing to compare against.
+ * Browsers cannot set Host or X-Forwarded-Host on a cross-origin request
+ * without a CORS preflight this app never approves.
+ */
+function isSameHost(url: string, request: Request): boolean {
+  const host = (request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "")
+    .split(",")[0]!
+    .trim();
+  try {
+    return host !== "" && new URL(url).host === host;
+  } catch {
+    return false;
+  }
+}
+
+// Server functions are same-origin RPC endpoints; refuse calls a browser
+// makes on behalf of another site (security-audit SEC-033). Modern browsers
+// send Sec-Fetch-Site, which decides alone; Origin and then Referer are the
+// fallbacks. Requests carrying none of the three come from non-browser
+// clients (scripts, the test suites) which hold no victim's cookies, so they
+// are allowed.
+const csrfMiddleware = createCsrfMiddleware({
+  filter: (ctx) => ctx.handlerType === "serverFn",
+  origin: (origin, ctx) => isSameHost(origin, ctx.request),
+  referer: (referer, ctx) => isSameHost(referer, ctx.request),
+  allowRequestsWithoutOriginCheck: true,
+});
+
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachRequestId, i18nGuardMiddleware],
-  requestMiddleware: [requestContextMiddleware, errorMiddleware],
+  requestMiddleware: [requestContextMiddleware, csrfMiddleware, errorMiddleware],
 }));

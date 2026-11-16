@@ -1,4 +1,4 @@
-2026-11-16T09:45:32Z (patched, MFA_ENFORCED=true)
+2026-11-16T17:38:02Z (patched, MFA_ENFORCED=true)
 SEC-004  MFA state is per session
   ok   owner's own session is verified
   ok   a second, password-only session is NOT verified

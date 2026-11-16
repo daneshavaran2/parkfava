@@ -1,4 +1,3 @@
-2026-11-16T09:42:31Z
 Anonymous reads expose only approved + active rows
   ok   getExhibitionCompanies responds 200
   ok   seeded public company is visible
@@ -19,4 +18,3 @@ Input validation
   ok   over-long company id is rejected
 
 13 passed, 0 failed
-exit=0

@@ -5,7 +5,7 @@
 | File | Used by | State |
 |---|---|---|
 | `bun.lock` | Dockerfile (`bun install --frozen-lockfile`), CI (`setup-bun`), Lovable | **Authoritative.** 676 packages |
-| `package-lock.json` | Nothing in the build | **Stale** — last changed long before the current dependency set (SEC-010) |
+| `package-lock.json` | Nothing in the build (npm users only) | **Regenerated in round 3** (SEC-010); 12 Moderate, one `minimatch` advisory |
 
 `bunfig.toml` enforces a 24-hour minimum release age (three Lovable packages exempted).
 

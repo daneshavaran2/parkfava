@@ -15,8 +15,8 @@ Immediate actions, in order:
 
 1. Merge and deploy the branch (closes SEC-001/002 in production; migration `0022`
    applies automatically at startup).
-2. Decide on `package-lock.json` (SEC-010): it still pins the SEC-001/002 versions for
-   anyone installing with npm.
+2. ~~Decide on `package-lock.json` (SEC-010)~~ — regenerated in round 3; it now pins the
+   patched versions (same as `bun.lock`).
 3. Only then plan MFA enablement (SEC-026): it was unsafe to enable before SEC-004/005.
 
 Details: [findings.md](findings.md).

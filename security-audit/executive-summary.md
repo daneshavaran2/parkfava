@@ -29,15 +29,15 @@ misleading.
 
 | Metric | Value |
 |---|---|
-| Total findings | 32 |
+| Total findings | 36 (32 + 4 in round 3: SEC-033…036) |
 | Confirmed vulnerabilities (incl. 3 advisory-confirmed) | 11 · Hardening / risk items (fp-check false positive as vulnerabilities) 21 |
 | fp-check verification of all 32 findings | 11 TRUE POSITIVE · 21 FALSE POSITIVE — [fp-check-verification.md](fp-check-verification.md) |
-| By severity | Critical 1 · High 3 (2 conditional on MFA) · Medium 5 · Low 2 · Informational 21 |
+| By severity | Critical 1 · High 3 (2 conditional on MFA) · Medium 6 · Low 3 · Informational 23 |
 | Rejected candidates (false positives, grouped) | 23 groups — [false-positives.md](false-positives.md) |
-| Fixes applied | 17 complete + 1 partial |
-| Fixes verified by an executed test or rescan (raw output in `evidence/`) | 14 (3 more verified by code review only) |
+| Fixes applied | 22 complete + 1 partial (round 3: SEC-010, 033, 034, 035, 036) |
+| Fixes verified by an executed test or rescan (raw output in `evidence/`) | 19 (3 more verified by code review only) |
 | Proposed, not applied | 10 (mostly configuration or need a product decision) |
-| Not started | 3 · Accepted with controls 1 |
+| Not started | 2 · Accepted with controls 1 |
 | Remaining high-risk items | Deployment gap (R-01), MFA off (R-02), backups unverified (R-08) |
 | Known dependency advisories in the build lockfile | 88 → 1 (Moderate, build-only) |
 
@@ -85,7 +85,7 @@ vulnerabilities.
 ## Decisions needed from you
 
 1. Merge and deploy the branch.
-2. Delete or regenerate `package-lock.json` (SEC-010).
+2. ~~Delete or regenerate `package-lock.json` (SEC-010)~~ — regenerated in round 3.
 3. Approve the proposed CI security workflow.
 4. Approve installing the reviewed OWASP skill plugins (optional).
 5. Allow CodeQL execution in a future session, or enable it in GitHub.

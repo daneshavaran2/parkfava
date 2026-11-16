@@ -1,4 +1,3 @@
-2026-11-16T09:42:29Z
 Admin-only mutations reject an anonymous caller
   ok   anon parks.upsertParkAdmin  [AUTH_REJECT(unauthenticated)]
   ok   anon parks.deleteParkAdmin  [AUTH_REJECT(unauthenticated)]
@@ -63,4 +62,3 @@ Owner-A's saveOwnedCompany cannot alter owner-B's row
   ok   ownerA->B exhibition-api.saveOwnedCompany  [no-op, row unchanged]
 
 51 passed, 0 failed
-exit=0

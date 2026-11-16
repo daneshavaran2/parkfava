@@ -1,0 +1,5 @@
+tsc --noEmit: 7 errors, all pre-existing (src/components/ui/carousel.tsx x1, chart.tsx x6), unchanged from baseline
+vitest: 4 files, 52 tests passed
+vite build: exit 0
+eslint (changed files): exit 0 after prettier --write
+lint:i18n: exit 1, pre-existing violations only; none in changed files

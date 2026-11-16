@@ -1,0 +1,21 @@
+SEC-033  server functions reject cross-site requests (CSRF)
+  ok   cross-site (Sec-Fetch-Site) call is refused  [status 403]
+  ok   foreign Origin without Sec-Fetch-Site is refused  [status 403]
+  ok   same-origin call works  [status 200]
+  ok   Origin matching the Host works  [status 200]
+  ok   non-browser call without Origin/Sec-Fetch-Site still works  [status 200]
+SEC-034  current-password guessing through changeMyPassword is rate-limited
+  ok   guesses are refused once the limit is reached  [INVALID_CURRENT_PASSWORD, INVALID_CURRENT_PASSWORD, INVALID_CURRENT_PASSWORD, INVALID_CURRENT_PASSWORD, INVALID_CURRENT_PASSWORD, RATE_LIMITED, RATE_LIMITED]
+  ok   the first guesses get the normal error  [INVALID_CURRENT_PASSWORD]
+  ok   a legitimate change still works (after the window)  [{"t":10,"i":0,"p":{"k":["result"],"v":[{"t":10,"i":1,"p":{"k":["ok"],"v":[{"t":2]
+SEC-035  oversized request bodies are rejected before parsing
+  ok   3 MB JSON body with Content-Length is refused with 413  [status 413]
+  ok   3 MB chunked body (no Content-Length) is refused  [status 500]
+  ok   normal-sized calls still work
+  ok   3 MB multipart body without a session is refused with 413  [status 413]
+  ok   3 MB multipart body with a live session reaches the app  [status 200]
+SEC-036  response headers
+  ok   Permissions-Policy denies camera/microphone/geolocation  [camera=(), microphone=(), geolocation=(), payment=(), usb=()]
+  ok   server-function responses are not cacheable  [no-store]
+
+all passed

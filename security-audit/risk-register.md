@@ -9,7 +9,7 @@ but dormant while MFA is off (they would undermine MFA the moment it is enabled)
 | R-01 | Production still runs the pre-audit code | Deployment gap | 3 | 3 | **9** | Merge + deploy (remediation step 1) | Maintainers | Now |
 | R-02 | Admin/owner takeover with a stolen password (no MFA) | SEC-026 | 2 | 3 | **6** | Enable MFA for admins (step 8) | Maintainers | 2 weeks |
 | R-03 | Privileged actions and failed logins leave no trail | SEC-024 | 2 | 2 | 4 | Audit table (step 7) | Maintainers | 1 month |
-| R-04 | npm users install known-critical versions | SEC-010 | 2 | 2 | 4 | Delete/regenerate lockfile (step 5) | Maintainers | 1 week |
+| R-04 | npm users install known-critical versions (closed in round 3: lockfile regenerated) | SEC-010 | 1 | 1 | 1 | Delete/regenerate lockfile (step 5) | Maintainers | 1 week |
 | R-05 | Repo access reveals CEO mobiles / initial passwords | SEC-023 | 1 | 2 | 2 | Delete JSON after provisioning (step 2) | Maintainers | After provisioning |
 | R-06 | DB credential holder decrypts OpenRouter key | SEC-017 | 1 | 2 | 2 | Separate key (step 3) | Ops | 1 week |
 | R-07 | Container compromise has root inside the container | SEC-011 | 1 | 3 | 3 | Non-root user (step 9) | Ops | 1 month |

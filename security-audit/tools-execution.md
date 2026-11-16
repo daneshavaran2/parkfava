@@ -63,3 +63,15 @@ redacted (`--redact`).
 | Unit tests (45, incl. 19 security regressions) | vitest 4.1.12 | `bunx vitest run tests/unit` | 0 | `evidence/unit-tests.txt` |
 | Type check | tsc 5.x | `bunx tsc --noEmit` | 2 — 7 errors, all pre-existing (missing `recharts`/`embla-carousel-react` types) | `evidence/tsc.txt` |
 | Production build | Vite 8.3.8 / Nitro | `bun run build` | 0 | — |
+
+## Round 3 re-runs (2026-11-16)
+
+| Tool | Scope | Result | Evidence |
+|---|---|---|---|
+| Semgrep 1.185.0 (`semgrep/semgrep-rules` + `trailofbits/semgrep-rules`, JS/TS/Python/secrets) | round-3 changed files | 0 errors; 3 results, all in the test script `scripts/test-request-hardening.py` (`exec` of the repo's own helper, `urlopen` to localhost) — test-only false positives; 0 in application code | `evidence/semgrep-r3-changed-files.json` |
+| Gitleaks 8.30.1 | working tree (`dir`) + unpushed commits | 0 findings | `evidence/gitleaks-dir-r3.json` |
+| bun audit | `bun.lock` | 1 Moderate (`minimatch`, unchanged) | `evidence/bun-audit-r3.txt` |
+| npm audit (npm 11.6.2) | regenerated `package-lock.json` | 12 Moderate, one advisory (`minimatch`) | `evidence/npm-audit-package-lock-regenerated.json` |
+| OSV-Scanner (offline DB) | `bun.lock` + `package-lock.json` | 4 entries, all GHSA-g3hv-75wg-m249 (`minimatch`) | `evidence/osv-scanner-r3.json` |
+| tsc / vitest / eslint / vite build / lint:i18n | whole repo | 7 pre-existing errors / 55 passed / clean on changed files / OK / pre-existing violations only | `evidence/build-and-lint-r3.txt` |
+| CodeQL | — | not run (blocked by session permission policy, as before) | — |

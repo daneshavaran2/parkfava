@@ -1,0 +1,14 @@
+2026-11-16T17:52:45Z production build (bun run build; NODE_ENV=production node .output/server/index.mjs on :3100, disposable DB). Same checks as scripts/test-request-hardening.py, with the build's hashed server-function IDs; the Secure session cookie sent explicitly because the test ran over plain http.
+  ok   admin sign-in on production build  [status 200]
+  ok   session cookie is Secure + HttpOnly in production  [secure=True]
+SEC-033
+  ok   cross-site Sec-Fetch-Site refused  [status 403]
+  ok   foreign Origin refused  [status 403]
+  ok   same-origin works  [status 200]
+SEC-036
+  ok   server-function response no-store  [no-store]
+SEC-035
+  ok   3 MB JSON refused with 413  [status 413]
+  ok   3 MB multipart without session refused with 413  [status 413]
+  ok   3 MB multipart with live session reaches the app  [status 200]
+all passed

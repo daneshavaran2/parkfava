@@ -24,6 +24,11 @@ via Playwright. Dates are UTC, 2026-11-16.
 | SEC-016 | headers | `curl -D -` on production build (HTML and `/assets/x.png`) | absent | `nosniff`, `strict-origin-when-cross-origin`, `max-age=31536000` present | `evidence/prod-build-checks.txt` |
 | SEC-018 | log message | dev log after `requestOtp` without provider | `OTP for 0912… (code: NNNNNN)` | masked phone, no code (by code review; requestOtp path unchanged) | — |
 | SEC-019, SEC-020 | timeouts, identifier allowlist | code review + build | — | — | not fault-injected |
+| SEC-010 | regenerated `package-lock.json` (npm 11.6.2) | `npm ci --dry-run`, npm audit, OSV offline | 37 advisories (8 C, 13 H); out of sync with `package.json` | 12 Moderate (one `minimatch` advisory, dev tooling); `npm ci --dry-run` succeeds | `evidence/npm-audit-package-lock-regenerated.json`, `evidence/osv-scanner-r3.json` |
+| SEC-033 | `createCsrfMiddleware` (`src/start.ts`) | `scripts/test-request-hardening.py`; production build | cross-site 200, foreign Origin 200 | 403 / 403; same-origin 200 | `evidence/request-hardening-*.txt`, `evidence/prod-build-checks-r3.txt` |
+| SEC-034 | throttle in `changeMyPassword` | same script | 7 × `INVALID_CURRENT_PASSWORD` | 5 × invalid, then `RATE_LIMITED`; legitimate change works | same |
+| SEC-035 | `src/lib/body-limit.ts`, `src/server.ts` | same script + 10 unit cases + browser 3 MB logo upload | 3 MB JSON 200, chunked 200 | 413; chunked aborted (500); anonymous 3 MB multipart 413; signed-in 200 | same + `evidence/unit-tests.txt` |
+| SEC-036 | headers in `src/server.ts` | same script; production build | absent | `Permissions-Policy`, `no-store` on `/_serverFn/` | same |
 
 ## Regression of legitimate behaviour (post-patch)
 
@@ -32,10 +37,11 @@ via Playwright. Dates are UTC, 2026-11-16.
 | `scripts/test-authz-coverage.py` (anonymous, non-admin, owner-A→B against every mutation) | 51 passed, 0 failed |
 | `scripts/test-api-contracts.py` (visibility, input validation) | 13 passed, 0 failed |
 | Browser flows: first login with national ID + CEO mobile (Persian digits), forced password set, unsafe URL rejected, owner save → pending review, old password rejected, new password works, admin login + users list, public company page | 8/8 OK, no page errors |
-| Unit tests (vitest) | 45 passed (26 existing + 19 new) |
+| Unit tests (vitest) | 55 passed (26 existing + 29 new) |
 | Type check | 7 errors, identical to the pre-audit baseline (missing `recharts`/`embla-carousel-react` type packages) |
 | Production build (`bun run build`) | success |
 | i18n lint | no new violations |
+| Round 3 re-run (after all round-3 fixes) | authz 51/51, contracts 13/13, browser flows 8/8, request hardening all passed (dev and production build), unit 55/55, build OK, tsc 7 pre-existing |
 
 ## Scanner deltas (before → after)
 

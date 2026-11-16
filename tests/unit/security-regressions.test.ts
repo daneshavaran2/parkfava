@@ -13,7 +13,9 @@ describe("SEC-003: rate-limit client key ignores attacker-chosen X-Forwarded-For
   });
   it("gives every spoofed variant the same bucket", () => {
     const keys = new Set(
-      ["1.1.1.1", "2.2.2.2, 3.3.3.3", "x"].map((spoof) => clientIpFromForwardedFor(`${spoof}, 198.51.100.7`, 1)),
+      ["1.1.1.1", "2.2.2.2, 3.3.3.3", "x"].map((spoof) =>
+        clientIpFromForwardedFor(`${spoof}, 198.51.100.7`, 1),
+      ),
     );
     expect([...keys]).toEqual(["198.51.100.7"]);
   });
@@ -53,5 +55,125 @@ describe("SEC-008: URL fields reject script-capable schemes", () => {
   ])("allows %j", (value) => {
     expect(hasBlockedScheme(value)).toBe(false);
     expect(safeUrlString().safeParse(value).success).toBe(true);
+  });
+});
+
+describe("SEC-035: request body size limits", async () => {
+  const { limitRequestBody, MAX_RPC_BODY_BYTES, MAX_UPLOAD_BODY_BYTES, bodyLimitFor } =
+    await import("../../src/lib/body-limit");
+  const url = "http://localhost/_serverFn/x";
+
+  it("rejects an oversized declared Content-Length with 413", () => {
+    const req = new Request(url, {
+      method: "POST",
+      body: "x",
+      headers: {
+        "content-length": String(MAX_RPC_BODY_BYTES + 1),
+        "content-type": "application/json",
+      },
+    });
+    const out = limitRequestBody(req);
+    expect(out).toBeInstanceOf(Response);
+    expect((out as Response).status).toBe(413);
+  });
+
+  it("errors a streamed body that exceeds the limit without declaring a length", async () => {
+    const big = new Uint8Array(MAX_RPC_BODY_BYTES + 10);
+    const stream = new ReadableStream({
+      start(c) {
+        c.enqueue(big);
+        c.close();
+      },
+    });
+    const req = new Request(url, {
+      method: "POST",
+      body: stream,
+      duplex: "half",
+      headers: { "content-type": "application/json" },
+    } as RequestInit);
+    const out = limitRequestBody(req) as Request;
+    expect(out).toBeInstanceOf(Request);
+    await expect(out.text()).rejects.toThrow();
+  });
+
+  it("returns a request with an acceptable declared length untouched", () => {
+    const body = JSON.stringify({ a: 1 });
+    const req = new Request(url, {
+      method: "POST",
+      body,
+      headers: { "content-type": "application/json", "content-length": String(body.length) },
+    });
+    expect(limitRequestBody(req)).toBe(req);
+  });
+
+  it("rejects a malformed Content-Length", () => {
+    const req = new Request(url, {
+      method: "POST",
+      body: "x",
+      headers: { "content-length": "abc", "content-type": "application/json" },
+    });
+    expect((limitRequestBody(req) as Response).status).toBe(413);
+  });
+
+  it("passes a normal streamed JSON body through intact", async () => {
+    const stream = new ReadableStream({
+      start(c) {
+        c.enqueue(new TextEncoder().encode(JSON.stringify({ a: 1 })));
+        c.close();
+      },
+    });
+    const req = new Request(url, {
+      method: "POST",
+      body: stream,
+      duplex: "half",
+      headers: { "content-type": "application/json" },
+    } as RequestInit);
+    const out = limitRequestBody(req) as Request;
+    expect(await out.json()).toEqual({ a: 1 });
+  });
+
+  it("allows uploads up to the larger multipart limit", () => {
+    expect(bodyLimitFor("multipart/form-data; boundary=x")).toBe(MAX_UPLOAD_BODY_BYTES);
+    expect(bodyLimitFor("application/json")).toBe(MAX_RPC_BODY_BYTES);
+    const req = new Request(url, {
+      method: "POST",
+      body: "x",
+      headers: {
+        "content-length": String(50 * 1024 * 1024),
+        "content-type": "multipart/form-data; boundary=x",
+      },
+    });
+    expect(limitRequestBody(req)).toBe(req);
+  });
+
+  it("leaves GET requests alone", () => {
+    const req = new Request(url, { method: "GET" });
+    expect(limitRequestBody(req)).toBe(req);
+  });
+});
+
+describe("SEC-035: large multipart bodies need a session", async () => {
+  const { needsSessionForBody, MAX_RPC_BODY_BYTES } = await import("../../src/lib/body-limit");
+  const url = "http://localhost/_serverFn/x";
+  const multipart = "multipart/form-data; boundary=x";
+  const req = (headers: Record<string, string>, method = "POST") =>
+    new Request(url, { method, body: method === "GET" ? undefined : "x", headers });
+
+  it("requires a session for a multipart body declared above the RPC limit", () => {
+    expect(
+      needsSessionForBody(
+        req({ "content-type": multipart, "content-length": String(MAX_RPC_BODY_BYTES + 1) }),
+      ),
+    ).toBe(true);
+  });
+  it("requires a session for a multipart body with no declared length", () => {
+    expect(needsSessionForBody(req({ "content-type": multipart }))).toBe(true);
+  });
+  it("lets small multipart bodies and all JSON bodies through without one", () => {
+    expect(needsSessionForBody(req({ "content-type": multipart, "content-length": "1024" }))).toBe(
+      false,
+    );
+    expect(needsSessionForBody(req({ "content-type": "application/json" }))).toBe(false);
+    expect(needsSessionForBody(req({ "content-type": multipart }, "GET"))).toBe(false);
   });
 });

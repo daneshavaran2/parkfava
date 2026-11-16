@@ -1,8 +1,10 @@
 # Findings Register
 
-32 findings. Every finding was verified with Trail of Bits `fp-check`
+36 findings. SEC-001…032 were verified with Trail of Bits `fp-check`
 ([fp-check-verification.md](fp-check-verification.md)): 11 TRUE POSITIVES, 21 FALSE
-POSITIVES as vulnerabilities (kept as hardening or risk-register items, severity Informational). Status vocabulary: **Confirmed** (reproduced or directly evidenced),
+POSITIVES as vulnerabilities (kept as hardening or risk-register items, severity Informational).
+SEC-033…036 (round 3) were verified by reproducing them against the pre-fix code
+(`cd55adf`, `evidence/request-hardening-baseline.txt`) rather than a separate fp-check pass. Status vocabulary: **Confirmed** (reproduced or directly evidenced),
 **Confirmed (advisory)** (vulnerable version present and reachable code path exists; the
 exploit itself was not reproduced), **Potential**, **Hardening (fp-check: false positive)** (not exploitable; fix kept), **Requires environment access**.
 "Conditional" severity applies only under a stated configuration.
@@ -26,10 +28,12 @@ checkout credentials, `72e224e` this report.
 | SEC-007 | Password change without current password; sessions not revoked | Medium | Confirmed | Applied |
 | SEC-009 | CI/CD: broad token, mutable action tags, unpinned deploy CLI, persisted credentials | Medium | Confirmed | Applied |
 | SEC-026 | MFA disabled by default; admin accounts are password-only | Medium | Confirmed | Proposed (config + code) |
+| SEC-035 | No request body size limit (unauthenticated memory exhaustion) | Medium | Confirmed (local) | Applied |
 | SEC-012 | Internal review fields in public company detail and export | Low | Confirmed | Applied |
 | SEC-023 | Brute-forceable initial-password hashes committed to the repo | Low | Confirmed | Proposed |
+| SEC-034 | Unthrottled current-password guessing through `changeMyPassword` | Low | Confirmed | Applied |
 | SEC-008 | Script-capable URL schemes stored in owner-editable URL fields | Informational | Hardening (fp-check: false positive) | Applied |
-| SEC-010 | Stale `package-lock.json` pins 37 known-vulnerable packages | Informational | Hardening (fp-check: false positive) | Not started |
+| SEC-010 | Stale `package-lock.json` pins 37 known-vulnerable packages | Informational | Hardening (fp-check: false positive) | Applied (regenerated) |
 | SEC-011 | Container runs as root | Informational | Hardening (fp-check: false positive) | Proposed |
 | SEC-013 | Username enumeration through login response time | Informational | Hardening (fp-check: false positive) | Applied |
 | SEC-014 | Debug endpoint enabled whenever NODE_ENV is unset | Informational | Hardening (fp-check: false positive) | Applied |
@@ -49,6 +53,8 @@ checkout credentials, `72e224e` this report.
 | SEC-030 | Database TLS without certificate verification | Informational | Hardening (fp-check: false positive) | Not started |
 | SEC-031 | Developer test pages routable in production | Informational | Hardening (fp-check: false positive) | Proposed |
 | SEC-032 | Open self-registration plus SMS sending (abuse/cost surface) | Informational | Hardening (fp-check: false positive) | Accepted with controls |
+| SEC-033 | Server functions accept cross-site requests (no CSRF check) | Informational | Hardening | Applied |
+| SEC-036 | No Permissions-Policy; server-function responses cacheable | Informational | Hardening | Applied |
 
 ---
 
@@ -68,7 +74,7 @@ checkout credentials, `72e224e` this report.
 - **Remediation:** upgrade to `@tanstack/start-server-core >= 1.169.39`.
 - **Patch status:** Applied (`763c1c6`, now 1.169.45). Server functions renamed `.inputValidator()` → `.validator()` as required by the new version.
 - **Verification:** `bun audit` and OSV-Scanner on `bun.lock` no longer list it; authz suite 51/51, contracts 13/13, e2e 8/8 after upgrade.
-- **Residual risk:** none known for this advisory; `package-lock.json` still pins the old version (SEC-010).
+- **Residual risk:** none known for this advisory; `package-lock.json` was regenerated in round 3 and now pins `seroval@1.8.1` and the patched TanStack versions (SEC-010).
 
 ### SEC-002 — seroval deserialization invokes attacker-chosen callables / DoS
 
@@ -181,7 +187,7 @@ checkout credentials, `72e224e` this report.
 - **CWE:** CWE-1104, CWE-1395
 - **Evidence:** `evidence/npm-audit-package-lock.log` (8 Critical, 13 High, 15 Moderate, 1 Low), `evidence/trivy-fs.json`, `evidence/osv-scanner.json` (29 packages) — includes the SEC-001/002 versions.
 - **Remediation:** delete `package-lock.json` (the project builds with Bun), or regenerate it. Regeneration was attempted with npm 10.9.9 (`--package-lock-only --ignore-scripts --before=…`) and crashed in npm's resolver (`Cannot read properties of null (reading 'edgesOut')`); not forced with `--legacy-peer-deps` because that changes resolution semantics.
-- **Patch status:** Not started — decision needed (does Lovable or any team member use npm?).
+- **Patch status:** Applied (round 3). The stale lockfile was also out of sync with `package.json` (13 entries, `postgres` missing), so `npm ci` already failed on it. Regenerated with npm 11.6.2 (`--package-lock-only --ignore-scripts --before=2026-11-15T17:00Z`); `npm ci --dry-run` succeeds; seroval, TanStack, zod, vite, postgres and electron versions equal `bun.lock`. npm audit: 37 advisories (8 C, 13 H) → 12 Moderate, all GHSA-g3hv-75wg-m249 (`minimatch`, dev tooling only). OSV: 29 packages → 2 (`minimatch`). Evidence: `evidence/npm-audit-package-lock-regenerated.json`, `evidence/osv-scanner-r3.json`.
 
 ### SEC-011 — Container runs as root
 
@@ -353,3 +359,45 @@ checkout credentials, `72e224e` this report.
 - **fp-check verdict:** FALSE POSITIVE — bounded abuse surface; no SMS provider configured; revisit with CAPTCHA when SMS goes live.
 
 - **Severity:** Informational · Self-registered users can set a phone and request OTP SMS. Controls: sign-up 5/hour per IP (effective after SEC-003), 60s resend cooldown, 5 SMS/day per user. Consider CAPTCHA or disabling self-registration if not needed (companies are provisioned by admins).
+
+---
+
+## Round 3 (2026-11-16, after `cd55adf`)
+
+Reproduced against `cd55adf` with `scripts/test-request-hardening.py`
+(`evidence/request-hardening-baseline.txt`: 7 FAILED), fixed, then re-run
+(`evidence/request-hardening-patched.txt`: all passed) on the dev server and on the
+production build (`evidence/prod-build-checks-r3.txt`: all passed).
+
+### SEC-035 — No request body size limit
+
+- **Status:** Confirmed (local) · **Severity:** Medium · **CWE:** CWE-400, CWE-770
+- **Location:** `src/server.ts` (no limit before the framework reads `request.json()` / `request.formData()`), reachable without authentication on every server function.
+- **Evidence:** a 3 MB JSON body to `signIn`, with Content-Length and chunked, was read and answered 200. Memory exhaustion itself was not demonstrated (DoS testing is out of policy); Liara's ingress body limit is unknown.
+- **Patch:** `src/lib/body-limit.ts` + `src/server.ts`: 2 MB for RPC bodies; multipart up to 110 MB (above the 100 MB video cap in `src/lib/storage/mime.ts`) **only with a live session** — every upload function requires one, and the framework buffers the whole form before function middleware runs. Declared oversize → 413 before any handler; undeclared (chunked) bodies are counted and aborted at the limit.
+- **Verification:** 413 for 3 MB JSON; chunked 3 MB aborted (500); anonymous 3 MB multipart 413; signed-in 3 MB multipart reaches the app (200); real 3 MB logo upload in the browser saved and shown; 10 unit cases.
+- **Residual:** a chunked oversize body gets 500, not 413; a signed-in user can still send up to 110 MB per request (buffered).
+
+### SEC-034 — Unthrottled current-password guessing through `changeMyPassword`
+
+- **Status:** Confirmed · **Severity:** Low · **CWE:** CWE-307
+- **Origin:** introduced by the SEC-007 fix (`2377040`), which added the current-password check without a throttle.
+- **Prerequisite:** a valid session of the victim (e.g. a stolen cookie); not anonymous.
+- **Impact:** unlimited online guessing of the account password, giving access that survives the session being revoked.
+- **Evidence:** 7 consecutive wrong guesses all answered `INVALID_CURRENT_PASSWORD`.
+- **Patch:** `applyLimit("pwchange:<user id>", 5 per 15 min)` before verification (`src/lib/auth.functions.ts`); the forced first-login change is unaffected.
+- **Verification:** 5 × `INVALID_CURRENT_PASSWORD` then `RATE_LIMITED`; a legitimate change still works. Like the login throttle, it fails open (logged) if the limiter table is unavailable.
+
+### SEC-033 — Server functions accept cross-site requests (no CSRF check)
+
+- **Status:** Hardening · **Severity:** Informational · **CWE:** CWE-352
+- **Why not exploitable today:** the session cookie is `SameSite=Lax`, and `liara.run` is on the Public Suffix List, so other `*.liara.run` sites are cross-site; JSON server-function calls need a CORS preflight the app never approves. Becomes relevant on a custom domain whose sibling subdomains are not all trusted.
+- **Evidence:** `Sec-Fetch-Site: cross-site` and `Origin: https://evil.example` both answered 200.
+- **Patch:** TanStack `createCsrfMiddleware` on server functions (`src/start.ts`): Sec-Fetch-Site decides; Origin, then Referer, compared with the forwarded Host; requests with none of them (non-browser clients, which carry no victim cookie) are allowed.
+- **Verification:** 403 / 403 for the cross-site cases; same-origin, matching Origin and header-less calls 200; browser flows 8/8.
+
+### SEC-036 — No Permissions-Policy; server-function responses cacheable
+
+- **Status:** Hardening · **Severity:** Informational · **CWE:** CWE-525, CWE-693
+- **Patch:** `src/server.ts` adds `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()` to every response and `Cache-Control: no-store` to `/_serverFn/` responses.
+- **Verification:** headers present on dev and production builds.

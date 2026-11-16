@@ -10,7 +10,12 @@ import { z } from "zod";
 import { getDb } from "../../db/connection";
 import { hashPassword, verifyPassword } from "./auth/password.server";
 import { parseLoginId, toAsciiDigits } from "./auth/login-id";
-import { createSession, destroyOtherSessions, destroySession, getSessionUser } from "./auth/session.server";
+import {
+  createSession,
+  destroyOtherSessions,
+  destroySession,
+  getSessionUser,
+} from "./auth/session.server";
 import { requireAuth } from "./auth/middleware";
 import { clientKey, enforceRateLimit, RateLimitError } from "./rate-limit.server";
 import { logWarn } from "./log-envelope";
@@ -34,7 +39,10 @@ const signInSchema = z
     password: z.string().min(1).max(256),
     remember: z.boolean().optional(),
   })
-  .transform(({ identifier, email, ...rest }) => ({ ...rest, identifier: identifier ?? email ?? "" }));
+  .transform(({ identifier, email, ...rest }) => ({
+    ...rest,
+    identifier: identifier ?? email ?? "",
+  }));
 
 /**
  * Passwords are stored with Persian/Arabic-Indic digits folded to ASCII, so
@@ -229,6 +237,9 @@ export const changeMyPassword = createServerFn({ method: "POST" })
     `;
     if (!current) throw new Error("Unauthorized: not signed in");
     if (!current.must_change_password) {
+      // Without a limit this check is an unthrottled password-guessing oracle
+      // for anyone holding the session (security-audit SEC-034).
+      await applyLimit(`pwchange:${context.user.id}`, { limit: 5, windowSeconds: 900 });
       const ok =
         data.currentPassword !== undefined &&
         (await verifyLoginPassword(data.currentPassword, current.password_hash));

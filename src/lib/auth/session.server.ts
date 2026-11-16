@@ -79,6 +79,28 @@ export async function destroyOtherSessions(userId: string): Promise<void> {
 }
 
 /** Returns the logged-in user (with roles) for the current request, or null. */
+/**
+ * True when a raw Cookie header carries a session token that is live in the
+ * database. For src/server.ts, which runs before the framework's request
+ * context exists (so getCookie() is not available there). Fails closed: if the
+ * lookup fails the caller is treated as anonymous.
+ */
+export async function isLiveSessionCookie(cookieHeader: string | null): Promise<boolean> {
+  const raw = cookieHeader
+    ?.split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${COOKIE_NAME}=`))
+    ?.slice(COOKIE_NAME.length + 1);
+  if (!raw) return false;
+  try {
+    const token = decodeURIComponent(raw);
+    const rows = await getDb()`SELECT 1 FROM sessions WHERE id = ${token} AND expires_at > now()`;
+    return rows.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 export async function getSessionUser(): Promise<SessionUser | null> {
   const token = getCookie(COOKIE_NAME);
   if (!token) return null;

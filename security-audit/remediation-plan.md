@@ -20,7 +20,7 @@ national-ID-only users would leave rows without email; keep `0021` in place on r
 |---|---|---|
 | 3 | Set a dedicated `SETTINGS_ENCRYPTION_KEY` on Liara, then re-save the OpenRouter key in `/admin/ai` | SEC-017 |
 | 4 | Confirm the Google Maps browser key is HTTP-referrer restricted; delete or lock the legacy Supabase project | SEC-022 |
-| 5 | Decide on `package-lock.json`: delete it if nobody installs with npm (recommended), otherwise regenerate it with a working npm version and audit it | SEC-010 |
+| 5 | ~~Decide on `package-lock.json`~~ — done in round 3: regenerated with npm 11.6.2 and audited (12 Moderate, one `minimatch` advisory) | SEC-010 |
 | 6 | Turn on branch protection for `main` (required review + required CI checks) | SEC-009 residual |
 
 ## Phase C — code changes proposed (not yet applied)
