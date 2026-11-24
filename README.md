@@ -753,7 +753,7 @@ payload before calling the server function.
 | `getMyCompany`                     | GET    | `requireAuth`                   | The signed-in user's own company (any status)     |
 | `saveAdminCompany`                 | POST   | `requireMfaVerified` + admin    | Upsert any company by `company_id`                |
 | `listAdminCompanies`               | GET    | `requireMfaVerified` + admin    | All companies, any status                         |
-| `saveOwnedCompany`                 | POST   | `requireMfaVerified` + owner    | Partial update on own company (status/is_active/owner_user_id stripped) |
+| `saveOwnedCompany`                 | POST   | `requireMfaVerified` + owner    | Partial update on own company (admin-only fields — status, activation, ownership, review fields, listing order — stripped) |
 | `submitCompanyForReview`           | POST   | `requireMfaVerified` + owner/admin | `status → 'pending'`                           |
 | `approveCompanyAdmin`/`rejectCompanyAdmin` | POST | `requireMfaVerified` + admin | `status → 'approved'`/`'rejected'`             |
 | `deleteExhibitionCompanyAdmin`/`reorderExhibitionCompaniesAdmin` | POST | `requireMfaVerified` + admin | delete / bulk `sort_order` update |

@@ -155,7 +155,7 @@ Run against a disposable database; never point these at production.
 | Checkov (Dockerfile, GitHub Actions, secrets) | 0 failed checks |
 | Gitleaks | no findings |
 | Hadolint | no findings |
-| Semgrep | no confirmed issues; remaining results are style rules, escaped map-popup HTML, test-only scripts, and base images pinned by tag rather than digest |
+| Semgrep | no confirmed issues; remaining results are style rules, escaped map-popup HTML, the constant `X-Frame-Options: DENY` (the rule looks for user input in that header), test-only scripts, and base images pinned by tag rather than digest |
 | zizmor | 1 Low: the deploy job installs a pinned CLI version with `npm install -g` |
 | `bun audit` / `npm audit` / OSV-Scanner | 1 Moderate advisory (`minimatch`), dev tooling only |
 | Bandit | test scripts only (localhost requests, fixed SQL for the test database) |

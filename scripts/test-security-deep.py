@@ -257,6 +257,9 @@ try:
                 break
             time.sleep(2)
             st, body, _ = anon.call(mod, name, data, method)
+        if not args.prod and not ok(body) and "Invalid server function ID" in body or (not args.prod and st >= 500 and not err(body)):
+            print(f"  skip {mod}.{name}: not registered on the dev server yet (no page loaded it); covered with --prod")
+            continue
         leaks = seroval_leaks(body)
         check(f"{mod}.{name} exposes no internal or personal fields", ok(body) and not leaks, ", ".join(leaks) or (err(body) or f"status {st}"))
     for path in ("/api/public/export", "/api/public/health"):
