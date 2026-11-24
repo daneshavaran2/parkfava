@@ -12,8 +12,8 @@ production build. Production was not tested.
 | Findings | 46 (SEC-001 … SEC-046) |
 | Critical / High | 1 / 3 — all fixed |
 | Medium | 6 — 5 fixed, 1 open (MFA off by default, SEC-026) |
-| Low | 8 — all fixed |
-| Informational / hardening | 28 — 19 fixed or partly fixed, 8 open or accepted (configuration or product decisions), 1 not applicable to the delivered package |
+| Low | 7 — all fixed |
+| Informational / hardening | 29 — 20 fixed or partly fixed, 8 open or accepted (configuration or product decisions), 1 not applicable to the delivered package |
 
 Every fix listed below is covered by an automated test or a scanner re-run.
 None of them protects a deployment until this code is deployed there. A clean
@@ -74,7 +74,6 @@ vulnerabilities.
 | SEC-012 | Low | Internal review fields in the public company page and export | Fields stripped on public paths |
 | SEC-023 | Low | Initial-password hashes (`scripts/company-national-id-logins.json`) committed with the source | File removed and git-ignored; generated locally from the park's spreadsheet when provisioning |
 | SEC-034 | Low | Unthrottled current-password guessing through `changeMyPassword` | 5 attempts per 15 minutes per account |
-| SEC-038 | Low | Uploads checked by extension only; an HTML page renamed to `.png` was stored | File signature must match the extension (`assertUploadContent`) |
 | SEC-040 | Low | Dev server listened on every network interface, exposing project files to the local network | Listens on localhost only; `--host` to opt in |
 | SEC-042 | Low | Attachments of an unpublished (draft, pending, rejected or inactive) company were readable by anyone who knew its id | Same visibility rule as the company itself: public only when published; owner and admins otherwise |
 | SEC-043 | Low | Trivial passwords (`12345678`, `password`, `11111111`, …) accepted at sign-up and password change | Blocklist of common passwords, repeated and sequential patterns, and passwords containing the username (NIST SP 800-63B); applies to the first-login change too |
@@ -93,6 +92,7 @@ vulnerabilities.
 | SEC-031 | Info | Developer test pages (`/perf`, `/dev/logo`) served in production | 404 in production builds |
 | SEC-033 | Info | Server functions accepted cross-site requests | CSRF middleware: Sec-Fetch-Site (same-origin only), then Origin/Referer against the host |
 | SEC-036 | Info | No Permissions-Policy; server-function responses cacheable | Permissions-Policy on every response; `no-store` on `/_serverFn/` |
+| SEC-038 | Info | Uploads checked by extension only; an HTML page renamed to `.png` was stored (it was still served as an image, never as HTML) | File signature must match the extension (`assertUploadContent`) |
 | SEC-037 | Info | Pages rendered for any HTTP method (`PUT /`, `DELETE /`, …) | 405 unless the path uses that method |
 | SEC-039 | Info | Admin upload ids used unchecked as folder names | Path segments validated (`assertSafePathSegment`) |
 | SEC-041 | Info | Desktop build's offline import spliced seed-file keys into SQL as identifiers | Same identifier allowlist as SEC-020 |

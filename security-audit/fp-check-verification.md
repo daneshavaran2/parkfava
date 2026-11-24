@@ -1480,3 +1480,406 @@ controls the phone number. 2.2 Cost bound: 5 × accounts/day. 2.3 N/A. 2.4 Bound
 | Result | Pass | Pass | **Fail** | **Fail** | Pass | **Fail** (no SMS provider) |
 
 `BUG SEC-032 FALSE POSITIVE — bounded abuse surface; revisit when SMS is configured.`
+
+---
+
+# Part C — SEC-033 … SEC-046 (rounds 3–5)
+
+Same method as Parts A and B (deep verification, phases 1–5, 13 questions, six gates);
+Gate 3 interpreted as above. "Baseline" means the code before the fix; the PoCs are the
+regression tests that failed on the baseline and pass after the fix. Code facts were
+re-read after the verdicts (Q13): `src/lib/auth/session.server.ts` (cookie `sameSite:
+"lax"`, `secure` in production), `src/start.ts` (CSRF middleware), `src/routes/assets.$.ts`
+(content-type from the extension, `nosniff`), `src/lib/auth.functions.ts` (throttles 8/5 min
+per account, 60/15 min per client, 5/h sign-up, 5/15 min password change).
+
+## Verdict summary — Part C
+
+| Bug | Class | Verdict | Effect on the register |
+|---|---|---|---|
+| SEC-034 | Brute force (credential oracle) | **TRUE POSITIVE** (needs a stolen session) | Unchanged (Low) |
+| SEC-035 | DoS (unbounded request body) | **TRUE POSITIVE** (unauthenticated) | Unchanged (Medium) |
+| SEC-040 | Information disclosure (dev server on all interfaces) | **TRUE POSITIVE** (adjacent network, development only) | Unchanged (Low) |
+| SEC-042 | Information disclosure (unpublished attachments) | **TRUE POSITIVE** | Unchanged (Low) |
+| SEC-043 | Weak credentials | **TRUE POSITIVE** | Unchanged (Low) |
+| SEC-044 | Information disclosure (database error) | **TRUE POSITIVE** (low value) | Unchanged (Low) |
+| SEC-046 | User enumeration (sign-up) | **TRUE POSITIVE** (low value, accepted) | Unchanged (Info, accepted) |
+| SEC-033 | CSRF | **FALSE POSITIVE** — SameSite=Lax + public-suffix domain block it | Stays Informational hardening |
+| SEC-036 | Missing headers | **FALSE POSITIVE** — defence in depth | Stays Informational hardening |
+| SEC-037 | Unexpected HTTP methods | **FALSE POSITIVE** — no state change | Stays Informational hardening |
+| SEC-038 | Upload content not checked | **FALSE POSITIVE** — never served as HTML | Low → **Informational** hardening |
+| SEC-039 | Path segment from admin input | **FALSE POSITIVE** — trusted admin, contained | Stays Informational hardening |
+| SEC-041 | SQL identifiers from seed file | **FALSE POSITIVE** — trusted input | Stays Informational hardening |
+| SEC-045 | Missing X-Frame-Options | **FALSE POSITIVE** — CSP frame-ancestors enforced | Stays Informational hardening |
+
+**Counts (Part C, 14 bugs): 7 TRUE POSITIVES, 7 FALSE POSITIVES.** All fixes stay applied.
+
+**Exploit chains checked:** SEC-040 (dev server exposed) + SEC-023 (hash file in the tree)
+— on the baseline a LAN attacker could fetch `scripts/company-national-id-logins.json` from
+a developer's dev server and brute-force CEO mobiles offline; both are fixed (dev server
+bound to localhost, file removed). SEC-043 (weak passwords) + SEC-046 (enumeration) —
+enumeration confirms a target email, weak passwords make the per-account throttle
+(8 per 5 min) insufficient; both addressed (policy) or bounded (5 sign-ups/h). SEC-042 +
+SEC-038 — a disguised upload of an unpublished company was readable by id, but still
+served as an image; no script execution. No further chain found.
+
+## SEC-033 — Server functions accept cross-site requests
+
+**Step 0.** Claim: no CSRF check on server functions. Threat model: attacker page visited
+by a signed-in user. Class: CSRF.
+**Phase 1.** 1.1 Browser on attacker origin → POST `/_serverFn/…` with the victim's cookie.
+1.2 Contract: server functions accept JSON (`x-tsr-serverfn`), the session cookie is
+`SameSite=Lax`. 1.3 Environment: production host `*.liara.run`; `liara.run` is on the
+Public Suffix List, so every other Liara app is a different site. 1.4 Cross-ref: CORS never
+approves foreign origins (probe: preflight not approved).
+**Phase 2.** 2.1 Attacker controls the request but not the cookie: Lax withholds it on
+cross-site POST and `fetch`. 2.2 N/A. 2.3 N/A. 2.4 Adversarial: a JSON request needs a
+preflight that fails; a `no-cors` text/plain POST is sent without the cookie.
+**Phase 3.** 3.1 No impact while Lax applies. 3.2 Lax is the primary control; the
+middleware is defence in depth (matters on a custom domain with untrusted sibling
+subdomains).
+**Phase 4.** 4.1 Pseudocode: evil.example → `fetch(target+signOutFn,{credentials:'include'})`
+→ no cookie → no effect. 4.2 Executable: `scripts/test-security-browser.cjs` (real
+Chromium, cross-site and same-site pages). 4.3 Unit/HTTP: `scripts/test-request-hardening.py`
+(baseline: forged `Sec-Fetch-Site: cross-site` answered 200 — header-level only, no cookie
+involved). 4.4 Negative: same-origin call 200. 4.5 Verified on the dev server and the
+production build.
+**Phase 5.** Q1 Lax cookie already blocks it. Q2 Framework default before 1.169 had no
+CSRF middleware. Q3 PSL status of the host. Q4 Yes — "no CSRF token" pattern. Q5 Lax
+prevents the cookie from being sent. Q6 Cookie is not attacker-controlled. Q7 N/A.
+Q8 Not on the current host. Q9 Yes — defence-in-depth gap. Q10 Browser SameSite
+enforcement. Q11 Not real on production. Q12 Considered a custom-domain sibling: covered
+by the middleware now (same-site refused). Q13 Re-read `session.server.ts` and `start.ts`.
+
+| Gate | 1 Process | 2 Reach | 3 Impact | 4 PoC | 5 Math | 6 Env |
+|---|---|---|---|---|---|---|
+| Result | Pass | **Fail** | **Fail** | **Fail** (no cookie sent) | N/A | **Fail** (Lax + PSL) |
+
+`BUG SEC-033 FALSE POSITIVE — the session cookie is never sent cross-site; middleware kept as hardening.`
+
+## SEC-034 — Unthrottled current-password guessing
+
+**Step 0.** Claim: `changeMyPassword` verifies the current password with no throttle.
+Threat model: attacker holding a victim's session (stolen cookie). Class: brute force.
+**Phase 1.** 1.1 Session cookie → `changeMyPassword({currentPassword})` →
+`verifyLoginPassword` → distinct `INVALID_CURRENT_PASSWORD`. 1.2 Contract: `requireAuth`
+only. 1.3 Environment: no other limiter on this path. 1.4 Introduced by the SEC-007 fix.
+**Phase 2.** 2.1 Attacker controls `currentPassword` fully. 2.2 Bound: unlimited tries per
+session (scrypt cost only, ~50 ms) ≈ 70,000 guesses/hour. 2.3 N/A. 2.4 Gains a password
+that survives revocation of the stolen session.
+**Phase 3.** 3.1 Real: credential disclosure → persistent account access. 3.2 Primary
+control missing (no throttle).
+**Phase 4.** 4.1 Pseudocode: loop guesses with the stolen cookie until no
+`INVALID_CURRENT_PASSWORD`. 4.2 Executable: `scripts/test-request-hardening.py`
+(baseline: 7 guesses, all answered, `evidence/request-hardening-baseline.txt`). 4.3 Unit:
+skipped — needs DB and session; the HTTP test is the executable PoC. 4.4 Negative: the
+legitimate change still works. 4.5 Patched: 5 guesses then `RATE_LIMITED`.
+**Phase 5.** Q1 Requires a session — still a real escalation to the password. Q2 Oversight
+in the SEC-007 fix. Q3 No upstream limiter. Q4 No — reproduced. Q5 Validation does not
+limit attempts. Q6 Attacker controls the field. Q7 Rate computed from scrypt cost. Q8 Yes,
+scripted. Q9 Primary control. Q10 None. Q11 Real, Low because a session is needed. Q12 No.
+Q13 Re-read the handler (throttle now at line 253).
+
+| Gate | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass | Pass | Pass | Pass | Pass |
+
+`BUG SEC-034 TRUE POSITIVE — unthrottled current-password oracle for a session holder.`
+
+## SEC-035 — No request body size limit
+
+**Step 0.** Claim: any request body is read and parsed in full before authorization.
+Threat model: anonymous attacker. Class: DoS (memory).
+**Phase 1.** 1.1 Body → framework `request.json()`/`formData()` → memory. 1.2 No limit in
+the framework or `src/server.ts`. 1.3 Liara ingress limit unknown (not documented in
+the repo). 1.4 Same parser for every server function.
+**Phase 2.** 2.1 Size fully attacker-controlled, no authentication. 2.2 Memory ≈ k × size
+× concurrency; with 10 concurrent 100 MB bodies and k ≥ 2 the demand exceeds a typical
+512 MB–1 GB container. 2.3 N/A. 2.4 Cheap for the attacker (bandwidth only).
+**Phase 3.** 3.1 Attacker-triggered, unauthenticated loss of availability with
+amplification — real impact under the DoS class rule. 3.2 Primary control missing.
+**Phase 4.** 4.1 Pseudocode: N parallel POSTs of B MB → heap growth → OOM/restart.
+4.2 Executable: `scripts/test-request-hardening.py` (baseline: 3 MB accepted with and
+without Content-Length). Memory exhaustion itself not run (DoS testing out of policy).
+4.3 Unit: `tests/unit/security-regressions.test.ts` (SEC-035 blocks). 4.4 Negative:
+normal calls and a 3 MB signed-in upload still work. 4.5 Patched: 413 / aborted.
+**Phase 5.** Q1 An ingress limit might exist — unverified. Q2 Framework default.
+Q3 Ingress configuration. Q4 No — acceptance reproduced. Q5 Nothing limited it. Q6 Body is
+attacker data. Q7 Bound above. Q8 Yes with modest bandwidth. Q9 Primary. Q10 Node heap
+limit turns it into a crash, not a defence. Q11 Real; magnitude depends on ingress.
+Q12 No. Q13 Re-read `server.ts` and `body-limit.ts`.
+
+| Gate | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass | Pass | Pass (trigger shown; OOM inferred, not run) | Pass | Pass (no known ingress limit) |
+
+`BUG SEC-035 TRUE POSITIVE — unauthenticated unbounded body parsing (memory DoS).`
+
+## SEC-036 — No Permissions-Policy; server-function responses cacheable
+
+**Step 0.** Claim: missing hardening headers. Threat model: injected script / shared cache.
+Class: missing control.
+**Phase 1.** 1.1 Headers on every response. 1.2 None set. 1.3 HTTPS, no shared cache in
+front of the app; server-function responses carry session data. 1.4 SEC-016 headers present.
+**Phase 2.** 2.1 Attacker controls nothing here. 2.2–2.3 N/A. 2.4 Would need script
+injection (none found) or a caching proxy (none).
+**Phase 3.** 3.1 Defence in depth only. 3.2 Not a primary control.
+**Phase 4.** 4.1 Pseudocode: none (no attack path). 4.2 Executable: header checks in
+`test-request-hardening.py`. 4.3 Skipped — header presence only. 4.4 Negative: pages load.
+4.5 Verified.
+**Phase 5.** Q1 Headers are optional. Q2 Not set by default. Q3 No CDN. Q4 Yes — checklist
+item. Q5 N/A. Q6 N/A. Q7 N/A. Q8 No. Q9 Yes. Q10 Browser defaults. Q11 Not a
+vulnerability. Q12 No. Q13 Re-read `server.ts`.
+
+| Gate | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Result | Pass | **Fail** | **Fail** | **Fail** | N/A | **Fail** |
+
+`BUG SEC-036 FALSE POSITIVE — hardening headers, no attack path.`
+
+## SEC-037 — Pages rendered for any HTTP method
+
+**Step 0.** Claim: `PUT /`, `DELETE /` return the page. Threat model: scanner / method
+tampering. Class: misconfiguration.
+**Phase 1.** 1.1 Any method → SSR render. 1.2 Pages have no handlers for other methods.
+1.3 None. 1.4 API routes and server functions handle their own methods.
+**Phase 2.** 2.1 Attacker controls the method. 2.2–2.3 N/A. 2.4 Nothing changes state.
+**Phase 3.** 3.1 No impact. 3.2 Hygiene.
+**Phase 4.** 4.1 `PUT /` → 200 HTML (baseline probe). 4.2 `test-security-probes.py`
+(405 after). 4.3 `security-regressions.test.ts` SEC-037. 4.4 GET/HEAD and POST to server
+functions still work. 4.5 Verified on both builds.
+**Phase 5.** Q1 Render is idempotent. Q2 Framework default. Q3 None. Q4 Yes — scanner
+finding. Q5 N/A. Q6 N/A. Q7 N/A. Q8 No. Q9 Yes. Q10 N/A. Q11 Not a vulnerability.
+Q12 No. Q13 Re-read `method-guard.ts`.
+
+| Gate | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass | **Fail** | **Fail** | N/A | Pass |
+
+`BUG SEC-037 FALSE POSITIVE — no state change or disclosure.`
+
+## SEC-038 — Uploads checked by extension only
+
+**Step 0.** Claim: an HTML file renamed `.png` is stored. Threat model: company owner or
+admin uploading a polyglot to run script in the site's origin. Class: stored XSS via upload.
+**Phase 1.** 1.1 Upload → `assertUploadAllowed` (extension) → disk → `/assets/*`.
+1.2 Served with the content-type of the extension (`mimeFromPath`) and `nosniff`.
+1.3 SVG/HTML/XML extensions refused. 1.4 Only signed-in owners/admins upload.
+**Phase 2.** 2.1 Uploader controls the bytes. 2.2 N/A. 2.3 N/A. 2.4 Browser obeys
+`image/png` + `nosniff`; HTML never renders.
+**Phase 3.** 3.1 No script execution → no impact. 3.2 The content-type is the primary
+control; the signature check is defence in depth.
+**Phase 4.** 4.1 Upload `x.png` containing HTML → GET `/assets/…` → `image/png`. 4.2
+Executable: `test-security-probes.py` baseline ("never served as HTML", served as
+`image/png`). 4.3 `security-regressions.test.ts` SEC-038. 4.4 Real PNG accepted;
+browser logo upload works. 4.5 Verified.
+**Phase 5.** Q1 Content-type + nosniff neutralise it. Q2 Extension allowlist chosen for
+simplicity. Q3 Serving headers. Q4 Yes — "no magic-byte check" pattern. Q5 Yes, it
+prevents execution. Q6 Uploader is authenticated. Q7 N/A. Q8 No. Q9 Yes. Q10 Browser
+MIME enforcement. Q11 Was rated Low; downgraded. Q12 Considered old browsers ignoring
+nosniff on images — they still render images, not HTML. Q13 Re-read `assets.$.ts`.
+
+| Gate | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass | **Fail** | **Fail** | N/A | **Fail** (nosniff + content-type) |
+
+`BUG SEC-038 FALSE POSITIVE — disguised HTML is served as an image; check kept as hardening.`
+
+## SEC-039 — Admin upload ids used as folder names
+
+**Step 0.** Claim: `company_id`/`park_id`/`ownerId` unchecked in upload paths. Threat model:
+admin. Class: path traversal.
+**Phase 1.** 1.1 Admin input → path → `saveLocalFile` → `resolveSafePath` (containment).
+1.2 Owners are limited to their own existing company id. 1.3 Uploads root containment.
+1.4 File names timestamp+random.
+**Phase 2.** 2.1 Only an admin controls the id. 2.2 N/A. 2.3 N/A. 2.4 Write stays inside
+the uploads root, never overwrites (random names).
+**Phase 3.** 3.1 No impact beyond what an admin can already do. 3.2 Containment is the
+primary control.
+**Phase 4.** 4.1 `company_id="../about"` → file in another uploads folder. 4.2
+`test-security-probes.py` (refused after). 4.3 SEC-039 unit tests. 4.4 Normal ids accepted.
+4.5 Verified.
+**Phase 5.** Q1 Admins are trusted. Q2 Ids come from the DB in normal use. Q3 Containment.
+Q4 Yes. Q5 Containment prevents escape. Q6 Yes — admin is trusted. Q7 N/A. Q8 No. Q9 Yes.
+Q10 N/A. Q11 Not a vulnerability. Q12 No. Q13 Re-read `local-storage.server.ts`.
+
+| Gate | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Result | Pass | **Fail** (admin only) | **Fail** | Pass | N/A | **Fail** (containment) |
+
+`BUG SEC-039 FALSE POSITIVE — trusted input, writes contained.`
+
+## SEC-040 — Dev server on every network interface
+
+**Step 0.** Claim: `vite dev` listened on `::`, serving project files to the local network.
+Threat model: attacker on the same network as a developer (office or café Wi-Fi). Class:
+information disclosure.
+**Phase 1.** 1.1 LAN → `http://<dev-ip>:8080/<file>` → Vite serves the project tree.
+1.2 Vite denies `.env`/`.git` but serves `package.json`, migrations and JSON files.
+1.3 Lovable's sandbox needs `::` and sits behind its own proxy; local runs do not.
+1.4 On the baseline the tree contained the initial-password hash file (SEC-023).
+**Phase 2.** 2.1 Attacker chooses the path. 2.2 N/A. 2.3 N/A. 2.4 Requires network
+adjacency and a running dev server.
+**Phase 3.** 3.1 Real: source and credential-hash disclosure. 3.2 Primary control missing.
+**Phase 4.** 4.1 LAN GET `/scripts/company-national-id-logins.json` → hashes. 4.2
+`test-security-probes.py` on the dev server (baseline: 200 for project files; `Network:`
+address printed by Vite). 4.3 Skipped — configuration. 4.4 Localhost access still works.
+4.5 After the fix Vite prints "use --host to expose".
+**Phase 5.** Q1 Development only. Q2 Default of the editor's config. Q3 Sandbox vs local.
+Q4 No — config shows `::`. Q5 Nothing restricted it. Q6 Attacker on LAN controls requests.
+Q7 N/A. Q8 Yes on shared networks. Q9 Primary. Q10 Host firewall may block — not assumed.
+Q11 Low, environment-bound. Q12 No. Q13 Re-read `vite.config.ts` (now `host: "localhost"`).
+
+| Gate | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass | Pass | Pass | N/A | Pass (development environments) |
+
+`BUG SEC-040 TRUE POSITIVE — project files and credential hashes readable from the local network.`
+
+## SEC-041 — Desktop offline import splices seed keys as SQL identifiers
+
+**Step 0.** Claim: `electron/main.cjs` builds INSERT column lists from seed keys.
+Threat model: attacker who can alter the bundled seed. Class: SQL injection.
+**Phase 1.** 1.1 Seed JSON (built by `scripts/build-offline-seed.ts`, bundled in the
+installer) → identifiers. 1.2 Values parameterised. 1.3 Local embedded Postgres.
+1.4 Same pattern fixed in SEC-020.
+**Phase 2.** 2.1 Attacker would need to modify the installer — already full control.
+2.2–2.3 N/A. 2.4 No remote path.
+**Phase 3.** 3.1 None. 3.2 Allowlist is hardening.
+**Phase 4.** 4.1 Tampered key `a"); DROP …` → executed. 4.2 Skipped — requires a modified
+installer. 4.3 Skipped. 4.4 Normal seed imports. 4.5 `node --check` and lint after the fix.
+**Phase 5.** Q1 Trusted build artefact. Q2 Mirrors the server import. Q3 Installer
+integrity. Q4 Yes. Q5 N/A. Q6 Yes — seed is trusted. Q7 N/A. Q8 No. Q9 Yes. Q10 N/A.
+Q11 Not a vulnerability. Q12 No. Q13 Re-read `upsertTable`.
+
+| Gate | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Result | Pass | **Fail** | **Fail** | **Fail** | N/A | **Fail** |
+
+`BUG SEC-041 FALSE POSITIVE — input is a trusted build artefact.`
+
+## SEC-042 — Attachments of unpublished companies readable by id
+
+**Step 0.** Claim: public `getAttachments` returns active attachments of any company,
+including draft, pending, rejected or inactive ones. Threat model: anonymous visitor.
+Class: information disclosure (broken access control).
+**Phase 1.** 1.1 Anonymous `getAttachments({ownerType:"exhibition", ownerId})` → rows
+with titles, descriptions and file URLs. 1.2 No auth middleware; filter `is_active` only.
+1.3 Company ids are slugs derived from names (guessable). 1.4 `getExhibitionCompanyDetail`
+and products already hide unpublished companies — the inconsistency.
+**Phase 2.** 2.1 Attacker chooses `ownerId`. 2.2 N/A. 2.3 N/A. 2.4 File URLs then fetch the
+files from `/assets`.
+**Phase 3.** 3.1 Real: unpublished company documents disclosed. 3.2 Primary control
+(visibility rule) missing on this function.
+**Phase 4.** 4.1 Anonymous call with a draft company id → rows. 4.2
+`scripts/test-security-strict.py` (baseline FAIL: `evidence/strict-dev-baseline.txt`).
+4.3 Skipped — the HTTP test exercises the real handler and DB. 4.4 Published company's
+attachments still public; owner/admin still see their own. 4.5 After fix: PASS on both
+builds.
+**Phase 5.** Q1 Attachments might be meant public — not for unpublished companies, by the
+detail function's own rule. Q2 Mirrored an old RLS policy. Q3 None missing. Q4 No —
+reproduced. Q5 `is_active` does not cover status. Q6 `ownerId` is attacker input.
+Q7 N/A. Q8 Yes, one request per guessed id. Q9 Primary. Q10 None. Q11 Low value data but
+real. Q12 No. Q13 Re-read `attachments.functions.ts`.
+
+| Gate | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass | Pass | Pass | N/A | Pass |
+
+`BUG SEC-042 TRUE POSITIVE — unpublished companies' attachments disclosed to anonymous callers.`
+
+## SEC-043 — Trivial passwords accepted
+
+**Step 0.** Claim: sign-up and password change accept `12345678`, `password`, etc.
+Threat model: online guessing against any account. Class: weak credentials.
+**Phase 1.** 1.1 Password → zod `min(8)` → hash. 1.2 No other rule. 1.3 Throttles 8/5 min
+per account, 60/15 min per client. 1.4 First-login change uses the same path.
+**Phase 2.** 2.1 Attacker controls guesses. 2.2 Bound: 8 guesses/5 min = 96/hour per
+account; a top-100 list is exhausted in ~63 min, distributed IPs do not raise the
+per-account cap. 2.3 N/A. 2.4 Users choosing common passwords become reachable.
+**Phase 3.** 3.1 Real: account takeover (admin → privilege). 3.2 Primary control (policy)
+missing; throttle alone is insufficient for top-list passwords.
+**Phase 4.** 4.1 Guess top-100 at 8/5 min → success for any account using one. 4.2
+`test-security-strict.py` (baseline: all 6 trivial passwords accepted). 4.3
+`security-regressions.test.ts` SEC-043. 4.4 Strong passwords and existing test fixtures
+accepted. 4.5 Verified on both builds; UI messages in both languages.
+**Phase 5.** Q1 Length rule exists. Q2 Simplicity. Q3 Throttle. Q4 No — reproduced.
+Q5 Throttle slows but does not prevent top-list guessing. Q6 Guesses are attacker data.
+Q7 Bound above. Q8 Yes. Q9 Primary. Q10 None. Q11 Low–Medium; Low because of throttling.
+Q12 No. Q13 Re-read signUp/changeMyPassword.
+
+| Gate | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass | Pass | Pass | Pass | Pass |
+
+`BUG SEC-043 TRUE POSITIVE — common passwords accepted; online guessing feasible within the throttle.`
+
+## SEC-044 — Database error returned on a sign-up race
+
+**Step 0.** Claim: concurrent sign-ups for one email return the raw Postgres error.
+Threat model: anonymous caller. Class: information disclosure.
+**Phase 1.** 1.1 Two sign-ups pass the existence check → second INSERT hits the unique
+index → error message serialised to the client. 1.2 Thrown errors are serialised by the
+framework. 1.3 None. 1.4 Any unexpected DB error took the same route.
+**Phase 2.** 2.1 Attacker controls timing (parallel requests). 2.2 N/A. 2.3 Race: window
+between SELECT and INSERT, reproducible with 10 parallel requests. 2.4 Reveals table and
+constraint names (`users_email_key`).
+**Phase 3.** 3.1 Real but low-value information disclosure. 3.2 Primary control (error
+mapping) missing.
+**Phase 4.** 4.1 10 parallel `signUp(sameEmail)`. 4.2 `test-security-strict.py`
+(baseline FAIL). 4.3 Skipped — needs real concurrency against the DB. 4.4 One account
+created, others `EMAIL_ALREADY_REGISTERED`. 4.5 Also covered by the NUL-byte fuzz payload
+(global guard).
+**Phase 5.** Q1 Schema names are not secret per se. Q2 Rare path. Q3 None. Q4 No —
+reproduced. Q5 N/A. Q6 Attacker controls timing. Q7 Race window shown empirically. Q8 Yes.
+Q9 Primary (error handling). Q10 None. Q11 Low value; still disclosure. Q12 No.
+Q13 Re-read the insert and `start.ts` guard.
+
+| Gate | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass | Pass (low value) | Pass | N/A | Pass |
+
+`BUG SEC-044 TRUE POSITIVE — raw database error (schema names) returned to anonymous callers.`
+
+## SEC-045 — No X-Frame-Options header
+
+**Step 0.** Claim: clickjacking possible. Threat model: attacker framing the site.
+Class: UI redressing.
+**Phase 1.** 1.1 Attacker page → `<iframe src=site>`. 1.2 CSP `frame-ancestors 'none'`
+enforced in production. 1.3 Modern browsers honour CSP. 1.4 Nikto flagged the legacy header.
+**Phase 2.** 2.1 Attacker controls the framing page. 2.2–2.3 N/A. 2.4 Blocked by CSP.
+**Phase 3.** 3.1 None in supported browsers. 3.2 CSP is primary; the header is legacy
+defence in depth.
+**Phase 4.** 4.1 Frame attempt → refused by CSP. 4.2 Nikto (baseline flag; gone after).
+4.3 Skipped — header presence. 4.4 Site loads normally. 4.5 Verified.
+**Phase 5.** Q1 CSP covers it. Q2 Legacy header unnecessary. Q3 Browser support. Q4 Yes.
+Q5 Yes. Q6 N/A. Q7 N/A. Q8 No. Q9 Yes. Q10 Browser CSP enforcement. Q11 Not a
+vulnerability. Q12 No. Q13 Re-read `csp.ts`.
+
+| Gate | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Result | Pass | **Fail** | **Fail** | **Fail** | N/A | **Fail** (CSP) |
+
+`BUG SEC-045 FALSE POSITIVE — framing already blocked by CSP frame-ancestors.`
+
+## SEC-046 — Sign-up reveals registered emails
+
+**Step 0.** Claim: `signUp` answers `EMAIL_ALREADY_REGISTERED`. Threat model: anonymous
+enumeration. Class: user enumeration.
+**Phase 1.** 1.1 Email → existence check → distinct error. 1.2 No auth. 1.3 5 sign-ups
+per hour per client. 1.4 Sign-in errors are uniform (SEC-013).
+**Phase 2.** 2.1 Attacker chooses emails. 2.2 5/h per client; distributed clients scale
+linearly. 2.3 N/A. 2.4 Confirms targets for password guessing.
+**Phase 3.** 3.1 Real, low-value disclosure. 3.2 Accepted: the form needs to tell users.
+**Phase 4.** 4.1 signUp(existing) → `EMAIL_ALREADY_REGISTERED`. 4.2
+`test-security-strict.py` (recorded as a note). 4.3 Skipped. 4.4 New email registers.
+4.5 Verified.
+**Phase 5.** Q1 UX requirement. Q2 Usability. Q3 Throttle. Q4 No. Q5 Throttle bounds rate.
+Q6 Email is attacker input. Q7 Rate bound above. Q8 Yes, slowly. Q9 Accepted risk.
+Q10 None. Q11 Low. Q12 Considered — accepted with throttle and SEC-043. Q13 Re-read signUp.
+
+| Gate | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass | Pass (low value) | Pass | Pass | Pass |
+
+`BUG SEC-046 TRUE POSITIVE — registered emails can be enumerated through sign-up (accepted, throttled).`
