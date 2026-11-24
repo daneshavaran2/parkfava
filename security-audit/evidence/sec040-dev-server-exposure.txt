@@ -1,0 +1,23 @@
+SEC-040 reproduction — 2026-11-24T09:04:07Z
+Container network address: 192.0.2.2 (not loopback). Dev server serves the project tree; question is whether it is reachable on a network address.
+
+Baseline binding: the Lovable config wrapper sets server.host to '::' (all interfaces) outside its sandbox:
+629:				host: "::",
+636:			host: "::",
+(this container has no IPv6, so '::' cannot bind here; '--host 0.0.0.0' reproduces the same all-interfaces exposure over IPv4)
+
+== all-interfaces (baseline equivalent): --host 0.0.0.0
+  ➜  Local:   http://localhost:8080/
+  ➜  Network: http://192.0.2.2:8080/  eth0
+  GET http://192.0.2.2:8080/package.json                            -> 200 5537B
+  GET http://192.0.2.2:8080/db/migrations/0001_init.sql             -> 200 8628B
+  GET http://192.0.2.2:8080/vite.config.ts                          -> 200 7227B
+  GET http://192.0.2.2:8080/src/lib/auth/session.server.ts          -> 500 8692B
+
+== fixed default (vite.config.ts host: localhost)
+  ➜  Local:   http://localhost:8080/
+  GET http://192.0.2.2:8080/package.json                            -> 000 0Bconnection refused
+  GET http://192.0.2.2:8080/db/migrations/0001_init.sql             -> 000 0Bconnection refused
+  GET http://192.0.2.2:8080/vite.config.ts                          -> 000 0Bconnection refused
+  GET http://192.0.2.2:8080/src/lib/auth/session.server.ts          -> 000 0Bconnection refused
+

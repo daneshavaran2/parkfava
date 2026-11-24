@@ -1897,7 +1897,7 @@ fix, the patched column on the fixed code (evidence files in `evidence/`).
 |---|---|---|---|
 | SEC-034 | `scripts/test-request-hardening.py` → "guesses are refused once the limit is reached" | `FAIL` — 7 × `INVALID_CURRENT_PASSWORD`, no limit (`request-hardening-baseline.txt`) | `ok` — 5 × invalid, then `RATE_LIMITED` (`request-hardening-patched.txt`) |
 | SEC-035 | `scripts/test-request-hardening.py` → "3 MB JSON body … refused with 413" | `FAIL` — `status 200` (`request-hardening-baseline.txt`) | `ok` — `status 413` |
-| SEC-040 | `scripts/test-security-probes.py` (dev server) → exposed-file checks; `vite.config.ts` binding | `FAIL` — `/package.json`, `/db/migrations/0001_init.sql`, `/scripts/company-national-id-logins.json` → `200`, with the server bound to `::` (that run's output file was overwritten by later runs; results recorded here) | Dev server on `localhost` only; production probes `ok` → `404` (`security-probes-prod.txt`) |
+| SEC-040 | Dev server bound to all interfaces, project files fetched through the container's network address (`evidence/sec040-dev-server-exposure.txt`) | `200` for `/package.json`, `/db/migrations/0001_init.sql`, `/vite.config.ts` from `192.0.2.2:8080` (on the baseline tree the same mechanism served `scripts/company-national-id-logins.json`) | Default binding `localhost`: connection refused on the network address (same file) |
 | SEC-042 | `scripts/test-security-strict.py` → "an unpublished company's attachments are hidden from the public" | `FAIL` (`strict-dev-baseline.txt`, `strict-prod-baseline.txt`) | `ok` (`strict-dev.txt`, `strict-prod.txt`) |
 | SEC-043 | `scripts/test-security-strict.py` → "common or trivial passwords are refused at sign-up"; unit: `tests/unit/security-regressions.test.ts` SEC-043 | `FAIL` — accepted `12345678, password, 11111111, qwertyui, abcdefgh, Password1` | `ok` — none accepted; unit tests pass |
 | SEC-044 | `scripts/test-security-strict.py` → "concurrent sign-ups never expose a database error" | `FAIL` — `duplicate key value violates unique constraint "users_email_key"` | `ok` |
@@ -1913,3 +1913,22 @@ testing, so heap exhaustion was not run. Gate 4 rests on the demonstrated trigge
 unauthenticated 3 MB body accepted and parsed, with no limit anywhere in the path) and
 Gate 5 on the algebraic bound in Phase 2; the verdict is recorded as a true positive with
 inferred, not observed, impact.
+
+## Part C — per-bug completeness
+
+| Bug | Phase 1 | Phase 2 | Phase 3 | Phase 4 (pseudo / exec / unit / negative / verified) | Q1–Q13 | Gates 1–6 | Verdict |
+|---|---|---|---|---|---|---|---|
+| SEC-033 | ✓ | ✓ | ✓ | ✓ / ✓ / ✓ / ✓ / ✓ | 13/13 | 6/6 evaluated | FALSE POSITIVE |
+| SEC-034 | ✓ | ✓ | ✓ | ✓ / ✓ / skipped (justified) / ✓ / ✓ | 13/13 | 6/6 evaluated | TRUE POSITIVE |
+| SEC-035 | ✓ | ✓ (impact inferred; DoS testing excluded) | ✓ | ✓ / ✓ / ✓ / ✓ / ✓ | 13/13 | 6/6 evaluated | TRUE POSITIVE |
+| SEC-036 | ✓ | ✓ | ✓ | ✓ / ✓ / skipped (header only) / ✓ / ✓ | 13/13 | 6/6 evaluated | FALSE POSITIVE |
+| SEC-037 | ✓ | ✓ | ✓ | ✓ / ✓ / ✓ / ✓ / ✓ | 13/13 | 6/6 evaluated | FALSE POSITIVE |
+| SEC-038 | ✓ | ✓ | ✓ | ✓ / ✓ / ✓ / ✓ / ✓ | 13/13 | 6/6 evaluated | FALSE POSITIVE |
+| SEC-039 | ✓ | ✓ | ✓ | ✓ / ✓ / ✓ / ✓ / ✓ | 13/13 | 6/6 evaluated | FALSE POSITIVE |
+| SEC-040 | ✓ | ✓ | ✓ | ✓ / ✓ (evidence file) / skipped (configuration) / ✓ / ✓ | 13/13 | 6/6 evaluated | TRUE POSITIVE |
+| SEC-041 | ✓ | ✓ | ✓ | ✓ / skipped (needs a tampered installer) / skipped / ✓ / ✓ | 13/13 | 6/6 evaluated | FALSE POSITIVE |
+| SEC-042 | ✓ | ✓ | ✓ | ✓ / ✓ / skipped (justified) / ✓ / ✓ | 13/13 | 6/6 evaluated | TRUE POSITIVE |
+| SEC-043 | ✓ | ✓ | ✓ | ✓ / ✓ / ✓ / ✓ / ✓ | 13/13 | 6/6 evaluated | TRUE POSITIVE |
+| SEC-044 | ✓ | ✓ | ✓ | ✓ / ✓ / skipped (justified) / ✓ / ✓ | 13/13 | 6/6 evaluated | TRUE POSITIVE |
+| SEC-045 | ✓ | ✓ | ✓ | ✓ / ✓ / skipped (header only) / ✓ / ✓ | 13/13 | 6/6 evaluated | FALSE POSITIVE |
+| SEC-046 | ✓ | ✓ | ✓ | ✓ / ✓ / skipped (justified) / ✓ / ✓ | 13/13 | 6/6 evaluated | TRUE POSITIVE |
