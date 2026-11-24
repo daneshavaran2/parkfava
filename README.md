@@ -637,9 +637,12 @@ ON CONFLICT (user_id, role) DO NOTHING;
 ```
 
 The first user who ever signs up is auto-promoted to admin by the
-`assign_first_user_admin` trigger (`db/migrations/0001_init.sql`); every
-subsequent admin must be granted explicitly (SQL above, or the "تبدیل به
-ادمین" button on `/admin/users` once you have one admin account).
+`assign_first_user_admin` trigger (`db/migrations/0001_init.sql`, narrowed
+in `0024_first_admin_only_once.sql`); every subsequent admin must be granted
+explicitly (SQL above, or the "تبدیل به ادمین" button on `/admin/users` once
+you have one admin account). Only the very first account qualifies: if the
+`users` table already has rows but no admin (or every admin role is later
+removed), nobody is promoted automatically; grant the role with the SQL above.
 
 ---
 

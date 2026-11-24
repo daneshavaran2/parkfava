@@ -195,6 +195,7 @@ for path in ("/", "/this-route-does-not-exist", "/api/public/health", "/auth?nex
         check(f"{path} carries HSTS", "strict-transport-security" in h)
 csp = home_h.get("content-security-policy") or home_h.get("content-security-policy-report-only") or ""
 check("HTML has a CSP with frame-ancestors 'none'", "frame-ancestors 'none'" in csp)
+check("X-Frame-Options is DENY (SEC-045)", (home_h.get("x-frame-options") or "").upper() == "DENY", home_h.get("x-frame-options", "missing"))
 if args.prod:
     check("CSP is enforced (not report-only) in production", "content-security-policy" in home_h)
 check("no X-Powered-By header", "x-powered-by" not in home_h, home_h.get("x-powered-by", ""))

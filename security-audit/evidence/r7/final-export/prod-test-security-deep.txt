@@ -1,0 +1,44 @@
+target http://localhost:3200 (production build)
+Data exposure in public responses
+  ok   exhibition-api.getExhibitionCompanies exposes no internal or personal fields  [status 200]
+  ok   exhibition-api.getExhibitionCompanyDetail exposes no internal or personal fields  [status 200]
+  ok   exhibition-api.getPublicExhibitionProducts exposes no internal or personal fields  [status 200]
+  ok   attachments.getAttachments exposes no internal or personal fields  [status 200]
+  ok   park-content.getParkContent exposes no internal or personal fields  [status 200]
+  ok   parks.getActiveParks exposes no internal or personal fields  [status 200]
+  ok   parks.getInactiveParkIds exposes no internal or personal fields  [status 200]
+  ok   about-sections.getAboutSections exposes no internal or personal fields  [status 200]
+  ok   auth.getCurrentUser exposes no internal or personal fields  [status 200]
+  ok   /api/public/export exposes no internal or personal fields  [status 200]
+  ok   /api/public/health exposes no internal or personal fields  [status 200]
+Hidden content (SEC-042, SEC-054)
+  ok   /api/public/export carries nothing of a deactivated park or an unpublished company  [status 200]
+  ok   deactivated park's news do not reach an anonymous visitor
+  ok   deactivated park's attachments do not reach an anonymous visitor
+  ok   deactivated park's news reach an admin
+  ok   deactivated park's attachments reach an admin
+  ok   an unpublished company's attachments do not reach an anonymous visitor
+Password storage (SEC-013, SEC-056)
+  ok   a new account's hash uses the current cost (scrypt N=2^14, r=8, p=5)  [scrypt]
+  ok   a wrong password takes as long for an unknown account as for old- and current-hash accounts  [unknown account 168 ms, account with an old hash 168 ms, account with a current hash 162 ms]
+  ok   an account with an old hash still signs in
+  ok   and its hash is replaced with the current cost  [scrypt$16384$8$5$879]
+  ok   the same password signs in after the upgrade
+Mass assignment by a company owner
+  ok   owner save of a draft applies ordinary fields  [Deep Test Draft]
+  ok   owner cannot set status, activation, ownership, review fields or listing order  [draft|t|dd15dc33-5b8d-4de2-825e-854cf1ce1068|||84 -> draft|t|dd15dc33-5b8d-4de2-825e-854cf1ce1068|||84]
+  ok   owner cannot redirect the save to another company
+  ok   a change request carries no privileged field  [{"name": "Deep Test Draft", "latitude": null, "longitude": n]
+Review workflow
+  ok   an owner's edit to a published company is not live before review
+  ok   an owner cannot approve their own change request  [FORBIDDEN]
+  ok   another signed-in user cannot approve it  [FORBIDDEN]
+  ok   the request is still pending
+Low-privilege abuse
+  ok   3 MB upload body from a self-registered user who owns nothing is refused  [status 413]
+  ok   3 MB upload body from a company owner is accepted for processing  [status 200]
+  ok   3 MB upload body from an admin is accepted for processing  [status 200]
+Input-processing cost (ReDoS)
+  ok   worst-case inputs are processed in under 2 s  [slowest 0.16s (identifier '۱۱۱۱۱۱'…)]
+
+34 checks, all passed

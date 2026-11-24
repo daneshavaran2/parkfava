@@ -1,0 +1,7 @@
+== simultaneous first sign-ups (two transactions held open 1s)
+first-a@example.test -> none
+first-b@example.test -> admin
+== later sign-up
+none
+== all admin roles removed, then a sign-up
+0 admin role(s)

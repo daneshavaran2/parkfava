@@ -81,12 +81,13 @@ def normalize_mobile(raw):
 
 
 def scrypt_hash(password):
-    # Mirrors hashPassword(): a 16-byte random salt, hex-encoded, and that hex
-    # *string* is what Node passes to scrypt as the salt. Node's defaults are
-    # N=16384, r=8, p=1; key length 64.
+    # Mirrors hashPassword() in src/lib/auth/password.server.ts: a 16-byte
+    # random salt, hex-encoded, and that hex *string* is what Node passes to
+    # scrypt as the salt; N=16384, r=8, p=5, key length 64, stored as
+    # scrypt$N$r$p$salt$hash.
     salt = os.urandom(16).hex()
-    key = hashlib.scrypt(password.encode(), salt=salt.encode(), n=16384, r=8, p=1, dklen=64, maxmem=64 * 1024 * 1024)
-    return f"{salt}:{key.hex()}"
+    key = hashlib.scrypt(password.encode(), salt=salt.encode(), n=16384, r=8, p=5, dklen=64, maxmem=64 * 1024 * 1024)
+    return f"scrypt$16384$8$5${salt}${key.hex()}"
 
 
 def first_email(raw):

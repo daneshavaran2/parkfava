@@ -811,8 +811,8 @@ export const uploadExhibitionAssetFn = createServerFn({ method: "POST" })
       await import("./storage/mime");
     const ext = assertUploadAllowed(data.file);
     await assertUploadContent(data.file, ext);
-    const path = `exhibition/${assertSafePathSegment(data.company_id)}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { saveLocalFile } = await import("./storage/local-storage.server");
+    const { saveLocalFile, newUploadName } = await import("./storage/local-storage.server");
+    const path = `exhibition/${assertSafePathSegment(data.company_id)}/${newUploadName()}.${ext}`;
     await saveLocalFile(path, Buffer.from(await data.file.arrayBuffer()));
     return { path };
   });

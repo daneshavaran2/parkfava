@@ -29,18 +29,30 @@ export const Route = createFileRoute("/api/public/export")({
             parkImages,
             parkNews,
           ] = await Promise.all([
-            sql`SELECT * FROM parks ORDER BY sort_order ASC`,
+            sql`SELECT * FROM parks WHERE is_active = true ORDER BY sort_order ASC`,
             sql<
               { company_id: string }[]
             >`SELECT * FROM exhibition_companies WHERE status = 'approved' AND is_active = true ORDER BY sort_order ASC`,
             sql<
               { company_id: string }[]
             >`SELECT * FROM exhibition_products ORDER BY created_at ASC`,
-            sql`SELECT * FROM company_attachments WHERE is_active = true ORDER BY kind ASC, sort_order ASC`,
+            // Only what the public site shows (docs/Security Report.md,
+            // SEC-054): a company's files only while it is published (the
+            // SEC-042 rule), and nothing of a park an admin deactivated.
+            sql`
+              SELECT a.* FROM company_attachments a
+              WHERE a.is_active = true
+                AND CASE a.owner_type
+                  WHEN 'exhibition' THEN EXISTS (
+                    SELECT 1 FROM exhibition_companies c
+                    WHERE c.company_id = a.owner_id AND c.status = 'approved' AND c.is_active = true)
+                  WHEN 'park' THEN a.owner_id NOT IN (SELECT park_id FROM parks WHERE is_active = false)
+                  ELSE false END
+              ORDER BY a.kind ASC, a.sort_order ASC`,
             sql`SELECT * FROM about_sections ORDER BY sort_order ASC`,
-            sql`SELECT * FROM park_content`,
-            sql`SELECT * FROM park_images ORDER BY sort_order ASC`,
-            sql`SELECT * FROM park_news ORDER BY published_at DESC`,
+            sql`SELECT * FROM park_content WHERE park_id NOT IN (SELECT park_id FROM parks WHERE is_active = false)`,
+            sql`SELECT * FROM park_images WHERE park_id NOT IN (SELECT park_id FROM parks WHERE is_active = false) ORDER BY sort_order ASC`,
+            sql`SELECT * FROM park_news WHERE park_id NOT IN (SELECT park_id FROM parks WHERE is_active = false) ORDER BY published_at DESC`,
           ]);
 
           // Products belong to companies that may since have gone

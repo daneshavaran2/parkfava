@@ -1,0 +1,8 @@
+  ok   export omits attachment of unpublished company seed-delta
+  ok   export omits deactivated park razavi itself
+  ok   export omits attachment of deactivated park razavi
+  ok   export omits content of deactivated park razavi
+  ok   export omits images of deactivated park razavi
+  ok   export omits news of deactivated park razavi
+  ok   companies are only published ones
+7 checks, 0 failed

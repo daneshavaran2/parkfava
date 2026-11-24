@@ -1,0 +1,12 @@
+bun audit v1.4.4 (38afee6c8)
+
+minimatch@3.1.5, 9.0.9, 10.2.5, 5.1.9
+  eslint > @eslint/eslintrc > minimatch
+  typescript-eslint > @typescript-eslint/utils > @typescript-eslint/typescript-estree > minimatch
+  electron-builder > dmg-builder > app-builder-lib > @electron/universal > @electron/asar > minimatch
+  moderate: minimatch has potential denial of service via globparts amplification (>=7.0.0 <11.0.1) - https://github.com/advisories/GHSA-g3hv-75wg-m249
+
+1 vulnerability (1 moderate)
+
+  bun audit fix           upgrade the vulnerable packages within their ranges
+  bun audit fix --latest  also cross major versions

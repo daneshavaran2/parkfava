@@ -16,6 +16,10 @@ export const getParkContent = createServerFn({ method: "GET" })
     // instead of crashing the route with a database error.
     if (!hasDb()) return { content: null, images: [] as ParkImage[], news: [] as ParkNews[] };
     const sql = getDb();
+    const { isParkHiddenFromViewer } = await import("./park-visibility.server");
+    if (await isParkHiddenFromViewer(sql, data.parkId)) {
+      return { content: null, images: [] as ParkImage[], news: [] as ParkNews[] };
+    }
     const [[content], images, news] = await Promise.all([
       sql<ParkContent[]>`SELECT * FROM park_content WHERE park_id = ${data.parkId}`,
       sql<
@@ -143,8 +147,8 @@ export const uploadParkAssetFn = createServerFn({ method: "POST" })
       await import("./storage/mime");
     const ext = assertUploadAllowed(data.file);
     await assertUploadContent(data.file, ext);
-    const path = `${assertSafePathSegment(data.park_id)}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { saveLocalFile } = await import("./storage/local-storage.server");
+    const { saveLocalFile, newUploadName } = await import("./storage/local-storage.server");
+    const path = `${assertSafePathSegment(data.park_id)}/${newUploadName()}.${ext}`;
     await saveLocalFile(path, Buffer.from(await data.file.arrayBuffer()));
     return { path };
   });

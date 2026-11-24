@@ -77,36 +77,71 @@ export const requestOtp = createServerFn({ method: "POST" })
       generateOtpCode, hashOtpCode,
     } = await import("@/lib/mfa/otp.server");
 
-    const lastSent = row.mfa_otp_last_sent_at ? row.mfa_otp_last_sent_at.getTime() : 0;
-    if (Date.now() - lastSent < OTP_RESEND_COOLDOWN_MS) {
-      throw new Error("OTP_COOLDOWN");
-    }
-
-    // Per-account cap on real SMS sends, independent of which phone number is
-    // targeted — a phone number's ownership is only proven once the OTP is
-    // verified, so without this an account could be used to repeatedly text
-    // an arbitrary third-party number (or hop between numbers) purely to
-    // harass someone or burn the SMS panel's budget.
-    const windowStart = row.mfa_otp_send_window_start ? row.mfa_otp_send_window_start.getTime() : 0;
-    const windowActive = Date.now() - windowStart < OTP_SEND_WINDOW_MS;
-    const sendsInWindow = windowActive ? row.mfa_otp_send_count : 0;
-    if (sendsInWindow >= OTP_MAX_SENDS_PER_WINDOW) {
-      throw new Error("OTP_DAILY_LIMIT");
+    // Claim the send before talking to the SMS panel, in one conditional
+    // UPDATE: the resend cooldown and the per-account cap on real SMS sends
+    // (independent of which number is targeted, since a number's ownership is
+    // only proven once the OTP is verified) are checked and recorded
+    // together. Read first and recorded after the send, parallel requests
+    // all passed both checks and each sent a text, so one account could fire
+    // a burst of SMS at an arbitrary number (docs/Security Report.md,
+    // SEC-051). Only one request can win the row.
+    const cooldownSecs = OTP_RESEND_COOLDOWN_MS / 1000;
+    const windowSecs = OTP_SEND_WINDOW_MS / 1000;
+    const [claimed] = await sql<{ id: string }[]>`
+      UPDATE users SET
+        mfa_otp_last_sent_at = now(),
+        mfa_otp_send_count = CASE
+          WHEN mfa_otp_send_window_start > now() - make_interval(secs => ${windowSecs})
+          THEN mfa_otp_send_count + 1 ELSE 1 END,
+        mfa_otp_send_window_start = CASE
+          WHEN mfa_otp_send_window_start > now() - make_interval(secs => ${windowSecs})
+          THEN mfa_otp_send_window_start ELSE now() END
+      WHERE id = ${context.user.id}
+        AND (mfa_otp_last_sent_at IS NULL
+          OR mfa_otp_last_sent_at <= now() - make_interval(secs => ${cooldownSecs}))
+        AND (mfa_otp_send_window_start IS NULL
+          OR mfa_otp_send_window_start <= now() - make_interval(secs => ${windowSecs})
+          OR mfa_otp_send_count < ${OTP_MAX_SENDS_PER_WINDOW})
+      RETURNING id
+    `;
+    if (!claimed) {
+      const lastSent = row.mfa_otp_last_sent_at ? row.mfa_otp_last_sent_at.getTime() : 0;
+      const windowStart = row.mfa_otp_send_window_start
+        ? row.mfa_otp_send_window_start.getTime()
+        : 0;
+      const capped =
+        Date.now() - windowStart < OTP_SEND_WINDOW_MS &&
+        row.mfa_otp_send_count >= OTP_MAX_SENDS_PER_WINDOW;
+      throw new Error(
+        capped && Date.now() - lastSent >= OTP_RESEND_COOLDOWN_MS
+          ? "OTP_DAILY_LIMIT"
+          : "OTP_COOLDOWN",
+      );
     }
 
     const code = generateOtpCode();
     const { sendOtpSms } = await import("@/lib/sms/send-sms.server");
-    await sendOtpSms(row.phone, code);
+    try {
+      await sendOtpSms(row.phone, code);
+    } catch (e) {
+      // Nothing was sent: hand the slot back, so an SMS panel outage does not
+      // use up the account's daily sends or make it wait out the cooldown.
+      // Safe from races: while this request held the slot every other one was
+      // refused by the cooldown.
+      await sql`
+        UPDATE users SET
+          mfa_otp_last_sent_at = ${row.mfa_otp_last_sent_at},
+          mfa_otp_send_count = greatest(mfa_otp_send_count - 1, 0)
+        WHERE id = ${context.user.id}
+      `;
+      throw e;
+    }
 
-    const nextWindowStart = windowActive ? row.mfa_otp_send_window_start : new Date();
     await sql`
       UPDATE users SET
         mfa_otp_hash = ${hashOtpCode(code)},
         mfa_otp_expires_at = ${new Date(Date.now() + OTP_TTL_MS)},
-        mfa_otp_attempts = 0,
-        mfa_otp_last_sent_at = now(),
-        mfa_otp_send_window_start = ${nextWindowStart},
-        mfa_otp_send_count = ${sendsInWindow + 1}
+        mfa_otp_attempts = 0
       WHERE id = ${context.user.id}
     `;
     return { ok: true };

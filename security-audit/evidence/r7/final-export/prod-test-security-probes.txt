@@ -1,0 +1,139 @@
+target http://localhost:3200 (production build)
+Security headers
+  ok   / carries nosniff / Referrer-Policy / Permissions-Policy
+  ok   / carries HSTS
+  ok   /this-route-does-not-exist carries nosniff / Referrer-Policy / Permissions-Policy
+  ok   /this-route-does-not-exist carries HSTS
+  ok   /api/public/health carries nosniff / Referrer-Policy / Permissions-Policy
+  ok   /api/public/health carries HSTS
+  ok   /auth?next= carries nosniff / Referrer-Policy / Permissions-Policy
+  ok   /auth?next= carries HSTS
+  ok   HTML has a CSP with frame-ancestors 'none'
+  ok   X-Frame-Options is DENY (SEC-045)  [DENY]
+  ok   CSP is enforced (not report-only) in production
+  ok   no X-Powered-By header
+  ok   Server header does not reveal a version
+Exposed files and source code
+  ok   /.env is not served  [status 404]
+  ok   /.env.local is not served  [status 404]
+  ok   /.git/config is not served  [status 404]
+  ok   /.git/HEAD is not served  [status 404]
+  ok   /package.json is not served  [status 404]
+  ok   /bun.lock is not served  [status 404]
+  ok   /package-lock.json is not served  [status 404]
+  ok   /Dockerfile is not served  [status 404]
+  ok   /vite.config.ts is not served  [status 404]
+  ok   /db/migrations/0001_init.sql is not served  [status 404]
+  ok   /scripts/company-national-id-logins.json is not served  [status 404]
+  ok   /server/cluster.mjs is not served  [status 404]
+  ok   /.output/server/index.mjs is not served  [status 404]
+  ok   /node_modules/react/package.json is not served  [status 404]
+  ok   /docs/Security%20Report.md is not served  [status 404]
+  ok   /src/server.ts is not served  [status 404]
+  ok   /src/lib/auth.functions.ts is not served  [status 404]
+  ok   /src/lib/auth/session.server.ts is not served  [status 404]
+  ok   no source maps shipped (15 scripts checked)
+  ok   debug endpoint is off in production  [status 404]
+  ok   developer page /perf is not served in production  [status 404]
+  ok   developer page /dev/logo is not served in production  [status 404]
+  ok   admin-only asset audit refuses anonymous callers  [status 403]
+Path traversal on /assets
+  ok   /assets/../../../../etc/passwd  [status 404]
+  ok   /assets/..%2f..%2f..%2f..%2fetc%2fpasswd  [status 404]
+  ok   /assets/%2e%2e/%2e%2e/%2e%2e/etc/passwd  [status 404]
+  ok   /assets/..%252f..%252f..%252fetc%252fpasswd  [status 404]
+  ok   /assets/exhibition/..%5c..%5c..%5cpackage.json  [status 404]
+  ok   /assets/....//....//....//etc/passwd  [status 404]
+  ok   /assets/%2e%2e%2f%2e%2e%2fpackage.json  [status 404]
+  ok   /assets/%00../../etc/passwd  [status 404]
+  ok   /assets/..;/..;/package.json  [status 404]
+  ok   /assets//etc/passwd  [status 404]
+Reflected XSS
+  ok   /exhibition?q=%22%3E%3Csvg/onload%3Dalert%281337%29%3E does not reflect markup  [status 200]
+  ok   /auth?next=%22%3E%3Csvg/onload%3Dalert%281337%29%3E does not reflect markup  [status 307]
+  ok   /?lang=%22%3E%3Csvg/onload%3Dalert%281337%29%3E does not reflect markup  [status 200]
+  ok   /%3Cscript%3Ealert%281337%29%3C/script%3E does not reflect markup  [status 404]
+  ok   /company/%22%3E%3Csvg/onload%3Dalert%281337%29%3E does not reflect markup  [status 404]
+  ok   /exhibition/%3Cscript%3Ealert%281337%29%3C/script%3E does not reflect markup  [status 404]
+  ok   /categories?c=%3Cscript%3Ealert%281337%29%3C/script%3E does not reflect markup  [status 200]
+Open redirect
+  ok   /auth?next='//evil.example' stays on this site  [status 307, location /auth?next=]
+  ok   /auth?next='https://evil.example' stays on this site  [status 307, location /auth?next=]
+  ok   /auth?next='/\\evil.example' stays on this site  [status 307, location /auth?next=]
+  ok   /auth?next='/%09/evil.example' stays on this site  [status 307, location /auth?next=]
+  ok   /auth?next='%2F%2Fevil.example' stays on this site  [status 307, location /auth?next=]
+  ok   /auth?next='javascript:alert(1)' stays on this site  [status 307, location /auth?next=]
+  ok   /auth?next='/\t/evil.example' stays on this site  [status 307, location /auth?next=]
+HTTP methods, CORS and Host header
+  ok   TRACE is not echoed  [status 405]
+  ok   PUT / is refused  [status 405, allow GET, HEAD]
+  ok   DELETE / is refused  [status 405, allow GET, HEAD]
+  ok   PATCH / is refused  [status 405, allow GET, HEAD]
+  ok   POST /about is refused  [status 405, allow GET, HEAD]
+  ok   PUT /_serverFn/15946b07b54e0909aa27fa0f35669 is refused  [status 405, allow GET, HEAD, POST, OPTIONS]
+  ok   DELETE /api/public/health is refused  [status 405, allow GET, HEAD, POST, OPTIONS]
+  ok   OPTIONS / is refused  [status 405, allow GET, HEAD]
+  ok   CORS does not trust a foreign origin on /api/public/export  [no ACAO]
+  ok   CORS does not trust a foreign origin on /_serverFn/91a3732f81a36f8d4d0ba23c88650  [no ACAO]
+  ok   CORS preflight from a foreign origin is not approved  [status 403]
+  ok   forged Host header is not reflected into links or redirects  [status 200]
+Authentication
+  ok   sign-in works  [status 200]
+  ok   sign-in issues a fresh session token (no fixation)
+  ok   session cookie is HttpOnly
+  ok   session cookie is SameSite=Lax or Strict
+  ok   session cookie is Secure
+  ok   the planted token is not a valid session
+  ok   the database stores only a hash of the session token  [raw 0, hashed 1]
+  ok   a signed-out session token no longer works
+  ok   password guessing is throttled  [INVALID_CREDENTIALS, INVALID_CREDENTIALS, INVALID_CREDENTIALS, INVALID_CREDENTIALS, INVALID_CREDENTIALS, INVALID_CREDENTIALS, INVALID_CREDENTIALS, INVALID_CREDENTIALS, RATE_LIMITED, RATE_LIMITED]
+  ok   same error for unknown user and wrong password  [INVALID_CREDENTIALS / INVALID_CREDENTIALS]
+SQL injection inputs
+  ok   signIn identifier "' OR '1'='1"  [status 200, INVALID_CREDENTIALS]
+  ok   company detail id "' OR '1'='1"  [status 200]
+  ok   assistant question "' OR '1'='1"  [status 200]
+  ok   signIn identifier "' OR 1=1--"  [status 200, INVALID_CREDENTIALS]
+  ok   company detail id "' OR 1=1--"  [status 200]
+  ok   assistant question "' OR 1=1--"  [status 200]
+  ok   signIn identifier "admin@example.test'--"  [status 200, INVALID_CREDENTIALS]
+  ok   company detail id "admin@example.test'--"  [status 200]
+  ok   assistant question "admin@example.test'--"  [status 200]
+  ok   signIn identifier '1; DROP TABLE users;--'  [status 200, INVALID_CREDENTIALS]
+  ok   company detail id '1; DROP TABLE users;--'  [status 200]
+  ok   assistant question '1; DROP TABLE users;--'  [status 200]
+  ok   signIn identifier "\\'; SELECT pg_sleep(5);--"  [status 200, INVALID_CREDENTIALS]
+  ok   company detail id "\\'; SELECT pg_sleep(5);--"  [status 200]
+  ok   assistant question "\\'; SELECT pg_sleep(5);--"  [status 200]
+  ok   signIn identifier "%' AND 1=CAST((SELECT version()) AS int)--"  [status 200, INVALID_CREDENTIALS]
+  ok   company detail id "%' AND 1=CAST((SELECT version()) AS int)--"  [status 200]
+  ok   assistant question "%' AND 1=CAST((SELECT version()) AS int)--"  [status 200]
+  ok   signIn identifier '") OR ("1"="1'  [status 200, INVALID_CREDENTIALS]
+  ok   company detail id '") OR ("1"="1'  [status 200]
+  ok   assistant question '") OR ("1"="1'  [status 200]
+  ok   users table intact after injection attempts
+Error handling
+  ok   malformed JSON: no stack trace or source paths in the response  [status 500]
+  ok   malformed JSON: handled without a server crash  [status 500]
+  ok   wrong value types: no stack trace or source paths in the response  [status 200]
+  ok   wrong value types: handled without a server crash  [status 200]
+  ok   unknown server function: no stack trace or source paths in the response  [status 500]
+  ok   unknown server function: handled without a server crash  [status 500]
+  ok   CSP report endpoint rejects garbage cleanly  [status 400]
+File upload
+  ok   upload of evil.html is refused  [UNSUPPORTED_FILE_TYPE]
+  ok   upload of evil.svg is refused  [UNSUPPORTED_FILE_TYPE]
+  ok   upload of evil.png.html is refused  [UNSUPPORTED_FILE_TYPE]
+  ok   upload of evil.php is refused  [UNSUPPORTED_FILE_TYPE]
+  ok   upload of .htaccess is refused  [UNSUPPORTED_FILE_TYPE]
+  ok   upload of evil.js is refused  [UNSUPPORTED_FILE_TYPE]
+  ok   upload into company id '../../../tmp' is refused  [INVALID_UPLOAD]
+  ok   upload into company id '../about' is refused  [INVALID_UPLOAD]
+  ok   upload into company id '..\\about' is refused  [INVALID_UPLOAD]
+  ok   upload into company id '.hidden' is refused  [INVALID_UPLOAD]
+  ok   a traversal file name cannot leave the company folder  [exhibition/alborz-karno-network/1795533821746-0aa3ccab97300012512f4425.png]
+  ok   HTML disguised as .png is refused (content checked, not only the extension)  [FILE_CONTENT_MISMATCH]
+  ok   a genuine PNG is accepted  [status 200]
+  ok   uploaded file is served as an image with nosniff  [200 image/png]
+  ok   anonymous upload is refused  [Unauthorized: not signed in]
+
+126 checks, all passed

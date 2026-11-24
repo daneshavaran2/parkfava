@@ -1,0 +1,32 @@
+Semgrep round 7, five rulesets cloned 2026-11-24: semgrep/semgrep-rules a5ad171, trailofbits/semgrep-rules 31390b3,
+elttam/semgrep-rules 2442685, apiiro/malicious-code-ruleset a21246b, kondukto-io/semgrep-rules e5d4465.
+semgrep 1.185.0, OSS engine (no Pro cross-file taint), --metrics=off; node_modules/.output/security-audit excluded.
+total findings 1302 (by severity {'WARNING': 939, 'ERROR': 9, 'INFO': 353, 'MEDIUM': 1}); round 3 total 1284
+
+(rule, file) pairs with more findings than in round 3:
+  arbitrary-sleep                        scripts/test-security-deep.py                        0 -> 2  lines [260, 298]
+  contains-bidirectional-characters      scripts/test-security-strict.py                      0 -> 1  lines [294]
+  dynamic-urllib-use-detected            scripts/test-request-hardening.py                    0 -> 2  lines [93, 151]
+  exec-detected                          scripts/test-auth-hardening.py                       0 -> 1  lines [35]
+  exec-detected                          scripts/test-request-hardening.py                    0 -> 1  lines [22]
+  html-in-template-string                scripts/provision-national-id-logins.ts              0 -> 1  lines [93]
+  html-in-template-string                scripts/test-security-browser.cjs                    0 -> 3  lines [111, 112, 198]
+  i18next-key-format                     src/routes/auth.tsx                                  51 -> 52  lines [68, 69, 73, 74, 75, 113, 113, 115]
+  i18next-key-format                     src/routes/my-company.tsx                            124 -> 125  lines [68, 82, 84, 90, 116, 117, 125, 127]
+  missing-template-string-indicator      scripts/test-security-browser.cjs                    0 -> 2  lines [202, 204]
+  playwright-goto-injection              scripts/test-security-browser.cjs                    0 -> 2  lines [163, 225]
+  python-dynamic-execution-eval          scripts/test-auth-hardening.py                       0 -> 1  lines [35]
+  python-dynamic-execution-eval          scripts/test-request-hardening.py                    0 -> 1  lines [22]
+  python-obfuscation-indirect-exec       scripts/test-auth-hardening.py                       0 -> 1  lines [35]
+  python-obfuscation-indirect-exec       scripts/test-request-hardening.py                    0 -> 1  lines [22]
+  return-not-in-function                 scripts/test-security-concurrency.py                 0 -> 7  lines [169, 177, 197, 206, 264, 305, 314]
+  return-not-in-function                 scripts/test-security-strict.py                      0 -> 1  lines [360]
+  useless-assignment                     scripts/test-security-browser.cjs                    0 -> 1  lines [20]
+  x-frame-options-misconfiguration       src/server.ts                                        0 -> 1  lines [78]
+
+(rule, file) pairs with fewer findings than in round 3:
+  detect-generic-ai-anthprop             security-audit/evidence/gitleaks-history.json        3 -> 0
+  detect-generic-ai-anthprop             security-audit/evidence/trivy-fs.json                5 -> 0
+  detect-insecure-websocket              security-audit/evidence/osv-scanner.json             1 -> 0
+  missing-user                           Dockerfile                                           3 -> 0
+  prefer-json-notation                   Dockerfile                                           1 -> 0

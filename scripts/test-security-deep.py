@@ -10,6 +10,11 @@ test-security-probes.py and test-security-strict.py:
     change request and is not live until an admin approves it;
   * low-privilege abuse: a self-registered user who owns nothing cannot make
     the server accept large upload bodies;
+  * hidden content: nothing of a deactivated park or an unpublished company
+    reaches anonymous visitors through the public reads or the export;
+  * password storage: current scrypt cost for new hashes, older hashes still
+    accepted and upgraded at sign-in, same response time for unknown accounts
+    and for accounts with either kind of hash;
   * input-processing cost: worst-case strings at the maximum accepted length
     for the text inputs that reach regex or search processing (ReDoS).
 
@@ -24,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import http.client
 import json
 import os
@@ -269,6 +275,83 @@ try:
         except ValueError:
             leaks = ["<not json>"]
         check(f"{path} exposes no internal or personal fields", st == 200 and not leaks, ", ".join(leaks) or f"status {st}")
+
+    print("Hidden content (SEC-042, SEC-054)")
+    hidden_park = psql("SELECT park_id FROM parks WHERE is_active ORDER BY park_id LIMIT 1")
+    psql(f"INSERT INTO company_attachments (owner_type, owner_id, kind, file_url, title, is_active) VALUES "
+         f"('exhibition', {q(draft)}, 'catalog', 'attachments/deep-probe.pdf', 'deep-probe draft file', true), "
+         f"('park', {q(hidden_park)}, 'catalog', 'attachments/deep-probe.pdf', 'deep-probe park file', true);"
+         f"INSERT INTO park_images (park_id, image_url, caption) VALUES ({q(hidden_park)}, 'deep-probe.jpg', 'deep-probe');"
+         f"INSERT INTO park_news (park_id, title) VALUES ({q(hidden_park)}, 'deep-probe news');"
+         f"UPDATE parks SET is_active = false WHERE park_id = {q(hidden_park)};")
+    try:
+        st, _, body, _ = request("GET", "/api/public/export")
+        export = json.loads(body) if st == 200 else {}
+        found = [k for k, rows in (("parks", export.get("parks", [])), ("parkContent", export.get("parkContent", [])),
+                                   ("parkImages", export.get("parkImages", [])), ("parkNews", export.get("parkNews", [])))
+                 if any(r.get("park_id") == hidden_park for r in rows)]
+        found += [f"attachment of {a['owner_id']}" for a in export.get("attachments", [])
+                  if a.get("title", "").startswith("deep-probe")]
+        check("/api/public/export carries nothing of a deactivated park or an unpublished company", st == 200 and not found,
+              ", ".join(found) or f"status {st}")
+        for label, sess, expect in (("anonymous visitor", anon, False), ("admin", admin, True)):
+            st, body, _ = sess.call("park-content", "getParkContent", {"parkId": hidden_park}, "GET")
+            for _ in range(5):
+                if args.prod or ok(body) or "error" in body[:80]:
+                    break
+                time.sleep(2)
+                st, body, _ = sess.call("park-content", "getParkContent", {"parkId": hidden_park}, "GET")
+            if not ok(body) and not args.prod:
+                print(f"  skip getParkContent ({label}): not registered on the dev server yet; covered with --prod")
+            else:
+                check(f"deactivated park's news {'reach' if expect else 'do not reach'} an {label}",
+                      ("deep-probe news" in body) == expect, err(body) or "")
+            st, body, _ = sess.call("attachments", "getAttachments", {"ownerType": "park", "ownerId": hidden_park}, "GET")
+            check(f"deactivated park's attachments {'reach' if expect else 'do not reach'} an {label}",
+                  ok(body) and ("deep-probe park file" in body) == expect, err(body) or "")
+        st, body, _ = anon.call("attachments", "getAttachments", {"ownerType": "exhibition", "ownerId": draft}, "GET")
+        check("an unpublished company's attachments do not reach an anonymous visitor",
+              ok(body) and "deep-probe draft file" not in body, err(body) or "")
+    finally:
+        psql(f"UPDATE parks SET is_active = true WHERE park_id = {q(hidden_park)};"
+             "DELETE FROM company_attachments WHERE title LIKE 'deep-probe %'; DELETE FROM park_images WHERE caption = 'deep-probe';"
+             "DELETE FROM park_news WHERE title = 'deep-probe news';")
+
+    print("Password storage (SEC-013, SEC-056)")
+    legacy_email, current_email = "security-deep-legacy@example.test", "security-deep-current@example.test"
+    salt = "00112233445566778899aabbccddeeff"
+    legacy_hash = salt + ":" + hashlib.scrypt(PASSWORD.encode(), salt=salt.encode(), n=16384, r=8, p=1, dklen=64,
+                                              maxmem=64 * 1024 * 1024).hex()
+    psql(f"DELETE FROM users WHERE email IN ({q(legacy_email)}, {q(current_email)}); DELETE FROM rate_limit_hits;"
+         f"INSERT INTO users (email, password_hash) VALUES ({q(legacy_email)}, {q(legacy_hash)});")
+    try:
+        s = Session()
+        s.call("auth", "signUp", {"email": current_email, "password": PASSWORD})
+        stored = psql(f"SELECT password_hash FROM users WHERE email = {q(current_email)}")
+        check("a new account's hash uses the current cost (scrypt N=2^14, r=8, p=5)", stored.startswith("scrypt$16384$8$5$"),
+              stored.split("$")[0][:20])
+        timings = {"unknown account": [], "account with an old hash": [], "account with a current hash": []}
+        for _ in range(7):
+            for label, email in (("unknown account", "security-deep-nobody@example.test"),
+                                 ("account with an old hash", legacy_email), ("account with a current hash", current_email)):
+                psql("DELETE FROM rate_limit_hits;")
+                _, _, dt = Session().call("auth", "signIn", {"email": email, "password": "Wrong#Passw0rd2026"})
+                timings[label].append(dt)
+        med = {k: sorted(v)[len(v) // 2] for k, v in timings.items()}
+        spread = max(med.values()) / min(med.values())
+        check("a wrong password takes as long for an unknown account as for old- and current-hash accounts", spread < 1.5,
+              ", ".join(f"{k} {v * 1000:.0f} ms" for k, v in med.items()))
+        psql("DELETE FROM rate_limit_hits;")
+        s = Session()
+        _, body, _ = s.call("auth", "signIn", {"email": legacy_email, "password": PASSWORD})
+        upgraded = psql(f"SELECT password_hash FROM users WHERE email = {q(legacy_email)}")
+        check("an account with an old hash still signs in", ok(body) and "session" in s.cookies, err(body))
+        check("and its hash is replaced with the current cost", upgraded.startswith("scrypt$16384$8$5$"), upgraded[:20])
+        s = Session()
+        _, body, _ = s.call("auth", "signIn", {"email": legacy_email, "password": PASSWORD})
+        check("the same password signs in after the upgrade", ok(body) and "session" in s.cookies, err(body))
+    finally:
+        psql(f"DELETE FROM users WHERE email IN ({q(legacy_email)}, {q(current_email)}); DELETE FROM rate_limit_hits;")
 
     print("Mass assignment by a company owner")
     other_owner = psql(f"SELECT id FROM users WHERE email = {q(PLAIN)}")

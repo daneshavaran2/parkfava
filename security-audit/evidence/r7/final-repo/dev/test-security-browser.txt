@@ -1,0 +1,19 @@
+target http://localhost:8080 (dev server)
+Stored XSS
+  ok   the stored payload is actually on the company page (as text)
+  ok   company page (fa): stored markup is shown as text  [status 200, scripts ran 0, elements 0]
+  ok   company page (en): stored markup is shown as text  [status 200, scripts ran 0, elements 0]
+  ok   exhibition listing: stored markup is shown as text  [status 200, scripts ran 0, elements 0]
+  ok   exhibition search: stored markup is shown as text  [status 200, scripts ran 0, elements 0]
+  ok   kiosk: stored markup is shown as text  [status 200, scripts ran 0, elements 0]
+  ok   categories: stored markup is shown as text  [status 200, scripts ran 0, elements 0]
+  ok   home: stored markup is shown as text  [status 200, scripts ran 0, elements 0]
+  ok   admin exhibition editor: stored markup is shown as text  [status 200, scripts ran 0, elements 0]
+  ok   product page: stored markup is shown as text  [status 200, scripts ran 0, elements 0]
+  ok   script URLs are refused when saving a company
+Cross-site request forgery
+  ok   a page on another site could not sign the victim out or change the password
+  ok   a page on a sibling on the same site could not sign the victim out or change the password
+  ok   the victim's password is unchanged
+
+14 checks, all passed

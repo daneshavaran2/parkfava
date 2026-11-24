@@ -27,9 +27,10 @@ way to introduce a hole in this codebase, which is why
 see [[Testing]].
 
 Roles live in `user_roles`, deliberately separate from `users` so that
-updating a profile can never escalate a role. The first user to sign up
-becomes admin (`assign_first_user_admin` trigger); everyone after gets nothing
-until an admin grants it.
+updating a profile can never escalate a role. The first account ever created
+becomes admin (`assign_first_user_admin` trigger, migration 0024); everyone
+after gets nothing until an admin grants it, even if no admin is left.
+`revokeAdmin` locks the admin rows, so an admin always remains.
 
 ## Rate limiting
 

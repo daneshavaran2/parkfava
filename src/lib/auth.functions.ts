@@ -8,7 +8,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getDb } from "../../db/connection";
-import { hashPassword, verifyPassword } from "./auth/password.server";
+import { hashPassword, needsRehash, verifyPassword } from "./auth/password.server";
 import { parseLoginId, toAsciiDigits } from "./auth/login-id";
 import {
   createSession,
@@ -186,12 +186,28 @@ export const signIn = createServerFn({ method: "POST" })
           `;
     if (!rows.length) {
       // Pay the same scrypt cost as a real account would, so the response
-      // time does not reveal which usernames exist.
-      await verifyPassword(data.password, await dummyHash());
+      // time does not reveal which usernames exist (including the second
+      // check verifyLoginPassword makes for a password with Persian digits).
+      await verifyLoginPassword(data.password, await dummyHash());
       throw invalid();
     }
     const ok = await verifyLoginPassword(data.password, rows[0].password_hash);
     if (!ok) throw invalid();
+
+    // A hash from before the current scrypt cost is replaced now that the
+    // password is known (password.server.ts, SEC-056). Only if it is still
+    // the one just checked, so a password change made meanwhile is kept;
+    // housekeeping, so it cannot fail the login.
+    if (needsRehash(rows[0].password_hash)) {
+      try {
+        await sql`
+          UPDATE users SET password_hash = ${await hashPassword(canonicalPassword(data.password))}
+          WHERE id = ${rows[0].id} AND password_hash = ${rows[0].password_hash}
+        `;
+      } catch {
+        /* stays on the old hash until the next sign-in */
+      }
+    }
 
     // A correct password clears the account's counter, so a user who fumbles
     // a few times and then succeeds is not left throttled — only a run of

@@ -1,0 +1,55 @@
+CodeQL 2.27.4, javascript-typescript database (no build), suites: javascript-security-and-quality + javascript-security-experimental (222 queries); actions: codeql/actions-queries (17 queries).
+Config: node_modules, .output, dist, dist-electron, security-audit, *.min.js excluded.
+Actions: 0 results. JavaScript/TypeScript: 49 results (8 unused-variable quality results not listed).
+Confirmed vulnerabilities: 0.
+
+incomplete-multi-character-sanitization      scripts/extract-booklet-docs.ts:106
+file-access-to-http                          scripts/test-security-browser.cjs:98
+insecure-temporary-file                      container-fetch-atlas-images-v2.js:568
+file-system-race                             electron/main.cjs:64
+http-to-file-access                          container-fetch-atlas-images.js:562
+http-to-file-access                          container-fetch-atlas-images-v2.js:568
+http-to-file-access                          scripts/build-offline-seed.ts:86
+http-to-file-access                          scripts/build-offline-seed.ts:112
+untrusted-data-to-external-api-more-sources  electron/main.cjs:219
+untrusted-data-to-external-api-more-sources  electron/main.cjs:257
+untrusted-data-to-external-api-more-sources  electron/main.cjs:264
+untrusted-data-to-external-api-more-sources  scripts/build-offline-seed.ts:86
+untrusted-data-to-external-api-more-sources  scripts/build-offline-seed.ts:112
+untrusted-data-to-external-api-more-sources  scripts/provision-company-owners.ts:163
+untrusted-data-to-external-api-more-sources  scripts/provision-national-id-logins.ts:247
+untrusted-data-to-external-api-more-sources  scripts/provision-national-id-logins.ts:268
+untrusted-data-to-external-api-more-sources  scripts/provision-national-id-logins.ts:283
+untrusted-data-to-external-api-more-sources  scripts/provision-national-id-logins.ts:315
+untrusted-data-to-external-api-more-sources  src/lib/auth/middleware.ts:13
+untrusted-data-to-external-api-more-sources  src/lib/auth/password.server.ts:51
+untrusted-data-to-external-api-more-sources  src/lib/auth/password.server.ts:58
+untrusted-data-to-external-api-more-sources  src/lib/auth/password.server.ts:58
+untrusted-data-to-external-api-more-sources  src/lib/auth/password.server.ts:59
+untrusted-data-to-external-api-more-sources  src/lib/auth/password.server.ts:59
+untrusted-data-to-external-api-more-sources  src/lib/auth/password.server.ts:62
+untrusted-data-to-external-api-more-sources  src/lib/auth.functions.ts:141
+untrusted-data-to-external-api-more-sources  src/lib/auth.functions.ts:205
+untrusted-data-to-external-api-more-sources  src/lib/auth.functions.ts:232
+untrusted-data-to-external-api-more-sources  src/lib/auth.functions.ts:281
+untrusted-data-to-external-api-more-sources  src/lib/offline-sync.functions.ts:34
+untrusted-data-to-external-api-more-sources  src/lib/offline-import.server.ts:71
+untrusted-data-to-external-api-more-sources  src/routes/auth.tsx:204
+untrusted-data-to-external-api-more-sources  src/routes/auth.tsx:206
+untrusted-data-to-external-api-more-sources  src/routes/my-company.tsx:108
+log-injection-more-sources                   container-fetch-atlas-images.js:555
+log-injection-more-sources                   scripts/build-offline-seed.ts:106
+log-injection-more-sources                   scripts/build-offline-seed.ts:114
+log-injection-more-sources                   scripts/test-security-browser.cjs:241
+user-controlled-bypass-more-sources          scripts/build-offline-seed.ts:105
+user-controlled-bypass-more-sources          src/lib/auth.functions.ts:266
+user-controlled-bypass-more-sources          src/lib/auth.functions.ts:271
+
+- untrusted-data-to-external-api-more-sources: not a flaw: experimental inventory of calls that receive external data (passwords to scrypt, values to postgres parameters, server-function results)
+- user-controlled-bypass-more-sources: false positive: the conditions are the intended current-password check and the 'password unchanged' check in changeMyPassword; or a dev script
+- file-system-race: accepted: desktop app reads/creates its own DB password file in the user's app-data folder (mode 0600); only the same OS user can race it
+- insecure-temporary-file: dev/ops one-off script (container-fetch-atlas-images-v2.js), never run by the app
+- http-to-file-access: dev/ops scripts writing downloaded content (seed export, images) by design; file names are fixed or come from the script itself
+- file-access-to-http: test script (browser suite) reading its own fixture
+- log-injection-more-sources: dev scripts logging to their own console
+- incomplete-multi-character-sanitization: content-extraction script (docx to text); its output is reviewed into migrations and rendered by React as text, never as HTML

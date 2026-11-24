@@ -293,3 +293,143 @@ describe("SEC-043: common and patterned passwords are refused", async () => {
     expect(() => assertStrongPassword("12345678")).toThrow("WEAK_PASSWORD");
   });
 });
+
+// Needs a disposable Postgres with the migrations applied, e.g.
+//   TEST_DATABASE_URL=postgres://postgres@127.0.0.1:54329/fava bunx vitest run
+describe.skipIf(!process.env.TEST_DATABASE_URL)(
+  "SEC-050: rate limits hold under parallel requests",
+  async () => {
+    process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+    const { enforceRateLimit, RateLimitError } = await import("../../src/lib/rate-limit.server");
+    const { getDb } = await import("../../db/connection");
+
+    it("lets exactly `limit` of 40 simultaneous calls through", async () => {
+      const bucket = `test:sec050:${Date.now()}:${Math.random()}`;
+      try {
+        const results = await Promise.allSettled(
+          Array.from({ length: 40 }, () =>
+            enforceRateLimit(bucket, { limit: 5, windowSeconds: 60 }),
+          ),
+        );
+        expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(5);
+        const refused = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
+        expect(refused.every((r) => r.reason instanceof RateLimitError)).toBe(true);
+        const [{ n }] = await getDb()<{ n: number }[]>`
+        SELECT count(*)::int AS n FROM rate_limit_hits WHERE bucket = ${bucket}`;
+        expect(n).toBe(5);
+      } finally {
+        await getDb()`DELETE FROM rate_limit_hits WHERE bucket = ${bucket}`;
+      }
+    });
+
+    it("does not hold up other buckets", async () => {
+      const buckets = Array.from(
+        { length: 10 },
+        (_, i) => `test:sec050:other:${i}:${Math.random()}`,
+      );
+      try {
+        await Promise.all(buckets.map((b) => enforceRateLimit(b, { limit: 1, windowSeconds: 60 })));
+      } finally {
+        await getDb()`DELETE FROM rate_limit_hits WHERE bucket = ANY(${buckets})`;
+      }
+    });
+  },
+);
+
+describe("SEC-052: uploaded file names carry 96 random bits from the CSPRNG", async () => {
+  const { newUploadName } = await import("../../src/lib/storage/local-storage.server");
+  it("has the time and 24 hex characters", () => {
+    expect(newUploadName()).toMatch(/^\d{13}-[0-9a-f]{24}$/);
+  });
+  it("does not repeat", () => {
+    const names = new Set(Array.from({ length: 1000 }, () => newUploadName()));
+    expect(names.size).toBe(1000);
+  });
+  it("is used by every upload function", async () => {
+    const { readFileSync } = await import("node:fs");
+    for (const f of ["about-sections", "attachments", "exhibition-api", "park-content"]) {
+      const src = readFileSync(`src/lib/${f}.functions.ts`, "utf8");
+      expect(src, f).toContain("newUploadName()");
+      expect(src, f).not.toMatch(/Math\.random\(\)/);
+    }
+  });
+});
+
+describe.skipIf(!process.env.TEST_DATABASE_URL)(
+  "SEC-053: no automatic admin once accounts exist",
+  async () => {
+    process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+    const { getDb } = await import("../../db/connection");
+    const ROLLBACK = new Error("rollback");
+
+    it("a new account gets no role even when no admin is left", async () => {
+      let roles: string[] = ["not checked"];
+      await getDb()
+        .begin(async (tx) => {
+          await tx`DELETE FROM user_roles WHERE role = 'admin'`;
+          const [user] = await tx<{ id: string }[]>`
+            INSERT INTO users (email, password_hash)
+            VALUES (${`sec053-${Date.now()}@example.test`}, 'x') RETURNING id`;
+          roles = (
+            await tx<
+              { role: string }[]
+            >`SELECT role::text AS role FROM user_roles WHERE user_id = ${user.id}`
+          ).map((r) => r.role);
+          throw ROLLBACK;
+        })
+        .catch((e) => {
+          if (e !== ROLLBACK) throw e;
+        });
+      expect(roles).toEqual([]);
+    });
+  },
+);
+
+describe("SEC-056: password hashes use the current scrypt cost; older hashes still verify", async () => {
+  const { hashPassword, verifyPassword, needsRehash } =
+    await import("../../src/lib/auth/password.server");
+  const { scryptSync } = await import("node:crypto");
+  const legacy = (pw: string) => {
+    const salt = "00112233445566778899aabbccddeeff";
+    return `${salt}:${scryptSync(pw, salt, 64, { N: 16384, r: 8, p: 1 }).toString("hex")}`;
+  };
+
+  it("writes N=2^14, r=8, p=5 and verifies it", async () => {
+    const stored = await hashPassword("Correct#Horse2026");
+    expect(stored).toMatch(/^scrypt\$16384\$8\$5\$[0-9a-f]{32}\$[0-9a-f]{128}$/);
+    expect(await verifyPassword("Correct#Horse2026", stored)).toBe(true);
+    expect(await verifyPassword("Correct#Horse2027", stored)).toBe(false);
+    expect(needsRehash(stored)).toBe(false);
+  });
+
+  it("still verifies a hash written before the change, and flags it for re-hashing", async () => {
+    const stored = legacy("09121947106");
+    expect(await verifyPassword("09121947106", stored)).toBe(true);
+    expect(await verifyPassword("09121947107", stored)).toBe(false);
+    expect(needsRehash(stored)).toBe(true);
+  });
+
+  it("refuses malformed hashes and parameters it does not write", async () => {
+    const weakHash = scryptSync("pw", "00", 64, { N: 1024, r: 1, p: 1 }).toString("hex");
+    for (const stored of ["", "nonsense", "scrypt$16384$8$5$", `scrypt$1024$1$1$00$${weakHash}`]) {
+      expect(await verifyPassword("pw", stored)).toBe(false);
+    }
+  });
+
+  it("takes about as long to check an old hash as a current one (SEC-013)", async () => {
+    const current = await hashPassword("x");
+    const old = legacy("x");
+    const median = async (stored: string) => {
+      const times: number[] = [];
+      for (let i = 0; i < 5; i++) {
+        const t = performance.now();
+        await verifyPassword("wrong", stored);
+        times.push(performance.now() - t);
+      }
+      return times.sort((a, b) => a - b)[2];
+    };
+    const ratio = (await median(old)) / (await median(current));
+    expect(ratio).toBeGreaterThan(0.6);
+    expect(ratio).toBeLessThan(1.6);
+  });
+});

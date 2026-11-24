@@ -1,0 +1,8 @@
+  FAIL export omits attachment of unpublished company seed-delta
+  FAIL export omits deactivated park tehran itself
+  FAIL export omits attachment of deactivated park tehran
+  FAIL export omits content of deactivated park tehran
+  FAIL export omits images of deactivated park tehran
+  FAIL export omits news of deactivated park tehran
+  ok   companies are only published ones
+7 checks, 6 failed

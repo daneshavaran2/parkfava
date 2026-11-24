@@ -1,0 +1,9 @@
+1. first login -> set-password screen          OK
+2. password set -> company editor loads        OK
+3. javascript: URL rejected                    OK
+4. https URL saved (zod 4 + validator())       OK
+5. old CEO-mobile password rejected            OK
+6. new password works                          OK
+7. admin login + users list                    OK
+8. public company page                         200 OK
+page errors                                    none

@@ -3,6 +3,7 @@
 // on Liara this must be a mounted persistent disk, or uploads vanish on
 // every redeploy/restart since the container filesystem is otherwise
 // ephemeral.
+import { randomBytes } from "node:crypto";
 import { createReadStream, existsSync } from "node:fs";
 import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { dirname, join, normalize, sep } from "node:path";
@@ -60,6 +61,16 @@ function resolveSafePath(relPath: string): string {
     throw new Error("INVALID_STORAGE_PATH");
   }
   return full;
+}
+
+/**
+ * Name for a newly uploaded file: upload time plus 96 random bits. /assets
+ * serves stored files to anyone who has the path, so the random part is what
+ * keeps the files of unpublished companies out of reach; it comes from the
+ * CSPRNG rather than Math.random (docs/Security Report.md, SEC-052).
+ */
+export function newUploadName(): string {
+  return `${Date.now()}-${randomBytes(12).toString("hex")}`;
 }
 
 export async function saveLocalFile(relPath: string, data: Buffer): Promise<void> {

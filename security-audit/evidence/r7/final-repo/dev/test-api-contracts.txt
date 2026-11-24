@@ -1,0 +1,20 @@
+Anonymous reads expose only approved + active rows
+  ok   getExhibitionCompanies responds 200
+  ok   seeded public company is visible
+  ok   pending company is not exposed
+  ok   draft company is not exposed
+  ok   detail of a draft company returns no company
+  ok   products of hidden companies are not exposed
+  ok   products of a public company are returned
+
+Unauthenticated writes are rejected
+  ok   saveAdminCompany without a session is rejected
+  ok   deleteExhibitionCompanyAdmin without a session is rejected
+  ok   rejected write did not create a row
+  ok   rejected delete did not remove a row
+
+Input validation
+  ok   empty company id is rejected
+  ok   over-long company id is rejected
+
+13 passed, 0 failed

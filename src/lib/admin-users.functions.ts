@@ -60,7 +60,18 @@ export const revokeAdmin = createServerFn({ method: "POST" })
     assertAdmin(context);
     if (data.user_id === context.user.id) throw new Error("CANNOT_REVOKE_SELF");
     const sql = getDb();
-    await sql`DELETE FROM user_roles WHERE user_id = ${data.user_id} AND role = 'admin'`;
+    // Locks every admin row first and checks the caller is still one of them.
+    // Two admins revoking each other at the same moment both passed the
+    // checks above and removed every admin (docs/Security Report.md,
+    // SEC-053); now the second waits, finds its own role gone and is refused,
+    // so an admin always remains.
+    await sql.begin(async (tx) => {
+      const admins = await tx<{ user_id: string }[]>`
+        SELECT user_id FROM user_roles WHERE role = 'admin' FOR UPDATE
+      `;
+      if (!admins.some((a) => a.user_id === context.user.id)) throw new Error("FORBIDDEN");
+      await tx`DELETE FROM user_roles WHERE user_id = ${data.user_id} AND role = 'admin'`;
+    });
     return { ok: true };
   });
 

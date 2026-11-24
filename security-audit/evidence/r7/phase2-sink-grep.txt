@@ -1,0 +1,60 @@
+## sql.unsafe / raw SQL strings
+src/lib/offline-import.server.ts:66:      await sql.unsafe(
+src/lib/db/auto-migrate.server.ts:52:            await tx.unsafe(contents);
+electron/main.cjs:95:      await tx.unsafe(contents);
+electron/main.cjs:143:        await sql.unsafe(
+db/migrate.ts:45:      await tx.unsafe(contents);
+## dangerouslySetInnerHTML / innerHTML
+src/components/ui/chart.tsx:73:      dangerouslySetInnerHTML={{
+src/components/hero/Logo3D.tsx:521:      <style dangerouslySetInnerHTML={{ __html: sliceCss }} />
+src/lib/fava/image-slot.js:237:      root.innerHTML =
+src/routes/__root.tsx:121:          dangerouslySetInnerHTML={{
+## eval / new Function / vm
+## outbound fetch (SSRF candidates)
+src/lib/assistant-ai.server.ts:47:  const res = await fetch(LOVABLE_GATEWAY_URL, {
+src/lib/assistant-ai.server.ts:83:  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+src/lib/assistant-ai.server.ts:114:  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+src/lib/offline-sync.functions.ts:28:    const res = await fetch(`${LIVE_SITE_URL}/api/public/export`, { signal: AbortSignal.timeout(120_000) });
+src/lib/sms/send-sms.server.ts:18:  return fetch(url, { ...init, signal: AbortSignal.timeout(SMS_TIMEOUT_MS) });
+src/lib/fava/image-slot.js:64:  // page. Reads via fetch() so viewing works anywhere the HTML and sidecar
+src/lib/fava/image-slot.js:78:    loadP = fetch(STATE_FILE)
+src/server.ts:114:  async fetch(request: Request, env: unknown, ctx: unknown) {
+src/server.ts:138:        const response = await handler.fetch(limited, env, ctx);
+electron/main.cjs:105:      const res = await fetch(url);
+## filesystem with paths
+src/lib/storage/local-storage.server.ts:6:import { createReadStream, existsSync } from "node:fs";
+src/lib/storage/local-storage.server.ts:7:import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
+## child_process
+src/routes/assets.$.ts:85:  const match = /^bytes=(\d*)-(\d*)$/.exec(header.trim());
+electron/main.cjs:30:const { spawn } = require("node:child_process");
+electron/main.cjs:263:  serverProcess = spawn(process.execPath, [serverEntry], {
+## WebSocket / socket.io / SSE
+src/lib/csp.ts:12:  "connect-src 'self' https://maps.googleapis.com https://*.googleapis.com https://cdn.gpteng.co https://raw.githack.com https://raw.githubusercontent.com https://*.lovableproject.com wss://*.lovableproject.com https://*.lovable.app wss://*.lovable.app ws://localhost:* wss://localhost:*",
+## payments
+src/components/fava/primitives.tsx:155:      wallet: "M3 7h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7zM3 7l2-3h11l2 3M17 13h.01",
+src/components/fava/primitives.tsx:174:export const CAT_ICON = { soft: "chip", telecom: "globe", hw: "bolt", auto: "robot", sec: "spark", fintech: "wallet", cloud: "layers", health: "dna" };
+src/lib/storage/local-storage.server.ts:27: * copies the images to ./seed-assets, and a dev checkout already has them at
+src/lib/fava/data.js:24:    { id: 'fintech', title: 'فین‌تک و خدمات مالی',            title_en: 'Fintech & Financial Services',             color: 'gold',  icon: 'wallet', companies: 3,  desc: 'پلتفرم‌های مالی، بیمه و شتاب‌دهی فین‌تک',          desc_en: 'Financial platforms, insurance, and fintech acceleration' },
+src/lib/fava/data.js:303:    { id: 'sv2', icon: 'wallet',   color: 'green', title: 'تسهیلات و حمایت مالی', desc: 'وام‌های کم‌بهره، سرمایه خطرپذیر و حمایت از تجاری‌سازی' },
+db/migrations/0007_exhibition_english_content.sql:25:  ('خبره پرداز پارس', 'kpp.ir', 'info@kpp.ir', 'Expert Pars', 'Software production', 'With the aim of developing practical software systems in 1375, Pars Expert Company was established in administrative and industrial sectors and its activities are focused on new technology, sustainable development and customer orientation. After years of experience, this company has focused on the banking sector and 15 ready-to-use systems and payment systems.', 'Reza Fekri, Mohsen Rahimi', 'Corporate banking Boom customers club', 'Specialized and analytical software'),
+db/migrations/0007_exhibition_english_content.sql:32:  ('شتابدهنده فناوری های مالی نوآفرین', 'noafarinac.ir', 'ceo@noafarinfa.com', 'Noafarin Fintech Accelerator', 'Information and communication technology, acceleration and development of commercialization services', 'Accelerator of innovative financial technologies is a platform to transform innovative ideas in the field of fintech into real and scalable businesses. Focusing on fields such as ICT, payment RegTech, digital banking, artificial intelligence, big data, blockchain, information security, this accelerator accompanies startups from the idea stage to entering the market and sustainable development. By providing specialized mentoring, smart seed capital and technical infrastructure, Noafrin provides the path of targeted growth for teams. Direct connection to a network of banks, financial institutions, technology companies and investors is one of the key advantages of this accelerator. Teams enter the acceleration process with a clear business model and a clear financial plan. Innovation is an environment for the growth of startups that think of solving real market problems and entering the industrial scale.', 'Samia Khosh Sarwar, Ali Ghasemi', 'Innovative accelerator in the field of acceleration and development The areas of innovation have a knowledge-based license', 'Development of export-oriented fintech startups'),
+db/migrations/0007_exhibition_english_content.sql:96:  ('پیام گستر فاوا', 'karasite.ir', 'info@payamgostar.ir', 'نرم افزار پخش مویرگی کارا', 'Capillary broadcast software', 'The capillary distribution software provides the possibility of grouping customers, setting different prices and managing orders with regulatory approval. This system supports the management of visitors, supervisors, distributors and drivers with dynamic commissions. Accurate four-level accounting, check and invoice registration, customer control and various reporting are among its other capabilities'),
+db/migrations/0007_exhibition_english_content.sql:97:  ('پیام گستر فاوا', 'karasite.ir', 'info@payamgostar.ir', 'نرم افزار صندوق فروش رستورانی سامان مبتنی بر کارتخوان های اندرویدی', 'Saman restaurant cash register software based on Android card readers', 'This Android software is installed on smart card readers and provides cafe and restaurant cash management by registering orders, issuing invoices and in-app payments. It is a low-cost and fast product for businesses without complete computer equipment, and with the integration of payment, it makes full management of the fund possible. This system includes the reception of clients with recognition and facial RFID, personnel and goods traffic registration, weighing scales and modules. It provides the possibility of exchanging messages and complete monitoring.'),
+db/migrations/0007_exhibition_english_content.sql:98:  ('پیام گستر فاوا', 'karasite.ir', 'info@payamgostar.ir', 'سامانه یکپارچه مدیریت کافه و رستوران سامان', 'Saman cafe and restaurant integrated management system', 'Saman is a comprehensive restaurant management system that goes from order to . CRM covers delivery, hall management, warehouse, raw materials, and this system reduces errors and increases service speed with real-time inventory control, order registration, invoice printing, and profit analysis.'),
+## JWT
+src/lib/auth/session.server.ts:4: * `sessions` table, so revoking access is a single DELETE, not a JWT
+src/lib/use-auth.ts:27:  // without a rename — the new session model has no separate JWT/session
+## CORS
+src/start.ts:87: * without a CORS preflight this app never approves.
+## Math.random in security contexts
+src/components/ui/sidebar.tsx:643:    return `${Math.floor(Math.random() * 40) + 50}%`;
+src/components/fava/AnimatedChip.tsx:42:  return from[Math.floor(Math.random() * from.length)];
+src/components/fava/primitives.tsx:385:        x: Math.random() * w, y: Math.random() * h,
+src/components/fava/primitives.tsx:386:        vx: (Math.random() - 0.5) * 0.12 * devicePixelRatio,
+src/components/fava/primitives.tsx:387:        vy: (Math.random() - 0.5) * 0.12 * devicePixelRatio,
+src/components/fava/primitives.tsx:388:        c: cols[Math.floor(Math.random() * cols.length)],
+src/components/fava/primitives.tsx:389:        r: (Math.random() * 1.4 + 0.8) * devicePixelRatio,
+src/lib/attachments.functions.ts:183:    const path = `attachments/${ownerType}/${assertSafePathSegment(ownerId)}/${kind}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
+src/lib/auth/session.server.ts:51:  if (Math.random() < 0.1) {
+src/lib/rate-limit.server.ts:100:  if (Math.random() < 0.05) {
+## JSON.parse of request data

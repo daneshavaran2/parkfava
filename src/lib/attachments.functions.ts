@@ -42,6 +42,9 @@ export const getAttachments = createServerFn({ method: "GET" })
           !!user && (user.roles.includes("admin") || company.owner_user_id === user.id);
         if (!allowed) return [] as CompanyAttachment[];
       }
+    } else {
+      const { isParkHiddenFromViewer } = await import("./park-visibility.server");
+      if (await isParkHiddenFromViewer(sql, data.ownerId)) return [] as CompanyAttachment[];
     }
     return await sql<CompanyAttachment[]>`
       SELECT * FROM company_attachments
@@ -180,8 +183,8 @@ export const uploadAttachmentFn = createServerFn({ method: "POST" })
       await import("./storage/mime");
     await assertUploadContent(file, assertUploadAllowed(file));
     const safeName = file.name.replace(/[^\w.\-]+/g, "_");
-    const path = `attachments/${ownerType}/${assertSafePathSegment(ownerId)}/${kind}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
-    const { saveLocalFile } = await import("./storage/local-storage.server");
+    const { saveLocalFile, newUploadName } = await import("./storage/local-storage.server");
+    const path = `attachments/${ownerType}/${assertSafePathSegment(ownerId)}/${kind}/${newUploadName()}-${safeName}`;
     await saveLocalFile(path, Buffer.from(await file.arrayBuffer()));
 
     const sql = getDb();

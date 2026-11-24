@@ -1,0 +1,31 @@
+target http://localhost:8091 (dev server)
+Rate limits under parallel requests
+  ok   30 parallel wrong passwords for one account: at most the limit (8) are checked  [8 checked, 22 refused]
+  ok   the per-account counter never exceeds the limit  [8 hits recorded]
+  ok   20 parallel current-password guesses: at most the limit (5) are checked  [5 checked, 15 refused]
+Change-request workflow under concurrency
+  ok   an owner's new product on a published company becomes a pending request
+  ok   10 parallel approvals apply the request exactly once  [1 approvals, 1 products]
+  ok   losing approvals fail cleanly, without database errors
+  ok   10 parallel owner saves leave a single pending company request  [1 pending]
+Session lifetime and revocation
+  ok   a live session works
+  ok   an expired session is refused
+  ok   a session deleted on the server (revoked) is refused at once
+  ok   session lifetime is bounded (at most 30 days)  [2592000s]
+Tampered session cookies
+  ok   the stored hash used as the cookie is refused  [status 200, Unauthorized: not signed in]
+  ok   a token with one character changed is refused  [status 200, Unauthorized: not signed in]
+  ok   an oversized cookie (6 KB) is refused  [status 200, Unauthorized: not signed in]
+  ok   SQL metacharacters is refused  [status 200, Unauthorized: not signed in]
+  ok   a NUL byte is refused  [status 200, Unauthorized: not signed in]
+  ok   a duplicate cookie before the real one: handled without error  [status 200]
+OTP sends under concurrency
+  ok   10 parallel OTP requests send a single text  [1 texts, 9 told to wait]
+  ok   the daily send counter counts every text actually sent  [count 1, 1 texts]
+  ok   at the daily cap nothing is sent  [OTP_DAILY_LIMIT]
+  ok   a new day's window allows a text again and restarts the count  [sent, count 1]
+  ok   the text that was sent left a fresh code to verify  [t]
+  ok   a resend inside the cooldown is refused  [OTP_COOLDOWN]
+
+23 checks, all passed

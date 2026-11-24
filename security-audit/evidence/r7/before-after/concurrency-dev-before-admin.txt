@@ -1,0 +1,29 @@
+target http://localhost:8080 (dev server)
+Rate limits under parallel requests
+  ok   30 parallel wrong passwords for one account: at most the limit (8) are checked  [8 checked, 22 refused]
+  ok   the per-account counter never exceeds the limit  [8 hits recorded]
+  ok   20 parallel current-password guesses: at most the limit (5) are checked  [5 checked, 15 refused]
+Change-request workflow under concurrency
+  ok   an owner's new product on a published company becomes a pending request
+  ok   10 parallel approvals apply the request exactly once  [1 approvals, 1 products]
+  ok   losing approvals fail cleanly, without database errors
+  ok   10 parallel owner saves leave a single pending company request  [1 pending]
+Session lifetime and revocation
+  ok   a live session works
+  ok   an expired session is refused
+  ok   a session deleted on the server (revoked) is refused at once
+  ok   session lifetime is bounded (at most 30 days)  [2592000s]
+Tampered session cookies
+  ok   the stored hash used as the cookie is refused  [status 200, Unauthorized: not signed in]
+  ok   a token with one character changed is refused  [status 200, Unauthorized: not signed in]
+  ok   an oversized cookie (6 KB) is refused  [status 200, Unauthorized: not signed in]
+  ok   SQL metacharacters is refused  [status 200, Unauthorized: not signed in]
+  ok   a NUL byte is refused  [status 200, Unauthorized: not signed in]
+  ok   a duplicate cookie before the real one: handled without error  [status 200]
+Admin role under concurrency
+  FAIL two admins revoking each other at the same moment leave an admin  [0 admin(s) left]
+  FAIL with no admin left, a self-registered account does not become admin  [roles: admin]
+OTP sends without an SMS panel (set SMS_STUB_LOG with a stand-in panel for the concurrency checks)
+  ok   a failed send is reported each time and uses up neither the cooldown nor the daily sends  [SMS_NOT_CONFIGURED,SMS_NOT_CONFIGURED,SMS_NOT_CONFIGURED; count,unset = 0,true]
+
+20 checks, 2 FAILED

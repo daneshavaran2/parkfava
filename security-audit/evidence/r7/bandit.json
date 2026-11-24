@@ -1,0 +1,2576 @@
+{
+  "errors": [],
+  "generated_at": "2026-11-24T14:53:00Z",
+  "metrics": {
+    "_totals": {
+      "CONFIDENCE.HIGH": 30,
+      "CONFIDENCE.LOW": 75,
+      "CONFIDENCE.MEDIUM": 11,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 1,
+      "SEVERITY.LOW": 31,
+      "SEVERITY.MEDIUM": 84,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 2756,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "scripts/generate-national-id-logins.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 130,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "scripts/logo-diff.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 39,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "scripts/test-api-contracts.py": {
+      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 2,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 155,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "scripts/test-auth-hardening.py": {
+      "CONFIDENCE.HIGH": 6,
+      "CONFIDENCE.LOW": 4,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 5,
+      "SEVERITY.MEDIUM": 5,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 88,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "scripts/test-authz-coverage.py": {
+      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.LOW": 1,
+      "CONFIDENCE.MEDIUM": 1,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 2,
+      "SEVERITY.MEDIUM": 2,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 295,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "scripts/test-company-smoke.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 147,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "scripts/test-directions-e2e.py": {
+      "CONFIDENCE.HIGH": 1,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 1,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 115,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "scripts/test-product-routing.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 1,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 1,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 96,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "scripts/test-request-hardening.py": {
+      "CONFIDENCE.HIGH": 6,
+      "CONFIDENCE.LOW": 4,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 3,
+      "SEVERITY.MEDIUM": 7,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 128,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "scripts/test-request-id-e2e.py": {
+      "CONFIDENCE.HIGH": 1,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 1,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 115,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "scripts/test-security-concurrency.py": {
+      "CONFIDENCE.HIGH": 3,
+      "CONFIDENCE.LOW": 28,
+      "CONFIDENCE.MEDIUM": 1,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 4,
+      "SEVERITY.MEDIUM": 28,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 290,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "scripts/test-security-deep.py": {
+      "CONFIDENCE.HIGH": 3,
+      "CONFIDENCE.LOW": 18,
+      "CONFIDENCE.MEDIUM": 2,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 5,
+      "SEVERITY.MEDIUM": 18,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 326,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "scripts/test-security-probes.py": {
+      "CONFIDENCE.HIGH": 3,
+      "CONFIDENCE.LOW": 6,
+      "CONFIDENCE.MEDIUM": 3,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 6,
+      "SEVERITY.MEDIUM": 6,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 337,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "scripts/test-security-strict.py": {
+      "CONFIDENCE.HIGH": 3,
+      "CONFIDENCE.LOW": 14,
+      "CONFIDENCE.MEDIUM": 3,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 1,
+      "SEVERITY.LOW": 5,
+      "SEVERITY.MEDIUM": 14,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 353,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "scripts/test-visual-regression.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 142,
+      "nosec": 0,
+      "skipped_tests": 0
+    }
+  },
+  "results": [
+    {
+      "code": "99     try:\n100         with urllib.request.urlopen(req, timeout=20) as resp:\n101             return resp.status, resp.read().decode(\"utf-8\", \"replace\")\n",
+      "col_offset": 13,
+      "end_col_offset": 52,
+      "filename": "scripts/test-api-contracts.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 22,
+        "link": "https://cwe.mitre.org/data/definitions/22.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+      "line_number": 100,
+      "line_range": [
+        100
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+      "test_id": "B310",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "138 try:\n139     urllib.request.urlopen(f\"{BASE_URL}/api/public/health\", timeout=10)\n140 except Exception as exc:  # noqa: BLE001 - any failure to reach the server is fatal here\n",
+      "col_offset": 4,
+      "end_col_offset": 71,
+      "filename": "scripts/test-api-contracts.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 22,
+        "link": "https://cwe.mitre.org/data/definitions/22.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+      "line_number": 139,
+      "line_range": [
+        139
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+      "test_id": "B310",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "27 import re\n28 import subprocess\n29 import sys\n",
+      "col_offset": 0,
+      "end_col_offset": 17,
+      "filename": "scripts/test-auth-hardening.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Consider possible security implications associated with the subprocess module.",
+      "line_number": 28,
+      "line_range": [
+        28
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess",
+      "test_id": "B404",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "34 # Reuse the authz suite's HTTP client and seroval encoder, not its fixtures.\n35 exec(compile(_src.split(\"for client, email in ((admin, ADMIN_EMAIL)\")[0], \"authz_helpers\", \"exec\"), _ns)\n36 Client = _ns[\"Client\"]\n",
+      "col_offset": 0,
+      "end_col_offset": 104,
+      "filename": "scripts/test-auth-hardening.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Use of exec detected.",
+      "line_number": 35,
+      "line_range": [
+        35
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b102_exec_used.html",
+      "test_id": "B102",
+      "test_name": "exec_used"
+    },
+    {
+      "code": "44 def psql(statement: str) -> None:\n45     subprocess.run([\"psql\", \"-q\", DB, \"-c\", statement], check=True)\n46 \n",
+      "col_offset": 4,
+      "end_col_offset": 67,
+      "filename": "scripts/test-auth-hardening.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Starting a process with a partial executable path",
+      "line_number": 45,
+      "line_range": [
+        45
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html",
+      "test_id": "B607",
+      "test_name": "start_process_with_partial_path"
+    },
+    {
+      "code": "44 def psql(statement: str) -> None:\n45     subprocess.run([\"psql\", \"-q\", DB, \"-c\", statement], check=True)\n46 \n",
+      "col_offset": 4,
+      "end_col_offset": 67,
+      "filename": "scripts/test-auth-hardening.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "subprocess call - check for execution of untrusted input.",
+      "line_number": 45,
+      "line_range": [
+        45
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html",
+      "test_id": "B603",
+      "test_name": "subprocess_without_shell_equals_true"
+    },
+    {
+      "code": "65 \n66 psql(f\"DELETE FROM users WHERE email = '{EMAIL}'; DELETE FROM rate_limit_hits;\")\n67 owner = Client(\"owner\")\n",
+      "col_offset": 7,
+      "end_col_offset": 40,
+      "filename": "scripts/test-auth-hardening.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 66,
+      "line_range": [
+        66
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "74 psql(\n75     f\"UPDATE users SET phone = '09120000001', phone_verified = true, \"\n76     f\"mfa_token_expires_at = now() + interval '24 hours' WHERE email = '{EMAIL}'; \"\n77     f\"UPDATE sessions SET mfa_verified_until = now() + interval '24 hours' \"\n78     f\"WHERE user_id = (SELECT id FROM users WHERE email = '{EMAIL}');\"\n79 )\n",
+      "col_offset": 6,
+      "end_col_offset": 72,
+      "filename": "scripts/test-auth-hardening.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 75,
+      "line_range": [
+        75,
+        76,
+        77,
+        78
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "90 check(\"password-only session cannot replace the verified phone\", \"PHONE_CHANGE_REQUIRES_MFA\" in body, body[:80])\n91 phone = subprocess.run([\"psql\", \"-At\", DB, \"-c\", f\"SELECT phone FROM users WHERE email = '{EMAIL}'\"],\n92                        capture_output=True, text=True).stdout.strip()\n93 check(\"stored phone is unchanged\", phone == \"09120000001\", phone)\n",
+      "col_offset": 8,
+      "end_col_offset": 54,
+      "filename": "scripts/test-auth-hardening.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Starting a process with a partial executable path",
+      "line_number": 91,
+      "line_range": [
+        91,
+        92
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html",
+      "test_id": "B607",
+      "test_name": "start_process_with_partial_path"
+    },
+    {
+      "code": "90 check(\"password-only session cannot replace the verified phone\", \"PHONE_CHANGE_REQUIRES_MFA\" in body, body[:80])\n91 phone = subprocess.run([\"psql\", \"-At\", DB, \"-c\", f\"SELECT phone FROM users WHERE email = '{EMAIL}'\"],\n92                        capture_output=True, text=True).stdout.strip()\n93 check(\"stored phone is unchanged\", phone == \"09120000001\", phone)\n",
+      "col_offset": 8,
+      "end_col_offset": 54,
+      "filename": "scripts/test-auth-hardening.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "subprocess call - check for execution of untrusted input.",
+      "line_number": 91,
+      "line_range": [
+        91,
+        92
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html",
+      "test_id": "B603",
+      "test_name": "subprocess_without_shell_equals_true"
+    },
+    {
+      "code": "90 check(\"password-only session cannot replace the verified phone\", \"PHONE_CHANGE_REQUIRES_MFA\" in body, body[:80])\n91 phone = subprocess.run([\"psql\", \"-At\", DB, \"-c\", f\"SELECT phone FROM users WHERE email = '{EMAIL}'\"],\n92                        capture_output=True, text=True).stdout.strip()\n",
+      "col_offset": 51,
+      "end_col_offset": 90,
+      "filename": "scripts/test-auth-hardening.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 91,
+      "line_range": [
+        91
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "109 \n110 psql(f\"DELETE FROM users WHERE email = '{EMAIL}';\")\n111 print(f\"\\n{'all passed' if not failures else f'{failures} FAILED'}\")\n",
+      "col_offset": 7,
+      "end_col_offset": 40,
+      "filename": "scripts/test-auth-hardening.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 110,
+      "line_range": [
+        110
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "43 OWNER_B_EMAIL = \"authz-owner-b@example.test\"\n44 PASSWORD = \"TestPassw0rd!\"\n45 \n",
+      "col_offset": 11,
+      "end_col_offset": 26,
+      "filename": "scripts/test-authz-coverage.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'TestPassw0rd!'",
+      "line_number": 44,
+      "line_range": [
+        44
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "183         try:\n184             urllib.request.urlopen(f\"{BASE_URL}{p}\", timeout=90).read()\n185         except Exception:  # noqa: BLE001\n",
+      "col_offset": 12,
+      "end_col_offset": 64,
+      "filename": "scripts/test-authz-coverage.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 22,
+        "link": "https://cwe.mitre.org/data/definitions/22.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+      "line_number": 184,
+      "line_range": [
+        184
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+      "test_id": "B310",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "184             urllib.request.urlopen(f\"{BASE_URL}{p}\", timeout=90).read()\n185         except Exception:  # noqa: BLE001\n186             pass\n187 \n",
+      "col_offset": 8,
+      "end_col_offset": 16,
+      "filename": "scripts/test-authz-coverage.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 185,
+      "line_range": [
+        185,
+        186
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "235     print(\"This suite needs one; grant it once with:\")\n236     print(\"  INSERT INTO user_roles (user_id, role) \"\n237           f\"SELECT id, 'admin' FROM users WHERE email = '{ADMIN_EMAIL}' \"\n238           \"ON CONFLICT DO NOTHING;\")\n239     sys.exit(1)\n",
+      "col_offset": 10,
+      "end_col_offset": 57,
+      "filename": "scripts/test-authz-coverage.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 236,
+      "line_range": [
+        236,
+        237,
+        238
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "46             return cp\n47         except Exception:\n48             continue\n49     return None\n",
+      "col_offset": 8,
+      "end_col_offset": 20,
+      "filename": "scripts/test-directions-e2e.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Continue detected.",
+      "line_number": 47,
+      "line_range": [
+        47,
+        48
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b112_try_except_continue.html",
+      "test_id": "B112",
+      "test_name": "try_except_continue"
+    },
+    {
+      "code": "9 BASE_URL = \"http://localhost:8080\"\n10 SCREENSHOTS = Path(\"/tmp/browser/product-routing-test/screenshots\")\n11 PRODUCT_PATH_RE = re.compile(r\"^/company/([^/]+)/product/([^/]+)$\")\n",
+      "col_offset": 19,
+      "end_col_offset": 66,
+      "filename": "scripts/test-product-routing.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 377,
+        "link": "https://cwe.mitre.org/data/definitions/377.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Probable insecure usage of temp file/directory.",
+      "line_number": 10,
+      "line_range": [
+        10
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b108_hardcoded_tmp_directory.html",
+      "test_id": "B108",
+      "test_name": "hardcoded_tmp_directory"
+    },
+    {
+      "code": "14 import re\n15 import subprocess\n16 import sys\n",
+      "col_offset": 0,
+      "end_col_offset": 17,
+      "filename": "scripts/test-request-hardening.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Consider possible security implications associated with the subprocess module.",
+      "line_number": 15,
+      "line_range": [
+        15
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess",
+      "test_id": "B404",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "21 _ns: dict = {}\n22 exec(compile(_src.split(\"for client, email in ((admin, ADMIN_EMAIL)\")[0], \"authz_helpers\", \"exec\"), _ns)\n23 Client, PASSWORD, server_fn_url, seroval = _ns[\"Client\"], _ns[\"PASSWORD\"], _ns[\"server_fn_url\"], _ns[\"seroval\"]\n",
+      "col_offset": 0,
+      "end_col_offset": 104,
+      "filename": "scripts/test-request-hardening.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Use of exec detected.",
+      "line_number": 22,
+      "line_range": [
+        22
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b102_exec_used.html",
+      "test_id": "B102",
+      "test_name": "exec_used"
+    },
+    {
+      "code": "38 def psql(statement: str) -> None:\n39     subprocess.run([\"psql\", \"-q\", DB, \"-c\", statement], check=True)\n40 \n",
+      "col_offset": 4,
+      "end_col_offset": 67,
+      "filename": "scripts/test-request-hardening.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Starting a process with a partial executable path",
+      "line_number": 39,
+      "line_range": [
+        39
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html",
+      "test_id": "B607",
+      "test_name": "start_process_with_partial_path"
+    },
+    {
+      "code": "38 def psql(statement: str) -> None:\n39     subprocess.run([\"psql\", \"-q\", DB, \"-c\", statement], check=True)\n40 \n",
+      "col_offset": 4,
+      "end_col_offset": 67,
+      "filename": "scripts/test-request-hardening.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "subprocess call - check for execution of untrusted input.",
+      "line_number": 39,
+      "line_range": [
+        39
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html",
+      "test_id": "B603",
+      "test_name": "subprocess_without_shell_equals_true"
+    },
+    {
+      "code": "58 \n59 psql(f\"DELETE FROM users WHERE email = '{EMAIL}'; DELETE FROM rate_limit_hits;\")\n60 user = Client(\"user\")\n",
+      "col_offset": 7,
+      "end_col_offset": 40,
+      "filename": "scripts/test-request-hardening.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 59,
+      "line_range": [
+        59
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "92 try:\n93     with urllib.request.urlopen(req, timeout=60) as r:\n94         st = r.status\n",
+      "col_offset": 9,
+      "end_col_offset": 48,
+      "filename": "scripts/test-request-hardening.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 22,
+        "link": "https://cwe.mitre.org/data/definitions/22.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+      "line_number": 93,
+      "line_range": [
+        93
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+      "test_id": "B310",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "144 check(\"3 MB multipart body from a signed-in user who owns nothing is refused\", st == 413, f\"status {st}\")\n145 psql(f\"INSERT INTO user_roles (user_id, role) SELECT id, 'admin' FROM users WHERE email = '{EMAIL}' ON CONFLICT DO NOTHING;\")\n146 st = post_multipart(user.opener)\n",
+      "col_offset": 7,
+      "end_col_offset": 91,
+      "filename": "scripts/test-request-hardening.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 145,
+      "line_range": [
+        145
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "147 check(\"3 MB multipart body from an admin reaches the app\", st != 413, f\"status {st}\")\n148 psql(f\"DELETE FROM user_roles WHERE user_id = (SELECT id FROM users WHERE email = '{EMAIL}');\")\n149 \n",
+      "col_offset": 7,
+      "end_col_offset": 83,
+      "filename": "scripts/test-request-hardening.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 148,
+      "line_range": [
+        148
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "150 print(\"SEC-036  response headers\")\n151 with urllib.request.urlopen(f\"http://{host}:{port}/\", timeout=30) as r:\n152     pp = r.headers.get(\"permissions-policy\") or \"\"\n",
+      "col_offset": 5,
+      "end_col_offset": 65,
+      "filename": "scripts/test-request-hardening.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 22,
+        "link": "https://cwe.mitre.org/data/definitions/22.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+      "line_number": 151,
+      "line_range": [
+        151
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+      "test_id": "B310",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "157 \n158 psql(f\"DELETE FROM users WHERE email = '{EMAIL}';\")\n159 print(f\"\\n{'all passed' if not failures else f'{failures} FAILED'}\")\n",
+      "col_offset": 7,
+      "end_col_offset": 40,
+      "filename": "scripts/test-request-hardening.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 158,
+      "line_range": [
+        158
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "29     try:\n30         resp = urllib.request.urlopen(r, timeout=10)\n31         return resp.status, dict(resp.headers), resp.read()\n",
+      "col_offset": 15,
+      "end_col_offset": 52,
+      "filename": "scripts/test-request-id-e2e.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 22,
+        "link": "https://cwe.mitre.org/data/definitions/22.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+      "line_number": 30,
+      "line_range": [
+        30
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+      "test_id": "B310",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "27 import re\n28 import subprocess\n29 import sys\n",
+      "col_offset": 0,
+      "end_col_offset": 17,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Consider possible security implications associated with the subprocess module.",
+      "line_number": 28,
+      "line_range": [
+        28
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess",
+      "test_id": "B404",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "46 ADMIN = \"security-race-admin@example.test\"\n47 PASSWORD = \"Race#Passw0rd2026\"\n48 failures = checks = 0\n",
+      "col_offset": 11,
+      "end_col_offset": 30,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'Race#Passw0rd2026'",
+      "line_number": 47,
+      "line_range": [
+        47
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "58 def psql(statement):\n59     return subprocess.run([\"psql\", \"-qtA\", DB, \"-c\", statement], check=True, capture_output=True, text=True).stdout.strip()\n60 \n",
+      "col_offset": 11,
+      "end_col_offset": 108,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Starting a process with a partial executable path",
+      "line_number": 59,
+      "line_range": [
+        59
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html",
+      "test_id": "B607",
+      "test_name": "start_process_with_partial_path"
+    },
+    {
+      "code": "58 def psql(statement):\n59     return subprocess.run([\"psql\", \"-qtA\", DB, \"-c\", statement], check=True, capture_output=True, text=True).stdout.strip()\n60 \n",
+      "col_offset": 11,
+      "end_col_offset": 108,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "subprocess call - check for execution of untrusted input.",
+      "line_number": 59,
+      "line_range": [
+        59
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html",
+      "test_id": "B603",
+      "test_name": "subprocess_without_shell_equals_true"
+    },
+    {
+      "code": "149 def account(email, admin=False):\n150     psql(f\"DELETE FROM users WHERE email = {q(email)}; DELETE FROM rate_limit_hits;\")\n151     st, body, _ = call(None, \"auth\", \"signUp\", {\"email\": email, \"password\": PASSWORD})\n",
+      "col_offset": 11,
+      "end_col_offset": 43,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 150,
+      "line_range": [
+        150
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "154     if admin:\n155         psql(f\"INSERT INTO user_roles (user_id, role) SELECT id, 'admin' FROM users WHERE email = {q(email)} ON CONFLICT DO NOTHING;\")\n156     psql(\"DELETE FROM rate_limit_hits;\")\n",
+      "col_offset": 15,
+      "end_col_offset": 98,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 155,
+      "line_range": [
+        155
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "172       f\"{processed} checked, {results.count('RATE_LIMITED')} refused\")\n173 hits = psql(f\"SELECT count(*) FROM rate_limit_hits WHERE bucket = {q('signin:' + USER)}\")\n174 check(\"the per-account counter never exceeds the limit\", int(hits) <= 8, f\"{hits} hits recorded\")\n",
+      "col_offset": 14,
+      "end_col_offset": 66,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 173,
+      "line_range": [
+        173
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "185 company = psql(\"SELECT company_id FROM exhibition_companies WHERE status = 'approved' AND is_active ORDER BY company_id LIMIT 1\")\n186 original_owner = psql(f\"SELECT coalesce(owner_user_id::text, '') FROM exhibition_companies WHERE company_id = {q(company)}\")\n187 psql(f\"UPDATE exhibition_companies SET owner_user_id = (SELECT id FROM users WHERE email = {q(OWNER)}) WHERE company_id = {q(company)};\"\n",
+      "col_offset": 24,
+      "end_col_offset": 110,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 186,
+      "line_range": [
+        186
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "186 original_owner = psql(f\"SELECT coalesce(owner_user_id::text, '') FROM exhibition_companies WHERE company_id = {q(company)}\")\n187 psql(f\"UPDATE exhibition_companies SET owner_user_id = (SELECT id FROM users WHERE email = {q(OWNER)}) WHERE company_id = {q(company)};\"\n188      f\"DELETE FROM exhibition_change_requests WHERE company_id = {q(company)};\")\n189 try:\n",
+      "col_offset": 7,
+      "end_col_offset": 91,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 187,
+      "line_range": [
+        187,
+        188
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "191                       {\"company_id\": company, \"name\": \"Race Product\"})\n192     req = psql(f\"SELECT id FROM exhibition_change_requests WHERE company_id = {q(company)} AND entity_type = 'product' \"\n193                \"AND action = 'create' AND status = 'pending' LIMIT 1\")\n194     check(\"an owner's new product on a published company becomes a pending request\", bool(req), err(body))\n",
+      "col_offset": 17,
+      "end_col_offset": 78,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 192,
+      "line_range": [
+        192,
+        193
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "199         approvals = sum(1 for b in outcomes if ok(b))\n200         products = psql(f\"SELECT count(*) FROM exhibition_products WHERE company_id = {q(company)} AND name = 'Race Product'\")\n201         check(\"10 parallel approvals apply the request exactly once\", approvals == 1 and products == \"1\",\n",
+      "col_offset": 26,
+      "end_col_offset": 86,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 200,
+      "line_range": [
+        200
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "207                                      {\"company_id\": company, \"patch\": {\"tagline\": f\"race tagline {i}\"}}), range(10)))\n208     pending = psql(f\"SELECT count(*) FROM exhibition_change_requests WHERE company_id = {q(company)} AND entity_type = 'company' \"\n209                    \"AND status = 'pending'\")\n210     check(\"10 parallel owner saves leave a single pending company request\", pending == \"1\", f\"{pending} pending\")\n",
+      "col_offset": 21,
+      "end_col_offset": 88,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 208,
+      "line_range": [
+        208,
+        209
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "211 finally:\n212     psql(f\"DELETE FROM exhibition_products WHERE company_id = {q(company)} AND name = 'Race Product';\"\n213          f\"DELETE FROM exhibition_change_requests WHERE company_id = {q(company)};\"\n214          f\"UPDATE exhibition_companies SET owner_user_id = {('NULL' if not original_owner else q(original_owner))} \"\n215          f\"WHERE company_id = {q(company)};\")\n216 \n",
+      "col_offset": 11,
+      "end_col_offset": 62,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 212,
+      "line_range": [
+        212,
+        213,
+        214,
+        215
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "220 check(\"a live session works\", USER in body)\n221 psql(f\"UPDATE sessions SET expires_at = now() - interval '1 minute' WHERE id = {q(key)};\")\n222 _, body, _ = call(f\"session={user_token}\", \"auth\", \"getCurrentUser\", None, \"GET\")\n",
+      "col_offset": 7,
+      "end_col_offset": 79,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 221,
+      "line_range": [
+        221
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "223 check(\"an expired session is refused\", USER not in body)\n224 psql(f\"UPDATE sessions SET expires_at = now() + interval '1 day' WHERE id = {q(key)};\")\n225 _, body, _ = call(f\"session={user_token}\", \"auth\", \"getCurrentUser\", None, \"GET\")\n",
+      "col_offset": 7,
+      "end_col_offset": 76,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 224,
+      "line_range": [
+        224
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "226 restored = USER in body\n227 psql(f\"DELETE FROM sessions WHERE id = {q(key)};\")\n228 _, body, _ = call(f\"session={user_token}\", \"auth\", \"getCurrentUser\", None, \"GET\")\n",
+      "col_offset": 7,
+      "end_col_offset": 39,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 227,
+      "line_range": [
+        227
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "229 check(\"a session deleted on the server (revoked) is refused at once\", restored and USER not in body)\n230 max_age = psql(f\"SELECT max(extract(epoch FROM expires_at - created_at))::int FROM sessions \"\n231                f\"WHERE user_id = (SELECT id FROM users WHERE email = {q(ADMIN)})\")\n232 check(\"session lifetime is bounded (at most 30 days)\", max_age and int(max_age) <= 30 * 86400 + 60, f\"{max_age}s\")\n",
+      "col_offset": 17,
+      "end_col_offset": 69,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 230,
+      "line_range": [
+        230,
+        231
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "252 ATTACKER = \"security-race-newcomer@example.test\"\n253 saved_admins = psql(\"SELECT coalesce(string_agg(r.user_id::text, ','), '') FROM user_roles r JOIN users u ON u.id = r.user_id \"\n254                     f\"WHERE r.role = 'admin' AND u.email NOT LIKE 'security-race-%'\")\n255 try:\n",
+      "col_offset": 20,
+      "end_col_offset": 83,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 253,
+      "line_range": [
+        253,
+        254
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "256     admin2_token = account(ADMIN2, admin=True)\n257     ids = {e: psql(f\"SELECT id FROM users WHERE email = {q(e)}\") for e in (ADMIN, ADMIN2)}\n258     psql(f\"DELETE FROM user_roles WHERE role = 'admin' AND user_id NOT IN ({q(ids[ADMIN])}, {q(ids[ADMIN2])});\")\n",
+      "col_offset": 21,
+      "end_col_offset": 56,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 257,
+      "line_range": [
+        257
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "257     ids = {e: psql(f\"SELECT id FROM users WHERE email = {q(e)}\") for e in (ADMIN, ADMIN2)}\n258     psql(f\"DELETE FROM user_roles WHERE role = 'admin' AND user_id NOT IN ({q(ids[ADMIN])}, {q(ids[ADMIN2])});\")\n259     remaining = \"2\"\n",
+      "col_offset": 11,
+      "end_col_offset": 75,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 258,
+      "line_range": [
+        258
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "260     for _ in range(8):\n261         psql(f\"INSERT INTO user_roles (user_id, role) VALUES ({q(ids[ADMIN])}, 'admin'), ({q(ids[ADMIN2])}, 'admin') \"\n262              \"ON CONFLICT DO NOTHING;\")\n263         with concurrent.futures.ThreadPoolExecutor(2) as pool:\n",
+      "col_offset": 15,
+      "end_col_offset": 62,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 261,
+      "line_range": [
+        261,
+        262
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "273     _, body, _ = call(None, \"auth\", \"signUp\", {\"email\": ATTACKER, \"password\": PASSWORD})\n274     roles = psql(f\"SELECT coalesce(string_agg(role::text, ','), '') FROM user_roles r JOIN users u ON u.id = r.user_id \"\n275                  f\"WHERE u.email = {q(ATTACKER)}\")\n276     check(\"with no admin left, a self-registered account does not become admin\", ok(body) and \"admin\" not in roles,\n",
+      "col_offset": 19,
+      "end_col_offset": 35,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 274,
+      "line_range": [
+        274,
+        275
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "278 finally:\n279     psql(f\"DELETE FROM users WHERE email IN ({q(ADMIN2)}, {q(ATTACKER)}); DELETE FROM user_roles WHERE role = 'admin';\")\n280     for uid in filter(None, saved_admins.split(\",\")):\n",
+      "col_offset": 11,
+      "end_col_offset": 45,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 279,
+      "line_range": [
+        279
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "280     for uid in filter(None, saved_admins.split(\",\")):\n281         psql(f\"INSERT INTO user_roles (user_id, role) VALUES ({q(uid)}, 'admin') ON CONFLICT DO NOTHING;\")\n282     psql(\"DELETE FROM rate_limit_hits;\")\n",
+      "col_offset": 15,
+      "end_col_offset": 62,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 281,
+      "line_range": [
+        281
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "298     def reset_otp(count=\"0\", window_start=\"NULL\"):\n299         psql(f\"UPDATE users SET phone = '+989120000000', mfa_otp_last_sent_at = NULL, \"\n300              f\"mfa_otp_send_window_start = {window_start}, mfa_otp_send_count = {count} WHERE email = {q(OWNER)};\")\n301 \n",
+      "col_offset": 15,
+      "end_col_offset": 43,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 299,
+      "line_range": [
+        299,
+        300
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "308           f\"{texts} texts, {sum(1 for b in outcomes if err(b) == 'OTP_COOLDOWN')} told to wait\")\n309     count = psql(f\"SELECT mfa_otp_send_count FROM users WHERE email = {q(OWNER)}\")\n310     check(\"the daily send counter counts every text actually sent\", count == str(texts), f\"count {count}, {texts} texts\")\n",
+      "col_offset": 19,
+      "end_col_offset": 70,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 309,
+      "line_range": [
+        309
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "318     _, body, _ = call(f\"session={owner_token}\", \"mfa\", \"requestOtp\")\n319     count = psql(f\"SELECT mfa_otp_send_count FROM users WHERE email = {q(OWNER)}\")\n320     check(\"a new day's window allows a text again and restarts the count\", ok(body) and sent() == before + 1 and count == \"1\",\n",
+      "col_offset": 19,
+      "end_col_offset": 70,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 319,
+      "line_range": [
+        319
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "321           f\"{err(body) or 'sent'}, count {count}\")\n322     live = psql(f\"SELECT mfa_otp_hash IS NOT NULL AND mfa_otp_expires_at > now() AND mfa_otp_attempts = 0 \"\n323                 f\"FROM users WHERE email = {q(OWNER)}\")\n324     check(\"the text that was sent left a fresh code to verify\", live == \"t\", live)\n",
+      "col_offset": 18,
+      "end_col_offset": 43,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 322,
+      "line_range": [
+        322,
+        323
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "324     check(\"the text that was sent left a fresh code to verify\", live == \"t\", live)\n325     psql(f\"UPDATE users SET mfa_otp_last_sent_at = now() - interval '30 seconds' WHERE email = {q(OWNER)};\")\n326     _, body, _ = call(f\"session={owner_token}\", \"mfa\", \"requestOtp\")\n",
+      "col_offset": 11,
+      "end_col_offset": 95,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 325,
+      "line_range": [
+        325
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "329     print(\"OTP sends without an SMS panel (set SMS_STUB_LOG with a stand-in panel for the concurrency checks)\")\n330     psql(f\"UPDATE users SET phone = '+989120000000', mfa_otp_last_sent_at = NULL, mfa_otp_send_window_start = NULL, \"\n331          f\"mfa_otp_send_count = 0 WHERE email = {q(OWNER)};\")\n332     outcomes = [err(call(f\"session={owner_token}\", \"mfa\", \"requestOtp\")[1]) for _ in range(3)]\n",
+      "col_offset": 11,
+      "end_col_offset": 48,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 330,
+      "line_range": [
+        330,
+        331
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "332     outcomes = [err(call(f\"session={owner_token}\", \"mfa\", \"requestOtp\")[1]) for _ in range(3)]\n333     state = psql(f\"SELECT mfa_otp_send_count || ',' || (mfa_otp_last_sent_at IS NULL) FROM users WHERE email = {q(OWNER)}\")\n334     check(\"a failed send is reported each time and uses up neither the cooldown nor the daily sends\",\n",
+      "col_offset": 19,
+      "end_col_offset": 111,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 333,
+      "line_range": [
+        333
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "336 \n337 psql(f\"DELETE FROM users WHERE email IN ({q(USER)}, {q(OWNER)}, {q(ADMIN)}); DELETE FROM rate_limit_hits;\")\n338 print(f\"\\n{checks} checks, {'all passed' if not failures else f'{failures} FAILED'}\")\n",
+      "col_offset": 7,
+      "end_col_offset": 41,
+      "filename": "scripts/test-security-concurrency.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 337,
+      "line_range": [
+        337
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "32 import re\n33 import subprocess\n34 import sys\n",
+      "col_offset": 0,
+      "end_col_offset": 17,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Consider possible security implications associated with the subprocess module.",
+      "line_number": 33,
+      "line_range": [
+        33
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess",
+      "test_id": "B404",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "52 ADMIN = \"security-deep-admin@example.test\"\n53 PASSWORD = \"Deep#Passw0rd2026\"\n54 failures = checks = 0\n",
+      "col_offset": 11,
+      "end_col_offset": 30,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'Deep#Passw0rd2026'",
+      "line_number": 53,
+      "line_range": [
+        53
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "64 def psql(statement):\n65     return subprocess.run([\"psql\", \"-qtA\", DB, \"-c\", statement], check=True, capture_output=True, text=True).stdout.strip()\n66 \n",
+      "col_offset": 11,
+      "end_col_offset": 108,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Starting a process with a partial executable path",
+      "line_number": 65,
+      "line_range": [
+        65
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html",
+      "test_id": "B607",
+      "test_name": "start_process_with_partial_path"
+    },
+    {
+      "code": "64 def psql(statement):\n65     return subprocess.run([\"psql\", \"-qtA\", DB, \"-c\", statement], check=True, capture_output=True, text=True).stdout.strip()\n66 \n",
+      "col_offset": 11,
+      "end_col_offset": 108,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "subprocess call - check for execution of untrusted input.",
+      "line_number": 65,
+      "line_range": [
+        65
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html",
+      "test_id": "B603",
+      "test_name": "subprocess_without_shell_equals_true"
+    },
+    {
+      "code": "168 def signed_up(email, admin=False):\n169     psql(f\"DELETE FROM users WHERE email = {q(email)}; DELETE FROM rate_limit_hits;\")\n170     s = Session()\n",
+      "col_offset": 11,
+      "end_col_offset": 43,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 169,
+      "line_range": [
+        169
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "174     if admin:\n175         psql(f\"INSERT INTO user_roles (user_id, role) SELECT id, 'admin' FROM users WHERE email = {q(email)} ON CONFLICT DO NOTHING;\")\n176     s.cookies.clear()\n",
+      "col_offset": 15,
+      "end_col_offset": 98,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 175,
+      "line_range": [
+        175
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "234 anon = Session()\n235 owner_id = psql(f\"SELECT id FROM users WHERE email = {q(OWNER)}\")\n236 published = psql(\"SELECT company_id FROM exhibition_companies WHERE status = 'approved' AND is_active ORDER BY company_id LIMIT 1\")\n",
+      "col_offset": 18,
+      "end_col_offset": 53,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 235,
+      "line_range": [
+        235
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "236 published = psql(\"SELECT company_id FROM exhibition_companies WHERE status = 'approved' AND is_active ORDER BY company_id LIMIT 1\")\n237 draft = psql(f\"SELECT company_id FROM exhibition_companies WHERE company_id <> {q(published)} ORDER BY company_id LIMIT 1\")\n238 psql(\"DROP TABLE IF EXISTS deep_backup; CREATE TABLE deep_backup AS SELECT * FROM exhibition_companies \"\n",
+      "col_offset": 15,
+      "end_col_offset": 79,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 237,
+      "line_range": [
+        237
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "237 draft = psql(f\"SELECT company_id FROM exhibition_companies WHERE company_id <> {q(published)} ORDER BY company_id LIMIT 1\")\n238 psql(\"DROP TABLE IF EXISTS deep_backup; CREATE TABLE deep_backup AS SELECT * FROM exhibition_companies \"\n239      f\"WHERE company_id IN ({q(published)}, {q(draft)});\")\n240 psql(f\"UPDATE exhibition_companies SET owner_user_id = {q(owner_id)} WHERE company_id IN ({q(published)}, {q(draft)});\"\n",
+      "col_offset": 5,
+      "end_col_offset": 28,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 238,
+      "line_range": [
+        238,
+        239
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "239      f\"WHERE company_id IN ({q(published)}, {q(draft)});\")\n240 psql(f\"UPDATE exhibition_companies SET owner_user_id = {q(owner_id)} WHERE company_id IN ({q(published)}, {q(draft)});\"\n241      f\"UPDATE exhibition_companies SET status = 'draft' WHERE company_id = {q(draft)};\"\n242      f\"DELETE FROM exhibition_change_requests WHERE company_id IN ({q(published)}, {q(draft)});\")\n243 park = psql(\"SELECT park_id FROM parks ORDER BY park_id LIMIT 1\")\n",
+      "col_offset": 7,
+      "end_col_offset": 55,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 240,
+      "line_range": [
+        240,
+        241,
+        242
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "276     hidden_park = psql(\"SELECT park_id FROM parks WHERE is_active ORDER BY park_id LIMIT 1\")\n277     psql(f\"INSERT INTO company_attachments (owner_type, owner_id, kind, file_url, title, is_active) VALUES \"\n278          f\"('exhibition', {q(draft)}, 'catalog', 'attachments/deep-probe.pdf', 'deep-probe draft file', true), \"\n279          f\"('park', {q(hidden_park)}, 'catalog', 'attachments/deep-probe.pdf', 'deep-probe park file', true);\"\n280          f\"INSERT INTO park_images (park_id, image_url, caption) VALUES ({q(hidden_park)}, 'deep-probe.jpg', 'deep-probe');\"\n281          f\"INSERT INTO park_news (park_id, title) VALUES ({q(hidden_park)}, 'deep-probe news');\"\n282          f\"UPDATE parks SET is_active = false WHERE park_id = {q(hidden_park)};\")\n283     try:\n",
+      "col_offset": 11,
+      "end_col_offset": 26,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 277,
+      "line_range": [
+        277,
+        278,
+        279,
+        280,
+        281,
+        282
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "311     finally:\n312         psql(f\"UPDATE parks SET is_active = true WHERE park_id = {q(hidden_park)};\"\n313              \"DELETE FROM company_attachments WHERE title LIKE 'deep-probe %'; DELETE FROM park_images WHERE caption = 'deep-probe';\"\n314              \"DELETE FROM park_news WHERE title = 'deep-probe news';\")\n315 \n",
+      "col_offset": 15,
+      "end_col_offset": 65,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 312,
+      "line_range": [
+        312,
+        313,
+        314
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "316     print(\"Mass assignment by a company owner\")\n317     other_owner = psql(f\"SELECT id FROM users WHERE email = {q(PLAIN)}\")\n318     before = psql(f\"SELECT status, is_active, owner_user_id, reviewed_by, rejection_note, sort_order FROM exhibition_companies WHERE company_id = {q(draft)}\")\n",
+      "col_offset": 25,
+      "end_col_offset": 60,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 317,
+      "line_range": [
+        317
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "317     other_owner = psql(f\"SELECT id FROM users WHERE email = {q(PLAIN)}\")\n318     before = psql(f\"SELECT status, is_active, owner_user_id, reviewed_by, rejection_note, sort_order FROM exhibition_companies WHERE company_id = {q(draft)}\")\n319     hostile = {\"status\": \"approved\", \"is_active\": True, \"owner_user_id\": other_owner, \"reviewed_by\": owner_id,\n",
+      "col_offset": 20,
+      "end_col_offset": 146,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 318,
+      "line_range": [
+        318
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "322     st, body, _ = owner.call(\"exhibition-api\", \"saveOwnedCompany\", {\"company_id\": draft, \"patch\": hostile})\n323     after = psql(f\"SELECT status, is_active, owner_user_id, reviewed_by, rejection_note, sort_order FROM exhibition_companies WHERE company_id = {q(draft)}\")\n324     name_now = psql(f\"SELECT name FROM exhibition_companies WHERE company_id = {q(draft)}\")\n",
+      "col_offset": 19,
+      "end_col_offset": 145,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 323,
+      "line_range": [
+        323
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "323     after = psql(f\"SELECT status, is_active, owner_user_id, reviewed_by, rejection_note, sort_order FROM exhibition_companies WHERE company_id = {q(draft)}\")\n324     name_now = psql(f\"SELECT name FROM exhibition_companies WHERE company_id = {q(draft)}\")\n325     check(\"owner save of a draft applies ordinary fields\", name_now == \"Deep Test Draft\", err(body) or name_now[:30])\n",
+      "col_offset": 22,
+      "end_col_offset": 79,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 324,
+      "line_range": [
+        324
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "326     check(\"owner cannot set status, activation, ownership, review fields or listing order\", before == after, f\"{before} -> {after}\")\n327     check(\"owner cannot redirect the save to another company\", psql(f\"SELECT name FROM exhibition_companies WHERE company_id = {q(published)}\")\n328           != \"Deep Test Draft\")\n",
+      "col_offset": 70,
+      "end_col_offset": 127,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 327,
+      "line_range": [
+        327
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "329     st, body, _ = owner.call(\"exhibition-api\", \"saveOwnedCompany\", {\"company_id\": published, \"patch\": hostile})\n330     payload = psql(f\"SELECT payload::text FROM exhibition_change_requests WHERE company_id = {q(published)} AND status = 'pending' \"\n331                    \"AND entity_type = 'company' ORDER BY submitted_at DESC LIMIT 1\")\n332     bad = [k for k in (\"status\", \"is_active\", \"owner_user_id\", \"reviewed_by\", \"rejection_note\", \"sort_order\", \"company_id\",\n",
+      "col_offset": 21,
+      "end_col_offset": 93,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 330,
+      "line_range": [
+        330,
+        331
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "336     print(\"Review workflow\")\n337     live_name = psql(f\"SELECT name FROM exhibition_companies WHERE company_id = {q(published)}\")\n338     check(\"an owner's edit to a published company is not live before review\", live_name != \"Deep Test Draft\")\n",
+      "col_offset": 23,
+      "end_col_offset": 80,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 337,
+      "line_range": [
+        337
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "338     check(\"an owner's edit to a published company is not live before review\", live_name != \"Deep Test Draft\")\n339     req_id = psql(f\"SELECT id FROM exhibition_change_requests WHERE company_id = {q(published)} AND status = 'pending' \"\n340                   \"AND entity_type = 'company' LIMIT 1\")\n341     if req_id:\n",
+      "col_offset": 20,
+      "end_col_offset": 81,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 339,
+      "line_range": [
+        339,
+        340
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "345         check(\"another signed-in user cannot approve it\", not ok(body), err(body)[:40])\n346         check(\"the request is still pending\", psql(f\"SELECT status FROM exhibition_change_requests WHERE id = {q(req_id)}\") == \"pending\")\n347 \n",
+      "col_offset": 53,
+      "end_col_offset": 110,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 346,
+      "line_range": [
+        346
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "370         psql(\"DELETE FROM rate_limit_hits;\")\n371         _, _, dt = anon.call(\"auth\", \"signIn\", {\"identifier\": ident, \"password\": \"x\"})\n372         slowest = max(slowest, (dt, f\"identifier {ident[:6]!r}\u2026\"))\n",
+      "col_offset": 69,
+      "end_col_offset": 79,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'x'",
+      "line_number": 371,
+      "line_range": [
+        371
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "376                 \"AND is_generated = 'NEVER' AND column_name <> 'company_id'\").split(\",\")\n377     psql(f\"UPDATE exhibition_companies e SET ({', '.join(cols)}) = ({', '.join('b.' + c for c in cols)}) FROM deep_backup b \"\n378          \"WHERE e.company_id = b.company_id; DROP TABLE deep_backup;\"\n379          f\"DELETE FROM exhibition_change_requests WHERE company_id IN ({q(published)}, {q(draft)});\"\n380          f\"DELETE FROM users WHERE email IN ({q(OWNER)}, {q(PLAIN)}, {q(ADMIN)}); DELETE FROM rate_limit_hits;\")\n381 \n",
+      "col_offset": 11,
+      "end_col_offset": 46,
+      "filename": "scripts/test-security-deep.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 377,
+      "line_range": [
+        377,
+        378,
+        379,
+        380
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "25 import re\n26 import subprocess\n27 import sys\n",
+      "col_offset": 0,
+      "end_col_offset": 17,
+      "filename": "scripts/test-security-probes.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Consider possible security implications associated with the subprocess module.",
+      "line_number": 26,
+      "line_range": [
+        26
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess",
+      "test_id": "B404",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "43 PROBE_ADMIN = \"security-probe-admin@example.test\"\n44 PASSWORD = \"Probe#Passw0rd2026\"\n45 XSS = '\"><svg/onload=alert(1337)>'\n",
+      "col_offset": 11,
+      "end_col_offset": 31,
+      "filename": "scripts/test-security-probes.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'Probe#Passw0rd2026'",
+      "line_number": 44,
+      "line_range": [
+        44
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "58 def psql(statement: str) -> str:\n59     return subprocess.run([\"psql\", \"-qtA\", DB, \"-c\", statement], check=True, capture_output=True, text=True).stdout.strip()\n60 \n",
+      "col_offset": 11,
+      "end_col_offset": 108,
+      "filename": "scripts/test-security-probes.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Starting a process with a partial executable path",
+      "line_number": 59,
+      "line_range": [
+        59
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html",
+      "test_id": "B607",
+      "test_name": "start_process_with_partial_path"
+    },
+    {
+      "code": "58 def psql(statement: str) -> str:\n59     return subprocess.run([\"psql\", \"-qtA\", DB, \"-c\", statement], check=True, capture_output=True, text=True).stdout.strip()\n60 \n",
+      "col_offset": 11,
+      "end_col_offset": 108,
+      "filename": "scripts/test-security-probes.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "subprocess call - check for execution of untrusted input.",
+      "line_number": 59,
+      "line_range": [
+        59
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html",
+      "test_id": "B603",
+      "test_name": "subprocess_without_shell_equals_true"
+    },
+    {
+      "code": "179 # ---------------------------------------------------------------------------\n180 psql(f\"DELETE FROM users WHERE email IN ('{PROBE_EMAIL}', '{PROBE_ADMIN}'); DELETE FROM rate_limit_hits;\")\n181 setup = Session()\n",
+      "col_offset": 7,
+      "end_col_offset": 42,
+      "filename": "scripts/test-security-probes.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 180,
+      "line_range": [
+        180
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "299 token = s.cookies.get(\"session\", \"\")\n300 stored = psql(f\"SELECT count(*) FROM sessions WHERE id = '{token}'\") if re.fullmatch(r\"[0-9a-f]{64}\", token) else \"?\"\n301 hashed = psql(f\"SELECT count(*) FROM sessions WHERE id = encode(sha256(convert_to('{token}', 'UTF8')), 'hex')\") if stored != \"?\" else \"?\"\n",
+      "col_offset": 16,
+      "end_col_offset": 58,
+      "filename": "scripts/test-security-probes.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 300,
+      "line_range": [
+        300
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "300 stored = psql(f\"SELECT count(*) FROM sessions WHERE id = '{token}'\") if re.fullmatch(r\"[0-9a-f]{64}\", token) else \"?\"\n301 hashed = psql(f\"SELECT count(*) FROM sessions WHERE id = encode(sha256(convert_to('{token}', 'UTF8')), 'hex')\") if stored != \"?\" else \"?\"\n302 check(\"the database stores only a hash of the session token\", stored == \"0\" and hashed == \"1\", f\"raw {stored}, hashed {hashed}\")\n",
+      "col_offset": 16,
+      "end_col_offset": 83,
+      "filename": "scripts/test-security-probes.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 301,
+      "line_range": [
+        301
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "315 psql(\"DELETE FROM rate_limit_hits;\")\n316 _, _, b1 = Session().call(\"auth\", \"signIn\", {\"email\": PROBE_EMAIL, \"password\": \"wrong-password\"})\n317 _, _, b2 = Session().call(\"auth\", \"signIn\", {\"email\": \"nobody-here@example.test\", \"password\": \"wrong-password\"})\n",
+      "col_offset": 67,
+      "end_col_offset": 77,
+      "filename": "scripts/test-security-probes.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'wrong-password'",
+      "line_number": 316,
+      "line_range": [
+        316
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "316 _, _, b1 = Session().call(\"auth\", \"signIn\", {\"email\": PROBE_EMAIL, \"password\": \"wrong-password\"})\n317 _, _, b2 = Session().call(\"auth\", \"signIn\", {\"email\": \"nobody-here@example.test\", \"password\": \"wrong-password\"})\n318 check(\"same error for unknown user and wrong password\", err(b1) == err(b2) == \"INVALID_CREDENTIALS\", f\"{err(b1)} / {err(b2)}\")\n",
+      "col_offset": 82,
+      "end_col_offset": 92,
+      "filename": "scripts/test-security-probes.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'wrong-password'",
+      "line_number": 317,
+      "line_range": [
+        317
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "348 print(\"File upload\")\n349 psql(f\"DELETE FROM users WHERE email = '{PROBE_ADMIN}';\")\n350 adm = Session()\n",
+      "col_offset": 7,
+      "end_col_offset": 40,
+      "filename": "scripts/test-security-probes.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 349,
+      "line_range": [
+        349
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "351 adm.call(\"auth\", \"signUp\", {\"email\": PROBE_ADMIN, \"password\": PASSWORD})\n352 psql(f\"INSERT INTO user_roles (user_id, role) SELECT id, 'admin' FROM users WHERE email = '{PROBE_ADMIN}' ON CONFLICT DO NOTHING;\")\n353 adm = Session()\n",
+      "col_offset": 7,
+      "end_col_offset": 91,
+      "filename": "scripts/test-security-probes.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 352,
+      "line_range": [
+        352
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "382 \n383 psql(f\"DELETE FROM users WHERE email IN ('{PROBE_EMAIL}', '{PROBE_ADMIN}'); DELETE FROM rate_limit_hits;\")\n384 print(f\"\\n{checks} checks, {'all passed' if not failures else f'{failures} FAILED'}\")\n",
+      "col_offset": 7,
+      "end_col_offset": 42,
+      "filename": "scripts/test-security-probes.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 383,
+      "line_range": [
+        383
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "33 import re\n34 import subprocess\n35 import sys\n",
+      "col_offset": 0,
+      "end_col_offset": 17,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Consider possible security implications associated with the subprocess module.",
+      "line_number": 34,
+      "line_range": [
+        34
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess",
+      "test_id": "B404",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "52 ADMIN_EMAIL = \"security-strict-admin@example.test\"\n53 PASSWORD = \"Strict#Passw0rd2026\"\n54 failures = checks = 0\n",
+      "col_offset": 11,
+      "end_col_offset": 32,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'Strict#Passw0rd2026'",
+      "line_number": 53,
+      "line_range": [
+        53
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "70 def psql(statement: str) -> str:\n71     return subprocess.run([\"psql\", \"-qtA\", DB, \"-c\", statement], check=True, capture_output=True, text=True).stdout.strip()\n72 \n",
+      "col_offset": 11,
+      "end_col_offset": 108,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Starting a process with a partial executable path",
+      "line_number": 71,
+      "line_range": [
+        71
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html",
+      "test_id": "B607",
+      "test_name": "start_process_with_partial_path"
+    },
+    {
+      "code": "70 def psql(statement: str) -> str:\n71     return subprocess.run([\"psql\", \"-qtA\", DB, \"-c\", statement], check=True, capture_output=True, text=True).stdout.strip()\n72 \n",
+      "col_offset": 11,
+      "end_col_offset": 108,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "subprocess call - check for execution of untrusted input.",
+      "line_number": 71,
+      "line_range": [
+        71
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html",
+      "test_id": "B603",
+      "test_name": "subprocess_without_shell_equals_true"
+    },
+    {
+      "code": "226 # --- setup -------------------------------------------------------------------\n227 psql(f\"DELETE FROM users WHERE email IN ('{USER_EMAIL}', '{ADMIN_EMAIL}'); DELETE FROM rate_limit_hits;\")\n228 for email in (USER_EMAIL, ADMIN_EMAIL):\n",
+      "col_offset": 7,
+      "end_col_offset": 42,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 227,
+      "line_range": [
+        227
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "231         sys.exit(f\"could not create {email} ({err(body) or st}); is the server up at {BASE}?\")\n232 psql(f\"INSERT INTO user_roles (user_id, role) SELECT id, 'admin' FROM users WHERE email = '{ADMIN_EMAIL}' ON CONFLICT DO NOTHING;\")\n233 psql(\"DELETE FROM rate_limit_hits;\")\n",
+      "col_offset": 7,
+      "end_col_offset": 91,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 232,
+      "line_range": [
+        232
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "271 company = psql(\"SELECT company_id FROM exhibition_companies WHERE status = 'approved' AND is_active ORDER BY company_id LIMIT 1\")\n272 original_status = psql(f\"SELECT status FROM exhibition_companies WHERE company_id = '{company}'\")\n273 company_name = psql(f\"SELECT name FROM exhibition_companies WHERE company_id = '{company}'\")\n",
+      "col_offset": 25,
+      "end_col_offset": 85,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 272,
+      "line_range": [
+        272
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "272 original_status = psql(f\"SELECT status FROM exhibition_companies WHERE company_id = '{company}'\")\n273 company_name = psql(f\"SELECT name FROM exhibition_companies WHERE company_id = '{company}'\")\n274 psql(f\"UPDATE exhibition_companies SET status = 'draft' WHERE company_id = '{company}';\"\n",
+      "col_offset": 22,
+      "end_col_offset": 80,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 273,
+      "line_range": [
+        273
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "273 company_name = psql(f\"SELECT name FROM exhibition_companies WHERE company_id = '{company}'\")\n274 psql(f\"UPDATE exhibition_companies SET status = 'draft' WHERE company_id = '{company}';\"\n275      f\"INSERT INTO company_attachments (owner_type, owner_id, kind, title, file_url, is_active) \"\n276      f\"VALUES ('exhibition', '{company}', 'catalog', 'strict-test-private', 'attachments/x/strict.pdf', true);\")\n277 try:\n",
+      "col_offset": 7,
+      "end_col_offset": 76,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 274,
+      "line_range": [
+        274,
+        275,
+        276
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "284 finally:\n285     psql(f\"UPDATE exhibition_companies SET status = '{original_status}' WHERE company_id = '{company}';\"\n286          \"DELETE FROM company_attachments WHERE title = 'strict-test-private';\")\n287 \n",
+      "col_offset": 11,
+      "end_col_offset": 53,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 285,
+      "line_range": [
+        285,
+        286
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "300             {k: \"a\\u0000b\" for k in (\"id\", \"ownerId\", \"company_id\", \"email\", \"identifier\", \"question\", \"parkId\", \"park_id\")}\n301             | {\"ownerType\": \"exhibition\", \"password\": \"x\", \"companyIds\": [\"a\\u0000b\"]}]\n302 raw_bodies = ['{\"t\":{\"t\":99},\"f\":63,\"m\":[]}', '{\"t\":{\"t\":10,\"i\":1,\"p\":{\"k\":[\"data\"],\"v\":[{\"t\":4,\"i\":424242}]},\"o\":0},\"f\":63,\"m\":[]}',\n",
+      "col_offset": 42,
+      "end_col_offset": 52,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'x'",
+      "line_number": 301,
+      "line_range": [
+        301
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "347     email = f\"weak-{abs(hash(pw)) % 10**8}@example.test\"\n348     psql(f\"DELETE FROM users WHERE email = '{email}'; DELETE FROM rate_limit_hits;\")\n349     _, body, _ = Session().call(\"auth\", \"signUp\", {\"email\": email, \"password\": pw})\n",
+      "col_offset": 11,
+      "end_col_offset": 44,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 348,
+      "line_range": [
+        348
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "351         weak_ok.append(pw)\n352     psql(f\"DELETE FROM users WHERE email = '{email}';\")\n353 check(\"common or trivial passwords are refused at sign-up\", not weak_ok, \"accepted: \" + \", \".join(weak_ok))\n",
+      "col_offset": 11,
+      "end_col_offset": 44,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 352,
+      "line_range": [
+        352
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "357 race_email = \"race-strict@example.test\"\n358 psql(f\"DELETE FROM users WHERE email = '{race_email}'; DELETE FROM rate_limit_hits;\")\n359 with concurrent.futures.ThreadPoolExecutor(10) as pool:\n",
+      "col_offset": 7,
+      "end_col_offset": 40,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 358,
+      "line_range": [
+        358
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "361 psql(\"DELETE FROM rate_limit_hits;\")\n362 check(\"concurrent sign-ups create exactly one account\", psql(f\"SELECT count(*) FROM users WHERE email = '{race_email}'\") == \"1\")\n363 check(\"concurrent sign-ups never expose a database error\", not any(DB_ERROR.search(b) for b in results),\n",
+      "col_offset": 63,
+      "end_col_offset": 105,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 362,
+      "line_range": [
+        362
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "364       next((err(b) for b in results if DB_ERROR.search(b)), \"\"))\n365 psql(f\"DELETE FROM users WHERE email = '{race_email}'; DELETE FROM rate_limit_hits;\")\n366 variants = [USER_EMAIL, USER_EMAIL.upper(), \" \" + USER_EMAIL, USER_EMAIL.title(), USER_EMAIL + \" \"]\n",
+      "col_offset": 7,
+      "end_col_offset": 40,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 365,
+      "line_range": [
+        365
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "375 before = succeeded(body)\n376 psql(f\"DELETE FROM user_roles WHERE user_id = (SELECT id FROM users WHERE email = '{ADMIN_EMAIL}') AND role = 'admin';\")\n377 _, body, _ = revoked.call(\"admin-users\", \"listUsers\", None, \"GET\")\n",
+      "col_offset": 7,
+      "end_col_offset": 83,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 376,
+      "line_range": [
+        376
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "378 check(\"revoking admin takes effect on an already signed-in session\", before and not succeeded(body), err(body)[:40])\n379 psql(f\"INSERT INTO user_roles (user_id, role) SELECT id, 'admin' FROM users WHERE email = '{ADMIN_EMAIL}' ON CONFLICT DO NOTHING;\")\n380 s2 = Session()\n",
+      "col_offset": 7,
+      "end_col_offset": 91,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 379,
+      "line_range": [
+        379
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "411 \n412 psql(f\"DELETE FROM users WHERE email IN ('{USER_EMAIL}', '{ADMIN_EMAIL}'); DELETE FROM rate_limit_hits;\")\n413 print(f\"\\n{checks} checks, {'all passed' if not failures else f'{failures} FAILED'}\" + (f\", {len(notes)} notes\" if notes else \"\"))\n",
+      "col_offset": 7,
+      "end_col_offset": 42,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "LOW",
+      "issue_cwe": {
+        "id": 89,
+        "link": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible SQL injection vector through string-based query construction.",
+      "line_number": 412,
+      "line_range": [
+        412
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
+      "test_id": "B608",
+      "test_name": "hardcoded_sql_expressions"
+    },
+    {
+      "code": "293     cur = cur[\"a\"]\n294 payloads = [None, 0, -1, 1e308, True, \"\", \"x\" * 100_000, \"\\u0000\u202e<script>\", \"'\\\"`;--\", [], [None] * 500,\n295             {\"__proto__\": {\"polluted\": \"yes\", \"isAdmin\": True, \"roles\": [\"admin\"], \"role\": \"admin\"}},\n",
+      "col_offset": 65,
+      "end_col_offset": 0,
+      "filename": "scripts/test-security-strict.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 838,
+        "link": "https://cwe.mitre.org/data/definitions/838.html"
+      },
+      "issue_severity": "HIGH",
+      "issue_text": "A Python source file contains bidirectional control characters ('\\u202e').",
+      "line_number": 294,
+      "line_range": [
+        294
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b613_trojansource.html",
+      "test_id": "B613",
+      "test_name": "trojansource"
+    }
+  ]
+}

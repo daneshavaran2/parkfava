@@ -10,6 +10,9 @@ import { getRequestIP, getRequestHeader } from "@tanstack/react-start/server";
 import { getDb } from "../../db/connection";
 import { clientIpFromForwardedFor } from "./client-ip";
 
+/** First key of the advisory lock that serialises each bucket's check. */
+const RATE_LIMIT_LOCK_CLASS = 7301;
+
 export class RateLimitError extends Error {
   constructor() {
     super("RATE_LIMITED");
@@ -71,16 +74,28 @@ export async function enforceRateLimit(
   const sql = getDb();
   const bucket = key;
 
-  const [{ count }] = await sql<{ count: string }[]>`
-    SELECT count(*)::text AS count
-    FROM rate_limit_hits
-    WHERE bucket = ${bucket}
-      AND created_at > now() - make_interval(secs => ${windowSeconds})
-  `;
+  // Count and record as one step per bucket. Run as two separate statements,
+  // parallel requests all counted before any of them recorded a hit, so a
+  // burst got through untouched: 20 simultaneous password guesses against a
+  // limit of 5 were all checked (docs/Security Report.md, SEC-050). The
+  // transaction-scoped advisory lock queues requests for the same bucket
+  // until the previous one has committed its hit; other buckets are not
+  // affected. Two-key form, so it cannot collide with the single-key lock
+  // the migration runner takes.
+  const allowed = await sql.begin(async (tx) => {
+    await tx`SELECT pg_advisory_xact_lock(${RATE_LIMIT_LOCK_CLASS}, hashtext(${bucket}))`;
+    const [{ count }] = await tx<{ count: string }[]>`
+      SELECT count(*)::text AS count
+      FROM rate_limit_hits
+      WHERE bucket = ${bucket}
+        AND created_at > now() - make_interval(secs => ${windowSeconds})
+    `;
+    if (Number(count) >= limit) return false;
+    await tx`INSERT INTO rate_limit_hits (bucket) VALUES (${bucket})`;
+    return true;
+  });
 
-  if (Number(count) >= limit) throw new RateLimitError();
-
-  await sql`INSERT INTO rate_limit_hits (bucket) VALUES (${bucket})`;
+  if (!allowed) throw new RateLimitError();
 
   if (Math.random() < 0.05) {
     // Keep a generous margin over the longest window in use rather than

@@ -1,0 +1,12 @@
+- Nikto v2.1.5/2.1.5
++ Target Host: localhost
++ Target Port: 3000
++ GET /: Uncommon header 'x-frame-options' found, with contents: DENY
++ GET /: Uncommon header 'x-content-type-options' found, with contents: nosniff
++ GET /: Uncommon header 'content-security-policy' found, with contents: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.gpteng.co https://maps.googleapis.com https://maps.gstatic.com; script-src-elem 'self' 'unsafe-inline' https://cdn.gpteng.co https://maps.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https://storage.googleapis.com https://*.lovableproject.com https://*.lovable.app https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.ggpht.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; connect-src 'self' https://maps.googleapis.com https://*.googleapis.com https://cdn.gpteng.co https://raw.githack.com https://raw.githubusercontent.com https://*.lovableproject.com wss://*.lovableproject.com https://*.lovable.app wss://*.lovable.app ws://localhost:* wss://localhost:*; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; report-uri /api/public/csp-report
++ GET /: Uncommon header 'strict-transport-security' found, with contents: max-age=31536000
++ GET /: Uncommon header 'referrer-policy' found, with contents: strict-origin-when-cross-origin
++ GET /: Uncommon header 'permissions-policy' found, with contents: camera=(), microphone=(), geolocation=(), payment=(), usb=()
++ GET /: Uncommon header 'x-request-id' found, with contents: 7650dd0c-4fa9-4dc7-a281-cfe4f320198d
++ GET /favicon.ico: Server leaks inodes via ETags, header found with file /favicon.ico, fields: 0xf4ba 0xx4eoTWDrPYYOXxexH5nKPUKEZ5s 
++ OPTIONS /: Allowed HTTP Methods: GET, HEAD 
