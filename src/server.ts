@@ -123,8 +123,8 @@ export default {
         const limited = limitRequestBody(request);
         if (limited instanceof Response) return withStandardHeaders(limited, requestId, request);
         if (needsSessionForBody(request)) {
-          const { isLiveSessionCookie } = await import("./lib/auth/session.server");
-          if (!(await isLiveSessionCookie(request.headers.get("cookie")))) {
+          const { canUploadLargeBody } = await import("./lib/auth/session.server");
+          if (!(await canUploadLargeBody(request.headers.get("cookie")))) {
             return withStandardHeaders(
               new Response("Payload Too Large", {
                 status: 413,

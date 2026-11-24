@@ -90,12 +90,15 @@ export async function destroyOtherSessions(userId: string): Promise<void> {
 
 /** Returns the logged-in user (with roles) for the current request, or null. */
 /**
- * True when a raw Cookie header carries a session token that is live in the
- * database. For src/server.ts, which runs before the framework's request
- * context exists (so getCookie() is not available there). Fails closed: if the
- * lookup fails the caller is treated as anonymous.
+ * True when a raw Cookie header carries a live session of someone who can
+ * upload files: an admin or the owner of a company (every upload function
+ * requires one of the two). A self-registered account that owns nothing does
+ * not qualify, so it cannot make the server buffer large bodies either
+ * (SEC-048). For src/server.ts, which runs before the framework's request
+ * context exists (so getCookie() is not available there). Fails closed: if
+ * the lookup fails the caller is treated as anonymous.
  */
-export async function isLiveSessionCookie(cookieHeader: string | null): Promise<boolean> {
+export async function canUploadLargeBody(cookieHeader: string | null): Promise<boolean> {
   const raw = cookieHeader
     ?.split(";")
     .map((part) => part.trim())
@@ -104,8 +107,12 @@ export async function isLiveSessionCookie(cookieHeader: string | null): Promise<
   if (!raw) return false;
   try {
     const token = decodeURIComponent(raw);
-    const rows =
-      await getDb()`SELECT 1 FROM sessions WHERE id = ${sessionKey(token)} AND expires_at > now()`;
+    const rows = await getDb()`
+      SELECT 1 FROM sessions s
+      WHERE s.id = ${sessionKey(token)} AND s.expires_at > now()
+        AND (EXISTS (SELECT 1 FROM user_roles r WHERE r.user_id = s.user_id AND r.role = 'admin')
+          OR EXISTS (SELECT 1 FROM exhibition_companies c WHERE c.owner_user_id = s.user_id))
+    `;
     return rows.length > 0;
   } catch {
     return false;

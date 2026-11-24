@@ -9,11 +9,11 @@ production build. Production was not tested.
 
 | | |
 |---|---|
-| Findings | 46 (SEC-001 … SEC-046) |
+| Findings | 49 (SEC-001 … SEC-049) |
 | Critical / High | 1 / 3 — all fixed |
 | Medium | 6 — 5 fixed, 1 open (MFA off by default, SEC-026) |
-| Low | 7 — all fixed |
-| Informational / hardening | 29 — 20 fixed or partly fixed, 8 open or accepted (configuration or product decisions), 1 not applicable to the delivered package |
+| Low | 9 — all fixed |
+| Informational / hardening | 30 — 21 fixed or partly fixed, 8 open or accepted (configuration or product decisions), 1 concerning old git history only |
 
 Every fix listed below is covered by an automated test or a scanner re-run.
 None of them protects a deployment until this code is deployed there. A clean
@@ -29,7 +29,8 @@ vulnerabilities.
   OSV-Scanner, `bun audit`, `npm audit`, Checkov, Hadolint, zizmor, Bandit.
 - Dynamic scanners against the production build: sqlmap (level 3, boolean,
   error, union, stacked and time-based techniques on every public text input
-  of the server functions), Wapiti (XSS, stored XSS, SQL and blind SQL
+  of the server functions, and on a company owner's company and product
+  saves with a signed-in session), Wapiti (XSS, stored XSS, SQL and blind SQL
   injection, command execution, path traversal, CRLF, open redirect, SSRF,
   XXE, CSRF, backup files, upload, Log4Shell/Spring4Shell/Shellshock) and
   Nikto (6,544 checks).
@@ -50,6 +51,12 @@ vulnerabilities.
     revocation of admin rights on live sessions; cookie scope; CRLF
     injection; same-site requests; secrets or server-only code in the client
     bundle.
+  - `scripts/test-security-deep.py`: every public read walked field by field
+    for internal or personal data; mass assignment by a company owner
+    (status, ownership, review fields, listing order, another company's id),
+    directly and through change requests; the review workflow (no live
+    change and no self-approval before an admin approves); large bodies from
+    a self-registered user; worst-case input processing cost (ReDoS).
   - `scripts/test-security-browser.cjs` (real Chromium): stored XSS in every
     text field of a company, its products and attachments, on every page that
     shows them; cross-site and same-site request forgery from another origin.
@@ -78,6 +85,8 @@ vulnerabilities.
 | SEC-042 | Low | Attachments of an unpublished (draft, pending, rejected or inactive) company were readable by anyone who knew its id | Same visibility rule as the company itself: public only when published; owner and admins otherwise |
 | SEC-043 | Low | Trivial passwords (`12345678`, `password`, `11111111`, …) accepted at sign-up and password change | Blocklist of common passwords, repeated and sequential patterns, and passwords containing the username (NIST SP 800-63B); applies to the first-login change too |
 | SEC-044 | Low | Two simultaneous sign-ups with one email returned the raw database error (table and constraint names) | Duplicate e-mail reported as `EMAIL_ALREADY_REGISTERED`; a global middleware turns any database error into `INTERNAL_ERROR` and logs the details |
+| SEC-047 | Low | A company owner could set the company's `sort_order` and move it to the top of the public listing, directly or through a change request | Listing order is admin-only: stripped from owner saves and filtered again when a change request is approved, together with status, ownership and review fields |
+| SEC-048 | Low | Any signed-in account, including a self-registered one that owns nothing, could send upload-sized bodies (up to 110 MB) that the server buffers | Large multipart bodies only from an admin or a company owner (the only users with an upload function) |
 | SEC-008 | Info | `javascript:`/`data:` URLs accepted in owner-editable URL fields | `src/lib/safe-url.ts` on every URL field |
 | SEC-010 | Info | Stale `package-lock.json` with known-vulnerable versions | Regenerated |
 | SEC-011 | Info | Container ran as root | Runs as `node` (uid 1000); uploads directory owned by that user |
@@ -96,6 +105,7 @@ vulnerabilities.
 | SEC-037 | Info | Pages rendered for any HTTP method (`PUT /`, `DELETE /`, …) | 405 unless the path uses that method |
 | SEC-039 | Info | Admin upload ids used unchecked as folder names | Path segments validated (`assertSafePathSegment`) |
 | SEC-041 | Info | Desktop build's offline import spliced seed-file keys into SQL as identifiers | Same identifier allowlist as SEC-020 |
+| SEC-049 | Info | Desktop build: links to other sites opened inside the app window and device permissions were not restricted | Only the local app opens in the window; other web, mail and phone links go to the system browser, anything else is blocked; permissions refused except clipboard writing |
 | SEC-045 | Info | No `X-Frame-Options` header (framing was already blocked by CSP `frame-ancestors`) | `X-Frame-Options: DENY` on every response |
 | SEC-025 | Info | Known vulnerabilities in desktop/build tooling | Upgraded; one Moderate `minimatch` advisory remains in dev tooling only (eslint, electron-builder), not in the running app |
 
@@ -113,8 +123,8 @@ vulnerabilities.
 | SEC-032 | Info | Open self-registration plus SMS sending | Accepted with rate limits; add CAPTCHA if SMS goes live |
 | SEC-046 | Info | Sign-up says when an email is already registered | Accepted: needed for the sign-up form, limited to 5 sign-ups per hour per client |
 
-SEC-022 (an `.env` with public-by-design keys in old git history) only matters
-if that history is shared; the source package handed over ships without it.
+SEC-022 (an `.env` with public-by-design keys in old git history) concerns the
+history only; rotate those keys if any of them was ever private.
 
 ## Verification
 
@@ -122,6 +132,7 @@ Run against a disposable database; never point these at production.
 
 | Test | Result |
 |---|---|
+| `scripts/test-security-deep.py` (dev / production build) | 23/23, 23/23 passed |
 | `scripts/test-security-strict.py` (dev / production build) | 203/203, 204/204 passed (2,800+ hostile requests, no crash, no stack trace, no database error) |
 | `scripts/test-security-browser.cjs` (dev / production build) | 14/14 passed |
 | `scripts/test-security-probes.py` (dev / production build) | 97/97, 125/125 passed (also as uid 1000) |
@@ -137,7 +148,7 @@ Run against a disposable database; never point these at production.
 
 | Tool | Result |
 |---|---|
-| sqlmap | no injectable parameter (sign-in, company detail, attachments, assistant) |
+| sqlmap | no injectable parameter (sign-in, company detail, attachments, assistant; signed-in owner's company and product saves) |
 | Wapiti | 0 vulnerabilities, 0 anomalies |
 | Nikto | no findings; one false positive ("ETag inode leak" applies to Apache, the ETag here is a content hash) |
 | Trivy (dependencies, Dockerfile, secrets) | no findings |

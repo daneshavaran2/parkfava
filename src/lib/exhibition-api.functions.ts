@@ -142,6 +142,27 @@ export const listAdminCompanies = createServerFn({ method: "GET" })
     `;
   });
 
+// Fields only an admin may set on a company: workflow state, ownership,
+// review bookkeeping and the public listing order. Stripped from an owner's
+// save and filtered again when a change request is approved (SEC-047).
+const ADMIN_ONLY_COMPANY_FIELDS = new Set([
+  "status",
+  "is_active",
+  "owner_user_id",
+  "reviewed_at",
+  "reviewed_by",
+  // rejection_note/submitted_at: under the propose path a stale echoed value
+  // could also overwrite something an admin set in the meantime.
+  "rejection_note",
+  "submitted_at",
+  "company_id",
+  "sort_order",
+]);
+
+function withoutAdminOnlyFields(patch: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(patch).filter(([k]) => !ADMIN_ONLY_COMPANY_FIELDS.has(k)));
+}
+
 export const saveOwnedCompany = createServerFn({ method: "POST" })
   .middleware([requireMfaVerified])
   .validator((input) =>
@@ -153,21 +174,7 @@ export const saveOwnedCompany = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const {
-      status,
-      is_active,
-      owner_user_id,
-      reviewed_at,
-      reviewed_by,
-      // rejection_note/submitted_at are also owner-admin fields: harmless to
-      // strip under direct writes, but under the propose path below a stale
-      // echoed value could overwrite something an admin set in the meantime.
-      rejection_note,
-      submitted_at,
-      company_id: _ignored,
-      ...safe
-    } = data.patch as any;
-    const patch: Record<string, unknown> = { ...(safe as Record<string, unknown>) };
+    const patch = withoutAdminOnlyFields(data.patch as Record<string, unknown>);
     normalizeLatLng(patch);
 
     const cols = Object.keys(patch);
@@ -514,8 +521,10 @@ export const approveChangeRequestAdmin = createServerFn({ method: "POST" })
       const cols = Object.keys(payload);
 
       if (cr.entity_type === "company") {
-        if (cols.length) {
-          await tx`UPDATE exhibition_companies SET ${tx(payload as any, ...cols)} WHERE company_id = ${cr.company_id}`;
+        const companyPayload = withoutAdminOnlyFields(payload);
+        const companyCols = Object.keys(companyPayload);
+        if (companyCols.length) {
+          await tx`UPDATE exhibition_companies SET ${tx(companyPayload as any, ...companyCols)} WHERE company_id = ${cr.company_id}`;
         }
       } else if (cr.entity_type === "product") {
         if (cr.action === "create") {

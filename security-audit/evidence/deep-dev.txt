@@ -1,0 +1,31 @@
+target http://localhost:8080 (dev server)
+Data exposure in public responses
+  ok   exhibition-api.getExhibitionCompanies exposes no internal or personal fields  [status 200]
+  ok   exhibition-api.getExhibitionCompanyDetail exposes no internal or personal fields  [status 200]
+  ok   exhibition-api.getPublicExhibitionProducts exposes no internal or personal fields  [status 200]
+  ok   attachments.getAttachments exposes no internal or personal fields  [status 200]
+  ok   park-content.getParkContent exposes no internal or personal fields  [status 200]
+  ok   parks.getActiveParks exposes no internal or personal fields  [status 200]
+  ok   parks.getInactiveParkIds exposes no internal or personal fields  [status 200]
+  ok   about-sections.getAboutSections exposes no internal or personal fields  [status 200]
+  ok   auth.getCurrentUser exposes no internal or personal fields  [status 200]
+  ok   /api/public/export exposes no internal or personal fields  [status 200]
+  ok   /api/public/health exposes no internal or personal fields  [status 200]
+Mass assignment by a company owner
+  ok   owner save of a draft applies ordinary fields  [Deep Test Draft]
+  ok   owner cannot set status, activation, ownership, review fields or listing order  [draft|t|cb7f5347-8ce9-458c-b8d4-077bfe21de34|||84 -> draft|t|cb7f5347-8ce9-458c-b8d4-077bfe21de34|||84]
+  ok   owner cannot redirect the save to another company
+  ok   a change request carries no privileged field  [{"name": "Deep Test Draft", "latitude": null, "longitude": n]
+Review workflow
+  ok   an owner's edit to a published company is not live before review
+  ok   an owner cannot approve their own change request  [FORBIDDEN]
+  ok   another signed-in user cannot approve it  [FORBIDDEN]
+  ok   the request is still pending
+Low-privilege abuse
+  ok   3 MB upload body from a self-registered user who owns nothing is refused  [status 413]
+  ok   3 MB upload body from a company owner is accepted for processing  [status 200]
+  ok   3 MB upload body from an admin is accepted for processing  [status 200]
+Input-processing cost (ReDoS)
+  ok   worst-case inputs are processed in under 2 s  [slowest 0.04s (identifier 'a@a@a@'…)]
+
+23 checks, all passed

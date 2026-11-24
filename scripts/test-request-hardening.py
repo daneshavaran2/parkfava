@@ -118,7 +118,8 @@ conn.close()
 _, body = user.call("auth", "getCurrentUser", method="GET")
 check("normal-sized calls still work", EMAIL in body)
 
-# Multipart bodies above the RPC limit are accepted only with a live session.
+# Multipart bodies above the RPC limit are accepted only from an admin or a
+# company owner (SEC-035, SEC-048).
 boundary = "----hardening"
 form = (f"--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.bin\"\r\n"
         f"Content-Type: application/octet-stream\r\n\r\n").encode() + b"\0" * (3 * 1024 * 1024) + f"\r\n--{boundary}--\r\n".encode()
@@ -140,7 +141,11 @@ def post_multipart(opener):
 st = post_multipart(urllib.request.build_opener())
 check("3 MB multipart body without a session is refused with 413", st == 413, f"status {st}")
 st = post_multipart(user.opener)
-check("3 MB multipart body with a live session reaches the app", st != 413, f"status {st}")
+check("3 MB multipart body from a signed-in user who owns nothing is refused", st == 413, f"status {st}")
+psql(f"INSERT INTO user_roles (user_id, role) SELECT id, 'admin' FROM users WHERE email = '{EMAIL}' ON CONFLICT DO NOTHING;")
+st = post_multipart(user.opener)
+check("3 MB multipart body from an admin reaches the app", st != 413, f"status {st}")
+psql(f"DELETE FROM user_roles WHERE user_id = (SELECT id FROM users WHERE email = '{EMAIL}');")
 
 print("SEC-036  response headers")
 with urllib.request.urlopen(f"http://{host}:{port}/", timeout=30) as r:

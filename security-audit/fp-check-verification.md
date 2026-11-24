@@ -1932,3 +1932,109 @@ inferred, not observed, impact.
 | SEC-044 | ✓ | ✓ | ✓ | ✓ / ✓ / skipped (justified) / ✓ / ✓ | 13/13 | 6/6 evaluated | TRUE POSITIVE |
 | SEC-045 | ✓ | ✓ | ✓ | ✓ / ✓ / skipped (header only) / ✓ / ✓ | 13/13 | 6/6 evaluated | FALSE POSITIVE |
 | SEC-046 | ✓ | ✓ | ✓ | ✓ / ✓ / skipped (justified) / ✓ / ✓ | 13/13 | 6/6 evaluated | TRUE POSITIVE |
+
+---
+
+# Part D — SEC-047 … SEC-049 (round 6)
+
+Same method and Gate 3 interpretation as above. PoCs are checks in
+`scripts/test-security-deep.py`; baseline output `evidence/deep-baseline.txt`,
+patched `evidence/deep-dev.txt` and `evidence/deep-prod.txt`.
+
+| Bug | Class | Verdict | Effect on the register |
+|---|---|---|---|
+| SEC-047 | Authorization (mass assignment of an admin-only field) | **TRUE POSITIVE** (low value) | Low |
+| SEC-048 | DoS (large bodies from a low-privilege account) | **TRUE POSITIVE** (impact inferred, DoS testing excluded) | Low |
+| SEC-049 | Desktop app navigation / permissions | **FALSE POSITIVE** — sandboxed, no privileges reachable | Informational hardening |
+
+## SEC-047 — Owner sets the company's listing order
+
+**Step 0.** Claim: `saveOwnedCompany` lets an owner write `sort_order`, an admin-only
+field that orders the public listing. Threat model: a company owner. Class: authorization
+(mass assignment).
+**Phase 1.** 1.1 Owner → `saveOwnedCompany({patch:{sort_order}})` → `companyPatchSchema`
+(includes `sort_order`) → strip list without `sort_order` → `UPDATE` (draft) or change
+request payload (published) → approval writes payload keys verbatim. 1.2 Contract: the
+owner path strips status, ownership and review fields only. 1.3 No other guard. 1.4 Public
+listing orders by `sort_order ASC`.
+**Phase 2.** 2.1 Owner fully controls the value. 2.2 Any integer; `-999999` sorts first.
+2.3 N/A. 2.4 Published companies need approval, but the field rides inside an otherwise
+ordinary edit.
+**Phase 3.** 3.1 Real: an owner performs an admin-only action (listing position) — limited
+vertical privilege escalation, integrity only. 3.2 Primary control (field allowlist) missing.
+**Phase 4.** 4.1 Pseudocode: owner save with `sort_order:-999999` → company first in the
+public list. 4.2 Executable: deep test "owner cannot set … listing order" (baseline
+`84 -> -999999`) and "a change request carries no privileged field" (baseline: `sort_order`).
+4.3 Skipped — the handler's effect is in the database; the HTTP test is the PoC. 4.4 Negative:
+ordinary fields (name) still saved. 4.5 Patched: unchanged order, payload without it.
+**Phase 5.** Q1 Owners could have been meant to order themselves — no UI exposes it. Q2
+Oversight in the strip list. Q3 None. Q4 No — reproduced. Q5 Strip list did not cover it.
+Q6 Owner input. Q7 N/A. Q8 Yes, one request. Q9 Primary. Q10 None. Q11 Low value. Q12 No.
+Q13 Re-read `saveOwnedCompany` and the approval path.
+
+| Gate | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass | Pass (integrity, limited) | Pass | N/A | Pass |
+
+`BUG SEC-047 TRUE POSITIVE — company owners could set the admin-only listing order.`
+
+## SEC-048 — Large bodies from any signed-in account
+
+**Step 0.** Claim: the SEC-035 rule let any live session send multipart bodies up to
+110 MB, which the framework buffers before authorization. Threat model: self-registered
+user (sign-up is open). Class: DoS.
+**Phase 1.** 1.1 Session → multipart POST to any server function → full `formData()` in
+memory → then authorization. 1.2 Only "live session" checked. 1.3 Sign-up open, 5/h per
+client. 1.4 Upload functions need admin or owner, so a plain user never needs large bodies.
+**Phase 2.** 2.1 Attacker controls size up to 110 MB per request. 2.2 Memory ≈ k × 110 MB ×
+concurrency; a handful of parallel requests per account exceeds a 512 MB–1 GB container.
+2.3 N/A. 2.4 Accounts are cheap (open sign-up).
+**Phase 3.** 3.1 Low-privilege, attacker-triggered loss of availability with amplification —
+real under the DoS rule. 3.2 Primary control too broad.
+**Phase 4.** 4.1 Pseudocode: sign up → N parallel 110 MB multipart POSTs → heap exhaustion.
+4.2 Executable: deep test "3 MB upload body from a self-registered user who owns nothing is
+refused" (baseline `status 200`). OOM not executed (DoS testing excluded). 4.3 Skipped —
+needs session and database. 4.4 Negative: owner and admin uploads still accepted; browser
+logo upload works. 4.5 Patched: 413 for the plain user.
+**Phase 5.** Q1 Session requirement looked sufficient. Q2 Simplicity. Q3 Open sign-up.
+Q4 No — reproduced. Q5 Session check does not stop a cheap account. Q6 Attacker data.
+Q7 Bound above. Q8 Yes. Q9 Primary. Q10 Node heap limit → crash, not defence. Q11 Low
+(needs an account, throttled sign-up). Q12 No. Q13 Re-read `canUploadLargeBody`.
+
+| Gate | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass | Pass | Pass (trigger shown; OOM inferred) | Pass | Pass |
+
+`BUG SEC-048 TRUE POSITIVE — any self-registered account could make the server buffer upload-sized bodies.`
+
+## SEC-049 — Desktop window navigation and permissions
+
+**Step 0.** Claim: `electron/main.cjs` had no `setWindowOpenHandler`, no `will-navigate`
+guard and no permission handler. Threat model: a malicious link in company content (e.g. a
+website URL). Class: Electron hardening.
+**Phase 1.** 1.1 Link click → navigation inside the app window. 1.2 `contextIsolation`,
+`sandbox`, `nodeIntegration:false` set. 1.3 No preload, no IPC. 1.4 Script URLs refused at
+save time (SEC-008).
+**Phase 2.** 2.1 Owner controls the URL. 2.2–2.3 N/A. 2.4 An external page in the app window
+has no Node or IPC access; only phishing-style content in app chrome.
+**Phase 3.** 3.1 No privilege reachable. 3.2 Hardening.
+**Phase 4.** 4.1 Pseudocode: company website link → opens inside the app. 4.2 Executable:
+skipped — no display server for Electron here; the URL classification was exercised with
+Node (app URLs kept, web links external, `file:`/`javascript:` blocked). 4.3 Skipped. 4.4
+App pages still load in the window. 4.5 `node --check`, ESLint.
+**Phase 5.** Q1 Sandbox makes it harmless. Q2 Defaults. Q3 No preload/IPC. Q4 Yes —
+checklist item. Q5 Sandbox prevents escalation. Q6 Owner input. Q7 N/A. Q8 Phishing only.
+Q9 Yes. Q10 Chromium sandbox. Q11 Not a vulnerability. Q12 No. Q13 Re-read
+`createWindow`.
+
+| Gate | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Result | Pass | Pass | **Fail** | **Fail** | N/A | **Fail** (sandbox) |
+
+`BUG SEC-049 FALSE POSITIVE — sandboxed window, no privilege reachable; hardening kept.`
+
+| Bug | Phase 1 | Phase 2 | Phase 3 | Phase 4 (pseudo / exec / unit / negative / verified) | Q1–Q13 | Gates 1–6 | Verdict |
+|---|---|---|---|---|---|---|---|
+| SEC-047 | ✓ | ✓ | ✓ | ✓ / ✓ / skipped (justified) / ✓ / ✓ | 13/13 | 6/6 evaluated | TRUE POSITIVE |
+| SEC-048 | ✓ | ✓ (impact inferred; DoS testing excluded) | ✓ | ✓ / ✓ / skipped (justified) / ✓ / ✓ | 13/13 | 6/6 evaluated | TRUE POSITIVE |
+| SEC-049 | ✓ | ✓ | ✓ | ✓ / skipped (no display; logic run in Node) / skipped / ✓ / ✓ | 13/13 | 6/6 evaluated | FALSE POSITIVE |

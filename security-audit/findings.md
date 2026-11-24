@@ -406,7 +406,7 @@ production build (`evidence/prod-build-checks-r3.txt`: all passed).
 
 ## Rounds 4–5 (2026-11-24)
 
-SEC-037 … SEC-046 and the stricter testing (server-function inventory and
+SEC-037 … SEC-049 and the stricter and deeper testing (server-function inventory and
 fuzzing, browser-level stored XSS and CSRF, sqlmap, Wapiti, Nikto) are recorded
 in [docs/Security Report.md](../docs/Security%20Report.md), which is also the
 report shipped with the source package. Baselines that exposed SEC-042/043/044:

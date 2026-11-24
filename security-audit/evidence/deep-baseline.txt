@@ -1,0 +1,31 @@
+target http://localhost:8080 (dev server)
+Data exposure in public responses
+  ok   exhibition-api.getExhibitionCompanies exposes no internal or personal fields  [status 200]
+  ok   exhibition-api.getExhibitionCompanyDetail exposes no internal or personal fields  [status 200]
+  ok   exhibition-api.getPublicExhibitionProducts exposes no internal or personal fields  [status 200]
+  ok   attachments.getAttachments exposes no internal or personal fields  [status 200]
+  ok   park-content.getParkContent exposes no internal or personal fields  [status 200]
+  FAIL parks.getActiveParks exposes no internal or personal fields  [status 500]
+  FAIL parks.getInactiveParkIds exposes no internal or personal fields  [status 500]
+  ok   about-sections.getAboutSections exposes no internal or personal fields  [status 200]
+  ok   auth.getCurrentUser exposes no internal or personal fields  [status 200]
+  ok   /api/public/export exposes no internal or personal fields  [status 200]
+  ok   /api/public/health exposes no internal or personal fields  [status 200]
+Mass assignment by a company owner
+  ok   owner save of a draft applies ordinary fields  [Deep Test Draft]
+  FAIL owner cannot set status, activation, ownership, review fields or listing order  [draft|t|a10e1bcc-cdc2-4f98-9b12-8b35c0c30663|||84 -> draft|t|a10e1bcc-cdc2-4f98-9b12-8b35c0c30663|||-999999]
+  ok   owner cannot redirect the save to another company
+  FAIL a change request carries no privileged field  [sort_order]
+Review workflow
+  ok   an owner's edit to a published company is not live before review
+  ok   an owner cannot approve their own change request  [FORBIDDEN]
+  ok   another signed-in user cannot approve it  [FORBIDDEN]
+  ok   the request is still pending
+Low-privilege abuse
+  FAIL 3 MB upload body from a self-registered user who owns nothing is refused  [status 200]
+  ok   3 MB upload body from a company owner is accepted for processing  [status 200]
+  ok   3 MB upload body from an admin is accepted for processing  [status 200]
+Input-processing cost (ReDoS)
+  ok   worst-case inputs are processed in under 2 s  [slowest 0.12s (question 'aaaaaa'…)]
+(restore step of this baseline run failed on a generated column; data was restored manually, and the script was fixed)
+(the two parks.* failures were the dev server not yet having registered those functions — 'Invalid server function ID' in its log; they return no internal fields once registered, see deep-dev.txt and deep-prod.txt)

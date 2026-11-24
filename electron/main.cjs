@@ -23,7 +23,7 @@
 //
 // Plain CommonJS on purpose (`.cjs`) — this process never goes through
 // Vite/TypeScript, so it stays directly runnable and easy to debug.
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, shell } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
 const crypto = require("node:crypto");
@@ -299,6 +299,26 @@ async function startBackend() {
   return { isFirstRun };
 }
 
+// Only the local app is shown inside the window. Any other link (a company's
+// website, a map) opens in the system browser, and only for web, mail and
+// phone links; nothing else can be navigated to, opened as a new window or
+// handed to the OS. Device permissions are refused except writing to the
+// clipboard, which the copy buttons use. (Electron security checklist.)
+const EXTERNAL_SCHEMES = /^(https?:|mailto:|tel:)/i;
+const ALLOWED_PERMISSIONS = new Set(["clipboard-sanitized-write"]);
+
+function isAppUrl(url) {
+  try {
+    return new URL(url).origin === `http://127.0.0.1:${APP_PORT}`;
+  } catch {
+    return false;
+  }
+}
+
+function openOutside(url) {
+  if (EXTERNAL_SCHEMES.test(url)) shell.openExternal(url).catch(() => {});
+}
+
 function createWindow(isFirstRun) {
   const win = new BrowserWindow({
     width: 1360,
@@ -307,8 +327,22 @@ function createWindow(isFirstRun) {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      webSecurity: true,
     },
   });
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (isAppUrl(url)) return { action: "allow" };
+    openOutside(url);
+    return { action: "deny" };
+  });
+  win.webContents.on("will-navigate", (event, url) => {
+    if (isAppUrl(url)) return;
+    event.preventDefault();
+    openOutside(url);
+  });
+  win.webContents.session.setPermissionRequestHandler((_contents, permission, callback) =>
+    callback(ALLOWED_PERMISSIONS.has(permission)),
+  );
   const urlPath = isFirstRun ? "/auth" : "/";
   win.loadURL(`http://127.0.0.1:${APP_PORT}${urlPath}`);
 }
