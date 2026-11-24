@@ -1883,3 +1883,33 @@ Q10 None. Q11 Low. Q12 Considered — accepted with throttle and SEC-043. Q13 Re
 | Result | Pass | Pass | Pass (low value) | Pass | Pass | Pass |
 
 `BUG SEC-046 TRUE POSITIVE — registered emails can be enumerated through sign-up (accepted, throttled).`
+
+## Part C — PoC index and coverage statement
+
+**Devil's-advocate coverage.** Every Part C entry above answers all 13 questions
+(Q1–Q13), in order, and every entry evaluates all six gates.
+
+**PoC artefacts for the true positives.** Each PoC is a check in a committed,
+re-runnable script; the baseline column is that check's output on the code before the
+fix, the patched column on the fixed code (evidence files in `evidence/`).
+
+| Bug | PoC (script → check) | Baseline result | Patched result |
+|---|---|---|---|
+| SEC-034 | `scripts/test-request-hardening.py` → "guesses are refused once the limit is reached" | `FAIL` — 7 × `INVALID_CURRENT_PASSWORD`, no limit (`request-hardening-baseline.txt`) | `ok` — 5 × invalid, then `RATE_LIMITED` (`request-hardening-patched.txt`) |
+| SEC-035 | `scripts/test-request-hardening.py` → "3 MB JSON body … refused with 413" | `FAIL` — `status 200` (`request-hardening-baseline.txt`) | `ok` — `status 413` |
+| SEC-040 | `scripts/test-security-probes.py` (dev server) → exposed-file checks; `vite.config.ts` binding | `FAIL` — `/package.json`, `/db/migrations/0001_init.sql`, `/scripts/company-national-id-logins.json` → `200`, with the server bound to `::` (that run's output file was overwritten by later runs; results recorded here) | Dev server on `localhost` only; production probes `ok` → `404` (`security-probes-prod.txt`) |
+| SEC-042 | `scripts/test-security-strict.py` → "an unpublished company's attachments are hidden from the public" | `FAIL` (`strict-dev-baseline.txt`, `strict-prod-baseline.txt`) | `ok` (`strict-dev.txt`, `strict-prod.txt`) |
+| SEC-043 | `scripts/test-security-strict.py` → "common or trivial passwords are refused at sign-up"; unit: `tests/unit/security-regressions.test.ts` SEC-043 | `FAIL` — accepted `12345678, password, 11111111, qwertyui, abcdefgh, Password1` | `ok` — none accepted; unit tests pass |
+| SEC-044 | `scripts/test-security-strict.py` → "concurrent sign-ups never expose a database error" | `FAIL` — `duplicate key value violates unique constraint "users_email_key"` | `ok` |
+| SEC-046 | `scripts/test-security-strict.py` → note "sign-up says when an email is already registered" | reproduced (note) | unchanged by design (accepted) |
+
+**Unit-test PoCs skipped (justification).** SEC-034, 042 and 044 depend on a real session,
+real database visibility rules and real concurrency; a unit test would have to mock exactly
+the behaviour under test, so the HTTP checks against a running server are the executable
+PoCs. SEC-035, 038, 039, 043 and 037 also have unit tests (listed above or in the entries).
+
+**SEC-035 impact not executed (justification).** The audit rules exclude denial-of-service
+testing, so heap exhaustion was not run. Gate 4 rests on the demonstrated trigger (an
+unauthenticated 3 MB body accepted and parsed, with no limit anywhere in the path) and
+Gate 5 on the algebraic bound in Phase 2; the verdict is recorded as a true positive with
+inferred, not observed, impact.
