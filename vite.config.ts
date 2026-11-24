@@ -16,6 +16,10 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 const nitroPreset = process.env.NITRO_PRESET || "node-server";
 
 export default defineConfig({
+  // Local dev server listens on this machine only; pass `--host` to expose it
+  // on a trusted network (it serves project files). Lovable's own sandbox
+  // still binds to every interface, which it needs.
+  vite: { server: { host: "localhost" } },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this

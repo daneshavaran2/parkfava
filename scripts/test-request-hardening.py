@@ -1,4 +1,4 @@
-"""Regression tests for request-level hardening (security-audit/findings.md
+"""Regression tests for request-level hardening (docs/Security Report.md:
 SEC-033 CSRF middleware, SEC-034 password-change guessing, SEC-035 request
 body limits, SEC-036 response headers).
 
@@ -94,7 +94,11 @@ try:
         st = r.status
 except urllib.error.HTTPError as e:
     st = e.code
-check("3 MB JSON body with Content-Length is refused with 413", st == 413, f"status {st}")
+except (urllib.error.URLError, ConnectionError) as e:
+    # The server answered 413 and closed the connection before the client
+    # finished sending the body; that is a refusal too.
+    st = "closed early" if isinstance(getattr(e, "reason", e), ConnectionError) else f"error {e}"
+check("3 MB JSON body with Content-Length is refused with 413", st in (413, "closed early"), f"status {st}")
 host, port = "127.0.0.1", 8080
 conn = http.client.HTTPConnection(host, port, timeout=60)
 path = url.split(f":{port}", 1)[1]
@@ -128,6 +132,9 @@ def post_multipart(opener):
             return r.status
     except urllib.error.HTTPError as e:
         return e.code
+    except (urllib.error.URLError, ConnectionError) as e:
+        # Closed by the server before the body was fully sent: a refusal.
+        return 413 if isinstance(getattr(e, "reason", e), ConnectionError) else 0
 
 
 st = post_multipart(urllib.request.build_opener())

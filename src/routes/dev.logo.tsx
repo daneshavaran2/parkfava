@@ -1,11 +1,15 @@
 import { useCallback, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Logo3D, type PerfStats } from "@/components/hero/Logo3D";
 import { LogoPerfPanel } from "@/components/hero/LogoPerfPanel";
 import { useLogoPivot, DEFAULT_PIVOT } from "@/hooks/use-logo-pivot";
 import logoSpin from "@/assets/logo-spin.webp";
 
 export const Route = createFileRoute("/dev/logo")({
+  // Developer test page: available on the dev server only (SEC-031).
+  beforeLoad: () => {
+    if (import.meta.env.PROD) throw notFound();
+  },
   component: DevLogoPage,
   head: () => ({
     meta: [

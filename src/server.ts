@@ -10,6 +10,7 @@ import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { CSP_POLICY, shouldEnforceCsp } from "./lib/csp";
 import { limitRequestBody, needsSessionForBody } from "./lib/body-limit";
+import { rejectUnexpectedMethod } from "./lib/method-guard";
 import { AsyncLocalStorage } from "node:async_hooks";
 
 import { getOrCreateRequestId, REQUEST_ID_HEADER } from "./lib/request-id";
@@ -112,6 +113,9 @@ export default {
     return runWithRequestContext({ requestId }, async () => {
       try {
         const handler = await getServerEntry();
+        // Only the methods each kind of path actually uses (SEC-037).
+        const wrongMethod = rejectUnexpectedMethod(request);
+        if (wrongMethod) return withStandardHeaders(wrongMethod, requestId, request);
         // Body size limits before anything parses the body (SEC-035).
         const limited = limitRequestBody(request);
         if (limited instanceof Response) return withStandardHeaders(limited, requestId, request);

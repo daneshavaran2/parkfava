@@ -124,6 +124,10 @@ async function waitForHealth(url, timeoutMs) {
 // from every upsert. Keep in sync with the same set in
 // src/lib/offline-import.server.ts.
 const GENERATED_COLUMNS = new Set(["search_text"]);
+// Column names come from the seed file's keys and are spliced into the
+// statement as identifiers, which parameters cannot cover; only plain
+// lower_snake_case names (every real column) may get through.
+const SAFE_IDENTIFIER = /^[a-z_][a-z0-9_]{0,62}$/;
 
 async function importSeedContent(sql, snapshot) {
   async function upsertTable(table, pkCols, rows, conflictTarget) {
@@ -131,7 +135,9 @@ async function importSeedContent(sql, snapshot) {
     let ok = 0,
       failed = 0;
     for (const row of rows) {
-      const cols = Object.keys(row).filter((c) => !GENERATED_COLUMNS.has(c));
+      const cols = Object.keys(row).filter(
+        (c) => SAFE_IDENTIFIER.test(c) && !GENERATED_COLUMNS.has(c),
+      );
       const updateCols = cols.filter((c) => !pkCols.includes(c));
       try {
         await sql.unsafe(

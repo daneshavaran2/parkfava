@@ -798,9 +798,11 @@ export const uploadExhibitionAssetFn = createServerFn({ method: "POST" })
     const sql = getDb();
     await assertCanEditCompany(sql, context, data.company_id);
 
-    const { assertUploadAllowed } = await import("./storage/mime");
+    const { assertUploadAllowed, assertUploadContent, assertSafePathSegment } =
+      await import("./storage/mime");
     const ext = assertUploadAllowed(data.file);
-    const path = `exhibition/${data.company_id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    await assertUploadContent(data.file, ext);
+    const path = `exhibition/${assertSafePathSegment(data.company_id)}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const { saveLocalFile } = await import("./storage/local-storage.server");
     await saveLocalFile(path, Buffer.from(await data.file.arrayBuffer()));
     return { path };

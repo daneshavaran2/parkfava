@@ -88,7 +88,8 @@ bun run db:migrate
 # 4. seed sample parks, companies, and products
 bun run seed
 
-# 5. start the dev server (http://localhost:8080)
+# 5. start the dev server (http://localhost:8080, this machine only;
+#    add `--host` to reach it from other devices on a trusted network)
 bun dev
 ```
 
@@ -950,7 +951,9 @@ infrastructure you provision yourself:
    ephemeral across redeploys — without a mounted disk, every uploaded
    logo/image/attachment disappears on the next `liara deploy`. Provision a
    disk in the Liara dashboard, mount it at the path you set `UPLOAD_DIR`
-   to, before the first real upload happens in production.
+   to, before the first real upload happens in production. The container
+   runs as the unprivileged `node` user (uid 1000), so the mounted disk must
+   be writable by uid 1000 (`chown -R 1000:1000 <mount>` once, if needed).
 
 Migrations live under `db/migrations/*.sql`, applied in filename order by
 `bun run db:migrate` (`db/migrate.ts`). Never edit an applied migration —

@@ -50,3 +50,6 @@ release/
 *.njsproj
 *.sln
 *.sw?
+
+# Generated from the park spreadsheet; holds initial-password hashes (see docs/Security Report.md, SEC-023)
+scripts/company-national-id-logins.json

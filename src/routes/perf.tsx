@@ -1,8 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Logo3D, type PerfStats } from "@/components/hero/Logo3D";
 
 export const Route = createFileRoute("/perf")({
+  // Developer test page: available on the dev server only (SEC-031).
+  beforeLoad: () => {
+    if (import.meta.env.PROD) throw notFound();
+  },
   component: PerfPage,
   head: () => ({ meta: [{ title: "Logo perf test • ICT PARK" }] }),
 });

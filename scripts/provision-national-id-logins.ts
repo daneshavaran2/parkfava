@@ -37,7 +37,7 @@
  * Run (writes):                       bun run scripts/provision-national-id-logins.ts --apply
  */
 import "dotenv/config";
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import postgres from "postgres";
@@ -84,9 +84,17 @@ type Action =
   | { kind: "refresh"; row: SourceRow; user: DbUser };
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
-const rows: SourceRow[] = JSON.parse(
-  readFileSync(join(scriptDir, "company-national-id-logins.json"), "utf8"),
-);
+// Generated locally by scripts/generate-national-id-logins.py from the park's
+// spreadsheet and never committed: it holds password hashes of the companies'
+// initial passwords (docs/Security Report.md, SEC-023). Delete it after use.
+const sourcePath = join(scriptDir, "company-national-id-logins.json");
+if (!existsSync(sourcePath)) {
+  console.error(
+    `Missing ${sourcePath} — generate it first: python scripts/generate-national-id-logins.py <spreadsheet.xlsx>`,
+  );
+  process.exit(1);
+}
+const rows: SourceRow[] = JSON.parse(readFileSync(sourcePath, "utf8"));
 
 async function main() {
   const [{ has_column }] = await sql<{ has_column: boolean }[]>`

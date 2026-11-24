@@ -4,7 +4,7 @@
  * `sessions` table, so revoking access is a single DELETE, not a JWT
  * blocklist. Server-only: never import this from client-rendered code.
  */
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { getCookie, setCookie, deleteCookie } from "@tanstack/react-start/server";
 import { getDb } from "../../../db/connection";
 
@@ -27,12 +27,22 @@ export type SessionUser = {
   mustChangePassword: boolean;
 };
 
+/**
+ * The cookie carries a random token; the database keeps only its SHA-256, so
+ * someone who can read the sessions table (a backup, a dump, a read-only DB
+ * user) cannot use what they see to sign in as anyone (docs/Security
+ * Report.md, SEC-027). Migration 0023 hashed the sessions that existed before.
+ */
+function sessionKey(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
 export async function createSession(userId: string, remember = true): Promise<void> {
   const sql = getDb();
   const token = randomBytes(32).toString("hex");
   const days = remember ? SESSION_DAYS : SHORT_SESSION_DAYS;
   const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-  await sql`INSERT INTO sessions (id, user_id, expires_at) VALUES (${token}, ${userId}, ${expiresAt})`;
+  await sql`INSERT INTO sessions (id, user_id, expires_at) VALUES (${sessionKey(token)}, ${userId}, ${expiresAt})`;
 
   // Expired rows are otherwise never removed — getSessionUser() filters them
   // out but leaves them in place, so the table would grow forever. Pruning
@@ -58,7 +68,7 @@ export async function destroySession(): Promise<void> {
   const token = getCookie(COOKIE_NAME);
   if (token) {
     const sql = getDb();
-    await sql`DELETE FROM sessions WHERE id = ${token}`;
+    await sql`DELETE FROM sessions WHERE id = ${sessionKey(token)}`;
   }
   deleteCookie(COOKIE_NAME, { path: "/" });
 }
@@ -68,14 +78,14 @@ export async function markSessionMfaVerified(userId: string, until: Date): Promi
   const token = getCookie(COOKIE_NAME);
   if (!token) throw new Error("Unauthorized: not signed in");
   const sql = getDb();
-  await sql`UPDATE sessions SET mfa_verified_until = ${until} WHERE id = ${token} AND user_id = ${userId}`;
+  await sql`UPDATE sessions SET mfa_verified_until = ${until} WHERE id = ${sessionKey(token)} AND user_id = ${userId}`;
 }
 
 /** Ends every session of `userId` except the one making this request. */
 export async function destroyOtherSessions(userId: string): Promise<void> {
   const token = getCookie(COOKIE_NAME) ?? "";
   const sql = getDb();
-  await sql`DELETE FROM sessions WHERE user_id = ${userId} AND id <> ${token}`;
+  await sql`DELETE FROM sessions WHERE user_id = ${userId} AND id <> ${sessionKey(token)}`;
 }
 
 /** Returns the logged-in user (with roles) for the current request, or null. */
@@ -94,7 +104,8 @@ export async function isLiveSessionCookie(cookieHeader: string | null): Promise<
   if (!raw) return false;
   try {
     const token = decodeURIComponent(raw);
-    const rows = await getDb()`SELECT 1 FROM sessions WHERE id = ${token} AND expires_at > now()`;
+    const rows =
+      await getDb()`SELECT 1 FROM sessions WHERE id = ${sessionKey(token)} AND expires_at > now()`;
     return rows.length > 0;
   } catch {
     return false;
@@ -121,7 +132,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     FROM sessions s
     JOIN users u ON u.id = s.user_id
     LEFT JOIN user_roles r ON r.user_id = u.id
-    WHERE s.id = ${token} AND s.expires_at > now()
+    WHERE s.id = ${sessionKey(token)} AND s.expires_at > now()
   `;
   if (!rows.length) return null;
 

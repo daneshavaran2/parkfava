@@ -160,10 +160,11 @@ export const uploadAttachmentFn = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
     const { file, ownerType, ownerId, kind, title, description } = data;
-    const { assertUploadAllowed } = await import("./storage/mime");
-    assertUploadAllowed(file);
+    const { assertUploadAllowed, assertUploadContent, assertSafePathSegment } =
+      await import("./storage/mime");
+    await assertUploadContent(file, assertUploadAllowed(file));
     const safeName = file.name.replace(/[^\w.\-]+/g, "_");
-    const path = `attachments/${ownerType}/${ownerId}/${kind}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
+    const path = `attachments/${ownerType}/${assertSafePathSegment(ownerId)}/${kind}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
     const { saveLocalFile } = await import("./storage/local-storage.server");
     await saveLocalFile(path, Buffer.from(await file.arrayBuffer()));
 

@@ -139,9 +139,11 @@ export const uploadParkAssetFn = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     assertIsAdmin(context);
-    const { assertUploadAllowed } = await import("./storage/mime");
+    const { assertUploadAllowed, assertUploadContent, assertSafePathSegment } =
+      await import("./storage/mime");
     const ext = assertUploadAllowed(data.file);
-    const path = `${data.park_id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    await assertUploadContent(data.file, ext);
+    const path = `${assertSafePathSegment(data.park_id)}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const { saveLocalFile } = await import("./storage/local-storage.server");
     await saveLocalFile(path, Buffer.from(await data.file.arrayBuffer()));
     return { path };
