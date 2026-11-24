@@ -401,3 +401,17 @@ production build (`evidence/prod-build-checks-r3.txt`: all passed).
 - **Status:** Hardening · **Severity:** Informational · **CWE:** CWE-525, CWE-693
 - **Patch:** `src/server.ts` adds `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()` to every response and `Cache-Control: no-store` to `/_serverFn/` responses.
 - **Verification:** headers present on dev and production builds.
+
+---
+
+## Rounds 4–5 (2026-11-24)
+
+SEC-037 … SEC-046 and the stricter testing (server-function inventory and
+fuzzing, browser-level stored XSS and CSRF, sqlmap, Wapiti, Nikto) are recorded
+in [docs/Security Report.md](../docs/Security%20Report.md), which is also the
+report shipped with the source package. Baselines that exposed SEC-042/043/044:
+`evidence/strict-dev-baseline.txt`, `evidence/strict-prod-baseline.txt`; final
+runs: `evidence/strict-*.txt`, `evidence/browser-prod.txt`,
+`evidence/security-probes-*.txt`, `evidence/sqlmap-*.txt`,
+`evidence/wapiti.txt`, `evidence/nikto.txt`. SEC-011, SEC-023, SEC-027 and
+SEC-031 above are fixed (see that report).

@@ -32,6 +32,34 @@ const requestContextMiddleware = createMiddleware().server(async ({ next, reques
   return runWithRequestContext({ requestId: getOrCreateRequestId(request) }, () => next());
 });
 
+/**
+ * Database errors carry table, column and constraint names; they are logged
+ * and the client gets a generic code instead (SEC-044). Application errors
+ * (the codes the UI translates) pass through unchanged.
+ */
+function isDatabaseError(error: unknown): error is Error & { code?: string } {
+  if (!(error instanceof Error)) return false;
+  const code = (error as { code?: unknown }).code;
+  return (
+    error.name === "PostgresError" ||
+    (typeof code === "string" && /^[0-9A-Z]{5}$/.test(code) && "severity" in error)
+  );
+}
+
+const dbErrorGuard = createMiddleware({ type: "function" }).server(async ({ next }) => {
+  try {
+    return await next();
+  } catch (error) {
+    if (!isDatabaseError(error)) throw error;
+    logError({
+      event: "db_error",
+      message: error.message,
+      meta: { code: error.code, stack: error.stack },
+    });
+    throw new Error("INTERNAL_ERROR");
+  }
+});
+
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
     return await next();
@@ -83,6 +111,6 @@ const csrfMiddleware = createCsrfMiddleware({
 });
 
 export const startInstance = createStart(() => ({
-  functionMiddleware: [attachRequestId, i18nGuardMiddleware],
+  functionMiddleware: [attachRequestId, i18nGuardMiddleware, dbErrorGuard],
   requestMiddleware: [requestContextMiddleware, csrfMiddleware, errorMiddleware],
 }));

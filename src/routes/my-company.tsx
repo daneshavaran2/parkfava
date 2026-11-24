@@ -120,9 +120,13 @@ function ForcePasswordChange({ username, onDone, onSignOut }: { username: string
       await changeMyPasswordFn({ data: { newPassword: password } });
       onDone();
     } catch (e: any) {
-      setMsg(e?.message === "PASSWORD_UNCHANGED"
-        ? t("myCompany.password_unchanged")
-        : `${t("common.error")}: ${e?.message ?? e}`);
+      setMsg(
+        e?.message === "PASSWORD_UNCHANGED"
+          ? t("myCompany.password_unchanged")
+          : e?.message === "WEAK_PASSWORD"
+            ? t("myCompany.password_weak")
+            : `${t("common.error")}: ${e?.message ?? e}`,
+      );
     }
     setBusy(false);
   }

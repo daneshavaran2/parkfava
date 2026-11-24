@@ -265,3 +265,31 @@ describe("SEC-039: upload path segments", async () => {
     (id) => expect(() => assertSafePathSegment(id)).toThrow("INVALID_UPLOAD"),
   );
 });
+
+describe("SEC-043: common and patterned passwords are refused", async () => {
+  const { weakPasswordReason, assertStrongPassword } =
+    await import("../../src/lib/auth/password-policy");
+  it.each([
+    "12345678",
+    "password",
+    "Password1",
+    "11111111",
+    "qwertyui",
+    "abcdefgh",
+    "87654321",
+    "۱۲۳۴۵۶۷۸",
+    "abababab",
+    "P@ssw0rd",
+  ])("refuses %j", (pw) => expect(weakPasswordReason(pw)).not.toBeNull());
+  it.each(["Arman#Secure2026", "Probe#Passw0rd2026", "blue-river-candle-42", "Tehran!Spring1405"])(
+    "accepts %j",
+    (pw) => expect(weakPasswordReason(pw)).toBeNull(),
+  );
+  it("refuses a password that contains the username", () => {
+    expect(weakPasswordReason("payasoft2026!", ["payasoft@example.com"])).toBe("contains-username");
+    expect(weakPasswordReason("x14006583810x", [null, "14006583810"])).toBe("contains-username");
+  });
+  it("throws WEAK_PASSWORD", () => {
+    expect(() => assertStrongPassword("12345678")).toThrow("WEAK_PASSWORD");
+  });
+});

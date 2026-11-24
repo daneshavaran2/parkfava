@@ -1,0 +1,23 @@
+[08:33:48] [INFO] testing 'AND boolean-based blind - WHERE or HAVING clause'
+[08:33:49] [INFO] testing 'AND boolean-based blind - WHERE or HAVING clause (subquery - comment)'
+[08:33:49] [INFO] testing 'AND boolean-based blind - WHERE or HAVING clause (comment)'
+[08:33:49] [INFO] testing 'Boolean-based blind - Parameter replace (original value)'
+[08:33:49] [INFO] testing 'Boolean-based blind - Parameter replace (DUAL)'
+[08:33:49] [INFO] testing 'Boolean-based blind - Parameter replace (DUAL - original value)'
+[08:33:49] [INFO] testing 'Boolean-based blind - Parameter replace (CASE)'
+[08:33:49] [INFO] testing 'Boolean-based blind - Parameter replace (CASE - original value)'
+[08:33:49] [INFO] testing 'HAVING boolean-based blind - WHERE, GROUP BY clause'
+[08:33:49] [INFO] testing 'PostgreSQL AND boolean-based blind - WHERE or HAVING clause (CAST)'
+[08:33:50] [INFO] testing 'PostgreSQL boolean-based blind - Parameter replace'
+[08:33:50] [INFO] testing 'PostgreSQL boolean-based blind - ORDER BY, GROUP BY clause'
+[08:33:50] [INFO] testing 'PostgreSQL boolean-based blind - Stacked queries'
+[08:33:50] [INFO] testing 'PostgreSQL AND error-based - WHERE or HAVING clause'
+[08:33:50] [INFO] testing 'PostgreSQL error-based - Parameter replace'
+[08:33:50] [INFO] testing 'PostgreSQL error-based - ORDER BY, GROUP BY clause'
+[08:33:50] [INFO] testing 'PostgreSQL > 8.1 stacked queries (comment)'
+[08:33:50] [INFO] testing 'PostgreSQL > 8.1 AND time-based blind'
+[08:33:51] [INFO] testing 'PostgreSQL > 8.1 time-based blind - Parameter replace'
+[08:33:51] [INFO] testing 'PostgreSQL > 8.1 time-based blind - ORDER BY, GROUP BY clause'
+[08:33:51] [INFO] testing 'Generic UNION query (NULL) - 1 to 10 columns'
+[08:33:51] [INFO] testing 'Generic UNION query (random number) - 1 to 10 columns'
+[08:33:51] [CRITICAL] all tested parameters do not appear to be injectable. Try to increase values for '--level'/'--risk' options if you wish to perform more tests. If you suspect that there is some kind of protection mechanism involved (e.g. WAF) maybe you could try to use option '--tamper' (e.g. '--tamper=space2comment') and/or switch '--random-agent'

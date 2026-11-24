@@ -17,6 +17,7 @@ import {
   getSessionUser,
 } from "./auth/session.server";
 import { requireAuth } from "./auth/middleware";
+import { assertStrongPassword } from "./auth/password-policy";
 import { clientKey, enforceRateLimit, RateLimitError } from "./rate-limit.server";
 import { logWarn } from "./log-envelope";
 
@@ -128,15 +129,25 @@ export const signUp = createServerFn({ method: "POST" })
     // Before the password hash: scrypt is deliberately expensive, so letting
     // an unthrottled caller reach it is itself the denial-of-service.
     await applyLimit(`signup:${clientKey()}`, LOGIN_LIMITS.signupPerClient);
+    assertStrongPassword(data.password, [email]);
 
     const existing = await sql`SELECT id FROM users WHERE email = ${email}`;
     if (existing.length) throw new Error("EMAIL_ALREADY_REGISTERED");
 
     const password_hash = await hashPassword(canonicalPassword(data.password));
-    const [user] = await sql<{ id: string }[]>`
-      INSERT INTO users (email, password_hash) VALUES (${email}, ${password_hash})
-      RETURNING id
-    `;
+    let user: { id: string };
+    try {
+      [user] = await sql<{ id: string }[]>`
+        INSERT INTO users (email, password_hash) VALUES (${email}, ${password_hash})
+        RETURNING id
+      `;
+    } catch (e) {
+      // Two sign-ups for the same email at once: the second loses the race on
+      // the unique index. Same answer as the check above, not the raw
+      // database error (SEC-044).
+      if ((e as { code?: string }).code === "23505") throw new Error("EMAIL_ALREADY_REGISTERED");
+      throw e;
+    }
     await createSession(user.id, data.remember ?? true);
     return { ok: true };
   });
@@ -248,6 +259,7 @@ export const changeMyPassword = createServerFn({ method: "POST" })
     if (await verifyPassword(newPassword, current.password_hash)) {
       throw new Error("PASSWORD_UNCHANGED");
     }
+    assertStrongPassword(newPassword, [context.user.email, context.user.nationalId]);
     const password_hash = await hashPassword(newPassword);
     await sql`
       UPDATE users SET password_hash = ${password_hash}, must_change_password = false

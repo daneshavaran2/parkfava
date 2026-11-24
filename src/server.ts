@@ -73,6 +73,9 @@ function withStandardHeaders(response: Response, requestId: string, request?: Re
   if (!headers.has("x-content-type-options")) headers.set("x-content-type-options", "nosniff");
   if (!headers.has("referrer-policy"))
     headers.set("referrer-policy", "strict-origin-when-cross-origin");
+  // CSP frame-ancestors already forbids framing; this covers older browsers
+  // and scanners that only look for the legacy header (SEC-045).
+  if (!headers.has("x-frame-options")) headers.set("x-frame-options", "DENY");
   // The app uses none of these browser features (only the clipboard, which
   // this does not restrict); denying them limits what injected script or a
   // compromised third-party script could ask the visitor for.

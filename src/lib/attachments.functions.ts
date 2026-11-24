@@ -27,6 +27,22 @@ export const getAttachments = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     if (!hasDb()) return [] as CompanyAttachment[];
     const sql = getDb();
+    if (data.ownerType === "exhibition") {
+      // Same visibility as the company itself (getExhibitionCompanyDetail):
+      // the public sees a published company's files; the owner and admins
+      // also see an unpublished one's. Anyone else gets nothing (SEC-042).
+      const [company] = await sql<
+        { status: string; is_active: boolean; owner_user_id: string | null }[]
+      >`SELECT status, is_active, owner_user_id FROM exhibition_companies WHERE company_id = ${data.ownerId}`;
+      if (!company) return [] as CompanyAttachment[];
+      if (!(company.status === "approved" && company.is_active)) {
+        const { getSessionUser } = await import("./auth/session.server");
+        const user = await getSessionUser();
+        const allowed =
+          !!user && (user.roles.includes("admin") || company.owner_user_id === user.id);
+        if (!allowed) return [] as CompanyAttachment[];
+      }
+    }
     return await sql<CompanyAttachment[]>`
       SELECT * FROM company_attachments
       WHERE owner_type = ${data.ownerType} AND owner_id = ${data.ownerId} AND is_active = true

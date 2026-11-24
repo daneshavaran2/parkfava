@@ -71,6 +71,7 @@ function authErrorMessage(e: any, t: (key: string) => string): string {
   // password and invite the user to keep trying, which is the one thing that
   // cannot work here.
   if (code === "RATE_LIMITED") return t("auth.too_many_attempts");
+  if (code === "WEAK_PASSWORD") return t("auth.weak_password");
   return t("auth.login_failed");
 }
 
