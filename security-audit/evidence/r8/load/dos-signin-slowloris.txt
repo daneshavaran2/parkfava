@@ -1,0 +1,20 @@
+target http://localhost:3000; 20 s per attack; container pf
+sign-in flood from one address
+  note a real user's sign-in: 184 ms before the attack; during it median 669 ms, slowest 1687 ms, 0 of 8 failed
+  ok   visitors still served during the attack (p95 under 1 s)  [p50 38 ms, p95 111 ms, max 444 ms, 0 failed; 11905 attempts from one address]
+  ok   back to normal within 15 s after the attack  [0.0 s]
+  ok   no crash, restart or out-of-memory kill  [restarts 0 -> 0]
+  ok   memory stayed under the container limit  [peak 279 MiB of 1024 MiB]
+sign-in flood from many addresses
+  note a real user's sign-in: 189 ms before the attack; during it median 8901 ms, slowest 9090 ms, 0 of 4 failed
+  ok   visitors still served during the attack (p95 under 3 s)  [p50 10 ms, p95 20 ms, max 114 ms, 0 failed; 158 attempts from random addresses]
+  ok   back to normal within 15 s after the attack  [0.0 s]
+  ok   no crash, restart or out-of-memory kill  [restarts 0 -> 0]
+  ok   memory stayed under the container limit  [peak 291 MiB of 1024 MiB]
+slowloris
+  ok   visitors still served during the attack (p95 under 1 s)  [p50 4 ms, p95 6 ms, max 87 ms, 0 failed; 2000 slow connections opened, 0 still open after 150 s]
+  ok   back to normal within 15 s after the attack  [0.0 s]
+  ok   no crash, restart or out-of-memory kill  [restarts 0 -> 0]
+  ok   memory stayed under the container limit  [peak 287 MiB of 1024 MiB]
+
+12 checks, all passed

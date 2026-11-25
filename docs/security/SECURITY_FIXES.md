@@ -78,9 +78,20 @@ control was weakened to make a test pass.
 | Behaviour change | New file names are 24 hexadecimal characters longer; existing files keep their names |
 | Regression tests | Unit "SEC-052" (format, 1,000 names without repeats, every upload function uses it and none uses `Math.random`) |
 
+### SEC-058: package managers in the runtime image
+
+| | |
+|---|---|
+| Severity | Low |
+| Root cause | The `node:22-slim` base image ships npm, npx, corepack and yarn; the runtime stage kept them although the app only runs `node` |
+| Files | `Dockerfile` |
+| Change | The runtime stage deletes `/usr/local/lib/node_modules/{npm,corepack}` and the `npm`, `npx`, `corepack`, `yarn`, `yarnpkg` commands |
+| Behaviour change | `npm` is not available in the running container (nothing in the app or the deploy uses it; migrations run from a checkout) |
+| Verification | Hadolint clean; image rebuilt; Trivy: 23 → 0 Node.js package advisories; the container passed the probes (126), deep (34) and browser-flow (8) suites and stays healthy |
+
 ## Breaking changes
 
-None that require action from users. Two operational notes:
+None that require action from users. Three operational notes:
 
 1. Migration 0024 changes who becomes admin automatically: only the very
    first account in an empty database. A database that has accounts but no
@@ -89,7 +100,9 @@ None that require action from users. Two operational notes:
    (8 per account per 5 minutes, 60 per client per 15 minutes) bound what one
    client can make the server compute, but sign-in attempts from many
    addresses now cost the server about four times as much CPU as before.
-   Load was not tested; include this in capacity planning.
+   The load tests (PENETRATION_TEST_RESULTS.md) measured this: a distributed
+   flood slows sign-in (SEC-059) but not the rest of the site.
+3. The runtime image no longer contains npm (SEC-058).
 
 ## Fixes from earlier rounds
 

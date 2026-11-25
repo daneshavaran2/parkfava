@@ -10,20 +10,23 @@ behaves this way on the production build in the test environment.
 
 | # | Item | How | Status |
 |---|---|---|---|
-| 1 | Back up the database and the uploads disk | Provider snapshot, then a test restore into a scratch database | To do |
+| 1 | Back up the database and the uploads disk, and prove the backup restores | `scripts/backup-restore-drill.sh` with `RESTORE_DATABASE_URL` pointing at a new empty database (it refuses anything else); store the backup encrypted, since it holds password hashes and the encrypted assistant key | To do (drill verified on a test copy) |
 | 2 | Apply migrations 0022, 0023, 0024 and deploy this code back to back | `DATABASE_URL=<production> bun run db:migrate` from a checkout of this commit, then deploy. The container never runs migrations; the new code needs 0022's column, and 0023 rewrites session ids, so running one long before the other signs everyone out in between | To do |
 | 3 | `NODE_ENV=production` | Set in the Dockerfile; enables HSTS, the enforced CSP, `Secure` cookies, and turns off the debug endpoint and test pages | Verified locally |
-| 4 | `SETTINGS_ENCRYPTION_KEY` set to a long random value | `openssl rand -hex 32`, stored as a Liara environment variable; the assistant API keys are re-saved in the admin page afterwards so they are encrypted with it (SEC-017) | To do |
+| 4 | `SETTINGS_ENCRYPTION_KEY` set to a long random value | `openssl rand -hex 32`, stored as a Liara environment variable and in the recovery instructions (not in the backup); re-save the assistant API key in the admin page afterwards. Without it the key is lost after a restore or a database password change (SEC-017, shown in the drill) | To do |
 | 5 | `DATABASE_URL` uses TLS | `?sslmode=require`; verify the certificate if the database is ever reached over the internet (SEC-030) | To check |
 | 6 | `TRUSTED_PROXY_HOPS` matches the proxies in front of the app | 1 for Liara's router alone; add one per CDN or proxy in front of it. Wrong values weaken the per-client limits (SEC-003) | To check |
 | 7 | Uploads disk writable by uid 1000 | The container runs as `node` (uid 1000); `liara.json` mounts the disk at `/app/data/uploads` | To check |
-| 8 | SMS provider configured, then `MFA_ENFORCED=true` | `SMS_PROVIDER`, `SMS_API_KEY`, `SMS_SENDER_LINE`; test one code end to end, then enable MFA at least for admins (SEC-026) | To do |
+| 8 | SMS provider configured, then `MFA_ENFORCED=true` | `SMS_PROVIDER`, `SMS_API_KEY`, `SMS_SENDER_LINE`. Test: (a) one code to your own phone arrives and verifies; (b) a code to an invalid number, or with a wrong sender line, must show an error in the app, not "code sent". If (b) shows "sent", the provider reports failures inside an HTTP 200 answer and `src/lib/sms/send-sms.server.ts` must also check the response body. Then enable MFA at least for admins (SEC-026) | To do |
 | 9 | A CAPTCHA on sign-up before SMS goes live | Open sign-up plus SMS sending (SEC-032); the OTP cap now holds under bursts (SEC-051) | Recommended |
 | 10 | `CSP_ENFORCE` not set to `0` | Leave unset; production enforces the CSP | Verified locally |
 | 11 | Admin accounts reviewed | `SELECT u.email, u.national_id FROM user_roles r JOIN users u ON u.id = r.user_id WHERE r.role = 'admin';` should list only the intended people. On a brand-new empty database, create the first admin before the site is reachable (SEC-029) | To check |
 | 12 | Keys from old git history rotated | Any key in the old `.env` (commit `13cd74d`) that was ever private: revoke and replace (SEC-022) | To check |
 | 13 | Default branch protected | Pull requests with review, no force pushes, deploy secret (`LIARA_API_TOKEN`) limited to the deploy workflow | To do |
 | 14 | Review-workflow decision | Decide SEC-055 (freeze edits while pending, or version-checked approval) | Open |
+| 15 | Edge protection and capacity | CDN for static files and public pages, rate limiting at the edge, CPU sized for peak traffic: one CPU served about 370 mixed requests per second cleanly (SEC-059, SEC-060) | Recommended |
+| 16 | Keep `PORT` at 3000 | The image's HEALTHCHECK calls port 3000 | Verified locally |
+| 17 | Rebuild the image regularly | Picks up Debian security fixes for the base image (SEC-061) | Ongoing |
 
 ## After deploying (read-only checks against the live site)
 

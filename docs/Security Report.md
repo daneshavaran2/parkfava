@@ -9,11 +9,11 @@ production build. Production was not tested.
 
 | | |
 |---|---|
-| Findings | 57 (SEC-001 … SEC-057) |
+| Findings | 61 (SEC-001 … SEC-061) |
 | Critical / High | 1 / 3 — all fixed |
 | Medium | 8 — 7 fixed, 1 open (MFA off by default, SEC-026) |
-| Low | 13 — 12 fixed, 1 open (review workflow, SEC-055) |
-| Informational / hardening | 32 — 22 fixed or partly fixed, 9 open or accepted (configuration or product decisions), 1 concerning old git history only |
+| Low | 15 — 13 fixed, 2 open (review workflow SEC-055, sign-in under a distributed flood SEC-059) |
+| Informational / hardening | 34 — 22 fixed or partly fixed, 11 open or accepted (configuration, capacity or product decisions), 1 concerning old git history only |
 
 The full audit (scope, threat model, every finding with its evidence, the
 fixes, penetration-test commands and results, test coverage and the
@@ -43,6 +43,12 @@ vulnerabilities.
 - Concurrency testing: parallel bursts against every throttle and every
   check-then-write step (rate limits, OTP sends, change-request approval,
   admin role changes), with a stand-in SMS panel so OTP sends can be counted.
+- The Docker image built from the Dockerfile and run as in production (uid
+  1000, cluster of workers, health check, 1 CPU / 1 GB), scanned with Trivy
+  and tested with all suites, load tests (autocannon) and denial-of-service
+  tests (`scripts/test-dos-resilience.py`).
+- A backup and restore drill (`scripts/backup-restore-drill.sh`) into an empty
+  database, with the application then run on the restored copy.
 - Own test suites, run against the dev server and the production build:
   - `scripts/test-security-probes.py`: path traversal, exposed files and
     source maps, reflected XSS, open redirects, SQL injection inputs,
@@ -124,6 +130,7 @@ vulnerabilities.
 | SEC-053 | Medium | Any new account became admin whenever no admin role existed, and two admins revoking each other at the same moment removed every admin role; the next self-registered account then became admin | Migration 0024: only the very first account ever created becomes admin; `revokeAdmin` locks the admin rows and requires the caller to still be one |
 | SEC-051 | Low (Medium once SMS is live) | OTP send cooldown and daily cap read before the send and recorded after it: 10 parallel requests sent 10 texts to the account's number | Send slot claimed in one conditional `UPDATE` before the SMS call; handed back if the send fails |
 | SEC-056 | Low | Password hashes used Node's default scrypt cost (N=2^14, r=8, p=1), a fifth of the OWASP Password Storage Cheat Sheet minimum; matters if the hashes ever leak | N=2^14, r=8, p=5 (an OWASP-equivalent setting at the same 16 MiB); older hashes still verify, cost the same time to check, and are replaced at the next sign-in |
+| SEC-058 | Low | The Docker runtime image shipped npm, npx, corepack and yarn, whose bundled packages carried 23 known advisories (10 High); the app never runs them | Removed from the runtime image; an image scan now finds no Node.js package advisories |
 | SEC-054 | Low | The public export (`/api/public/export`), `getParkContent` and park attachments returned a park an admin had deactivated (with its content, images and news) and the attachments of unpublished companies | Same visibility rules as the public site: nothing of a deactivated park, a company's files only while it is published; admins still see everything |
 | SEC-052 | Info | Uploaded files are served to anyone with the path, and the only unpredictable part of the name came from `Math.random` (about 31 bits) | 96 bits from the CSPRNG (`newUploadName()`) in every upload function |
 
@@ -132,8 +139,9 @@ vulnerabilities.
 | ID | Severity | Finding | Recommended action |
 |---|---|---|---|
 | SEC-026 | Medium | MFA is off by default; admins sign in with a password only | Configure the SMS provider, then set `MFA_ENFORCED=true` (at least for admins) |
+| SEC-059 | Low | Sign-in slows down under a password-guessing flood from many addresses: on one CPU, 50 attackers from different addresses raised a real user's sign-in from 0.19 s to about 9 s (it still succeeded; the rest of the site was unaffected), because every attempt costs a password hash. Behind the host's proxy an attacker needs about 120 real addresses per CPU core to keep this up | Rate limiting at the edge (Liara / CDN), a CAPTCHA or proof-of-work challenge on sign-in when failures spike, enough CPU |
 | SEC-055 | Low | An owner can still edit a company while it waits for review, so the content an admin approves can differ from what they looked at; an owner save already under way can also land just after approval | Product decision: freeze edits while pending, or have approval carry the version the admin reviewed and refuse if it changed |
-| SEC-017 | Info | Settings encryption key falls back to `DATABASE_URL` | Set `SETTINGS_ENCRYPTION_KEY` |
+| SEC-017 | Info | Settings encryption key falls back to `DATABASE_URL`; the restore drill showed that a restore to a new database address (or a database password change) then makes the stored assistant key undecryptable, and the assistant silently stops | Set `SETTINGS_ENCRYPTION_KEY` (with it, the key survived the restore), then re-enter the assistant key once in the admin page |
 | SEC-024 | Info | No audit trail for sign-ins and privileged actions | Add an audit table for auth events and admin actions |
 | SEC-028 | Info | CSP allows inline scripts | Move to a nonce-based CSP |
 | SEC-029 | Info | On a fresh, empty database the first account to sign up becomes admin | Create the admin account before the site is reachable (since migration 0024 nothing else is ever promoted automatically) |
@@ -141,6 +149,8 @@ vulnerabilities.
 | SEC-021 | Info | Company content is passed into the assistant prompt | Keep the assistant read-only; treat model output as untrusted |
 | SEC-032 | Info | Open self-registration plus SMS sending | Accepted with rate limits; add CAPTCHA if SMS goes live |
 | SEC-046 | Info | Sign-up says when an email is already registered | Accepted: needed for the sign-up form, limited to 5 sign-ups per hour per client |
+| SEC-060 | Info | No load shedding: past capacity (about 350 mixed requests per second per CPU core on the production image) most requests stay fast but a small share wait 10–30 s and some time out; no crash, memory stable | CDN caching of static files and public pages, rate limits at the edge, CPU sized for peak traffic |
+| SEC-061 | Info | The `node:22-slim` base image (Debian 12) has 1 Critical and 37 High OS-package CVEs with no fixed version available; the app does not use the affected packages (Node bundles its own zlib) | Rebuild the image regularly to pick up Debian fixes; the Debian 13 variant was checked and is not better (0 Critical, 50 High) |
 | SEC-057 | Info | The session cookie is named `session`, without the `__Host-` prefix ASVS 5.0 (3.3.1) asks for; the prefix stops sibling sites under a shared parent domain from planting the cookie | `liara.run` is on the Public Suffix List, so browsers already refuse such cookies there; rename the cookie to `__Host-session` in production (reading the old name during a transition) before moving to a custom domain shared with other sites |
 
 SEC-022 (an `.env` with public-by-design keys in old git history) concerns the
@@ -165,6 +175,10 @@ Run against a disposable database; never point these at production.
 | Browser flows (first login, forced password change, URL validation, admin pages, public page; production build) | 8/8 passed |
 | Migration 0023 | a session created before it still signs in after it |
 | Migration 0024 | on an empty database exactly one of two simultaneous first sign-ups becomes admin; later accounts never do |
+| Docker image (built from the Dockerfile, run as in production: uid 1000, `cluster.mjs`, HEALTHCHECK, 1 CPU / 1 GB) | healthy; probes 126/126, strict 204/204, deep 34/34, concurrency 20/20, browser 14/14, flows 8/8 against the container |
+| `scripts/test-dos-resilience.py` against the container | 28/28: sign-in floods, export flood, slowloris (2,000 connections, closed by the server's header timeout), 5,000 idle connections, large and oversized bodies; no crash, peak memory 384 MiB of 1 GiB |
+| Load test (autocannon, container on 1 CPU) | 50 clients per route, no errors: home 263 req/s, company list 519, export 182, static files 1,190; 90 clients across three routes: about 370 req/s, p99 under 0.8 s, no timeouts |
+| `scripts/backup-restore-drill.sh` | backup and restore into an empty database: 16 tables, 72 files, migrations identical; the container on the restored copy passed probes and deep suites and kept existing sessions |
 
 ### Scanner results (final code)
 
@@ -183,13 +197,15 @@ Run against a disposable database; never point these at production.
 | Bandit | test scripts only (localhost requests, fixed SQL for the test database) |
 | CodeQL 2.27.4 (JavaScript/TypeScript security-and-quality and security-experimental suites; GitHub Actions queries) | no confirmed issues; 41 security results, all in one-off dev scripts, the desktop app's own data folder, or inventory queries that list calls receiving outside data (for example passwords passed to scrypt); Actions: 0 |
 
-Not covered: load/DoS testing, the assistant against a live model, a real
-SMS provider (a stand-in answered instead), a Docker build (no container
-runtime available; the image's runtime user was reproduced by running the
-build as uid 1000), restore of production backups, and the production
-deployment itself. Not run: OWASP ZAP (its scan add-ons could not be
-obtained in the test environment); sqlmap, Wapiti, Nikto and the own suites
-cover the same ground for this application.
+Not covered: a real SMS provider (no account exists; a stand-in answered
+instead, and the providers' documentation was not reachable from the test
+network), the assistant against a live model, restore of the real production
+backups (the drill used a copy of the test database), and the production
+deployment itself (the live-site checks need network approval that was not
+available at the time; the commands are in the production checklist).
+Not run: OWASP ZAP (its scan add-ons could not be obtained in the test
+environment); sqlmap, Wapiti, Nikto and the own suites cover the same ground
+for this application.
 
 ## Before going live
 
@@ -198,7 +214,13 @@ cover the same ground for this application.
    container does not run migrations; the code needs 0022's column, and 0023
    changes how sessions are looked up).
 2. Make the uploads volume writable by uid 1000 (the container no longer runs as root).
-3. Set `SETTINGS_ENCRYPTION_KEY`.
-4. Configure SMS and enable MFA for admins.
+3. Set `SETTINGS_ENCRYPTION_KEY`, then re-enter the assistant API key once in
+   the admin page so it is encrypted with it.
+4. Configure SMS: send one real code, and one to an invalid number, and
+   confirm the app reports the failure (the providers' error format could not
+   be checked without an account); then enable MFA for admins.
 5. Protect the default branch (reviews required, no force pushes).
-6. Confirm database and uploads-disk backups with a test restore.
+6. Confirm database and uploads-disk backups with a test restore
+   (`scripts/backup-restore-drill.sh` into an empty database).
+7. Put the site behind a CDN or edge rate limiting and size the CPU for peak
+   traffic (SEC-059, SEC-060).

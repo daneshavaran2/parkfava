@@ -31,9 +31,10 @@ the deployed site does not have these fixes.
 | # | Condition | Why |
 |---|---|---|
 | 1 | Run migrations 0022–0024 (`bun run db:migrate` from a checkout; the container does not run them) and deploy this code right after | None of the fixes protects the live site until it runs this code, and the code needs these migrations |
-| 2 | Turn on MFA for admins: configure the SMS provider, set `MFA_ENFORCED=true` (SEC-026, Medium, open) | Today an admin account is protected by its password alone |
-| 3 | Set `SETTINGS_ENCRYPTION_KEY` (SEC-017) | Otherwise the stored assistant API keys are encrypted with a key derived from `DATABASE_URL` |
-| 4 | Make the uploads volume writable by uid 1000 and confirm database and uploads backups with a test restore | The container no longer runs as root; restores were not tested |
+| 2 | Turn on MFA for admins: configure the SMS provider, check one real code and one failed send, set `MFA_ENFORCED=true` (SEC-026, Medium, open) | Today an admin account is protected by its password alone; no SMS account existed to test with |
+| 3 | Set `SETTINGS_ENCRYPTION_KEY` and re-enter the assistant key once (SEC-017) | Otherwise the key is derived from `DATABASE_URL`, and the restore drill showed it is lost after a restore to a new database address or a database password change |
+| 4 | Make the uploads volume writable by uid 1000 and run `scripts/backup-restore-drill.sh` on the real backups | The container runs as uid 1000; the drill was tested on a copy of the test database |
+| 4a | Edge protection and sizing: CDN or edge rate limiting, CPU sized for peak traffic (SEC-059, SEC-060) | A distributed sign-in flood slows sign-in; past about 350 requests per second per CPU some requests wait 10–30 s |
 | 5 | Decide the review-workflow rule (SEC-055, Low, open) | An owner can still change a company while it waits for review |
 | 6 | Rotate the keys found in old git history if any of them was ever private (SEC-022) | They remain in the history |
 
@@ -44,13 +45,18 @@ first-account-becomes-admin on an empty database (SEC-029), database TLS
 without certificate verification (SEC-030), assistant prompt content
 (SEC-021), open self-registration (SEC-032, SEC-046), session cookie without
 the `__Host-` prefix (SEC-057), one Moderate advisory in dev tooling only
-(SEC-025).
+(SEC-025), sign-in under a distributed flood (SEC-059), no load shedding
+past capacity (SEC-060), unfixed CVEs in the Debian base image (SEC-061).
 
-Not tested, and therefore not covered by this recommendation: load and
-denial-of-service behaviour, a real SMS provider, the assistant against a
-live model, a Docker build (no container runtime was available), backup
-restore, and the production deployment. A clean test result means these
-tests found nothing; it does not prove the absence of vulnerabilities.
+Not tested, and therefore not covered by this recommendation: a real SMS
+provider (no account exists, and the providers' documentation was not
+reachable from the test network), the assistant against a live model,
+restoring the real production backups, and the live site (the read-only
+checks need a network approval that was not available at the time;
+they are listed in the production checklist). The Docker image, load and
+denial-of-service behaviour, and backup and restore were tested locally. A
+clean test result means these tests found nothing; it does not prove the
+absence of vulnerabilities.
 
 ## Phase 1: discovery
 
@@ -125,10 +131,12 @@ other viewer. Values from the SMS panel and the AI provider are untrusted.
 | Personal data | Information disclosure | Anonymous, DB reader | Public responses walked field by field by tests; hashes and tokens never returned | Old git history (SEC-022) |
 | Password hashes | Offline cracking after a leak | DB reader | scrypt at the OWASP-equivalent cost (SEC-056) | Initial passwords of company accounts are mobile numbers until first login |
 | SMS and AI budget | Denial of wallet | Self-registered user | Rate limits; OTP cooldown and daily cap enforced atomically (SEC-051) | No CAPTCHA (SEC-032) |
-| Availability | Denial of service | Anonymous | Body limits, method guard, input length limits, no ReDoS in tested inputs | Not load-tested |
+| Availability | Denial of service | Anonymous | Body limits, header timeout, method guard, input length limits, no ReDoS in tested inputs; tested with floods, slowloris and load on the real image | Sign-in under a distributed flood (SEC-059); no load shedding past capacity (SEC-060) |
 | Server functions | Cross-site request forgery | Other website | CSRF middleware (`Sec-Fetch-Site`, then `Origin`/`Referer`); `SameSite=Lax` | none known |
 | Uploads | Malicious file, path traversal | Owner, admin | Extension and file-signature checks; safe path segments; `nosniff`; served as stored type | none known |
 | Desktop app | Navigation to hostile sites, device access | Hostile content | Navigation and new windows restricted; permissions refused | none known |
+| Container | Exploiting the runtime image | Attacker with code execution | Non-root user, read-only application files, no npm or other package managers (SEC-058) | Unfixed Debian CVEs (SEC-061) |
+| Backups | Disclosure or unusable restore | Anyone with backup access; disaster | Drill script with checksums, owner-only files | Backups hold hashes and the encrypted key; key lost on restore without `SETTINGS_ENCRYPTION_KEY` (SEC-017) |
 | CI/CD | Supply chain, token theft | Third party | Pinned actions, read-only token, pinned CLI | `npm install -g` of a pinned CLI (zizmor Low) |
 
 ## Phase 2: review by category
@@ -193,6 +201,9 @@ that exercises it (see [SECURITY_TEST_COVERAGE.md](SECURITY_TEST_COVERAGE.md)).
    payments).
 6. Dynamic testing of the local production build: passive checks first
    (headers, Nikto), then sqlmap and Wapiti, only against local instances.
+   The Docker image built from the Dockerfile, run as in production, scanned
+   and tested with every suite, then load and denial-of-service tests
+   against it; a backup and restore drill.
 7. Each confirmed issue: reproduced on the unfixed code, fixed, regression
    test added, all suites re-run.
 8. Final re-run of every scanner and suite on the final code, for both the

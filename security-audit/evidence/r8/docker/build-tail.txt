@@ -1,0 +1,40 @@
+#15 9.605  [38;5;240m  │[0m ──────┬──────  
+#15 9.605  [38;5;240m  │[0m       ╰──────── module level directive may not be preserved
+#15 9.605  [38;5;240m  │[0m 
+#15 9.605  [38;5;240m  │[0m [38;5;115mHelp[0m: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+#15 9.605 [38;5;246m───╯[0m
+#15 9.605 
+#15 9.607 ✓ built in 623ms
+#15 9.609 ℹ Generated .output/nitro.json
+#15 9.609 
+#15 9.609 [nitro] ✔ You can preview this build using npx vite preview
+#15 DONE 11.0s
+
+#16 [runtime 2/7] WORKDIR /app
+#16 CACHED
+
+#17 [runtime 3/7] COPY --from=build /app/.output ./.output
+#17 DONE 0.0s
+
+#18 [runtime 4/7] COPY --from=build /app/server ./server
+#18 DONE 0.0s
+
+#19 [runtime 5/7] COPY --from=build /app/scripts/atlas-images ./seed-assets
+#19 DONE 0.0s
+
+#20 [runtime 6/7] RUN mkdir -p /app/data/uploads && chown -R node:node /app/data
+#20 DONE 0.1s
+
+#21 [runtime 7/7] RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack     /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack     /usr/local/bin/yarn /usr/local/bin/yarnpkg
+#21 DONE 0.5s
+
+#22 exporting to image
+#22 exporting layers
+#22 exporting layers 0.4s done
+#22 exporting manifest sha256:90a7b6432ce52c3dafd623950da4e89afdb54481a2b443ed765893046e975617 done
+#22 exporting config sha256:013931e8aebade0c8ceb76c394c64c60f664772f1448f637b9734ece06b8bd89 done
+#22 exporting attestation manifest sha256:a118ae6d78cd8ef6fef2fcf5dc3883a1ffb183445cec859b2d56d685e17cb60a done
+#22 exporting manifest list sha256:ff441c4931d21f6665fcbefcb628028baf7a69a088d2cc3202c55951bec828be done
+#22 naming to docker.io/library/parkfava:audit2 done
+#22 unpacking to docker.io/library/parkfava:audit2 0.1s done
+#22 DONE 0.5s

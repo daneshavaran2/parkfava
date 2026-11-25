@@ -1,0 +1,7 @@
+4a5,6
+> # Sandbox only: trust the test network's HTTPS proxy during the build stage.
+> COPY --from=proxyca ca-bundle.crt /tmp/proxy-ca.crt
+7c9
+< RUN bun install --frozen-lockfile
+---
+> RUN bun install --frozen-lockfile --cafile /tmp/proxy-ca.crt

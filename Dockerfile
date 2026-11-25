@@ -24,6 +24,13 @@ COPY --from=build /app/scripts/atlas-images ./seed-assets
 # uploads directory is the only path the app writes to; a volume mounted there
 # must be writable by uid 1000 (e.g. `chown -R 1000:1000` on the volume once).
 RUN mkdir -p /app/data/uploads && chown -R node:node /app/data
+
+# The base image ships npm, npx, corepack and yarn; the app runs only `node`.
+# Their bundled packages carried 23 known advisories in an image scan
+# (docs/Security Report.md, SEC-058), so they are removed from the runtime.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+    /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+    /usr/local/bin/yarn /usr/local/bin/yarnpkg
 USER node
 
 EXPOSE 3000

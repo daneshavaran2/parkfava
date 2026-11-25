@@ -1,0 +1,38 @@
+target http://localhost:3000; 20 s per attack; container pf
+sign-in flood from one address
+  ok   visitors still served during the attack (p95 under 1 s)  [p50 33 ms, p95 97 ms, max 474 ms, 0 failed; 13369 attempts from one address]
+  ok   back to normal within 15 s after the attack  [0.0 s]
+  ok   no crash, restart or out-of-memory kill  [restarts 0 -> 0]
+  ok   memory stayed under the container limit  [peak 292 MiB of 1024 MiB]
+sign-in flood from many addresses
+  ok   visitors still served during the attack (p95 under 3 s)  [p50 11 ms, p95 20 ms, max 24 ms, 0 failed; 162 attempts from random addresses]
+  ok   back to normal within 15 s after the attack  [0.0 s]
+  ok   no crash, restart or out-of-memory kill  [restarts 0 -> 0]
+  ok   memory stayed under the container limit  [peak 305 MiB of 1024 MiB]
+export flood
+  ok   visitors still served during the attack (p95 under 2 s)  [p50 281 ms, p95 327 ms, max 341 ms, 0 failed; 3583 exports]
+  ok   back to normal within 15 s after the attack  [0.0 s]
+  ok   no crash, restart or out-of-memory kill  [restarts 0 -> 0]
+  ok   memory stayed under the container limit  [peak 307 MiB of 1024 MiB]
+slowloris
+  ok   visitors still served during the attack (p95 under 1 s)  [p50 3 ms, p95 6 ms, max 49 ms, 0 failed; 2000 slow connections opened, 2000 still open after 70 s]
+  ok   back to normal within 15 s after the attack  [0.0 s]
+  ok   no crash, restart or out-of-memory kill  [restarts 0 -> 0]
+  ok   memory stayed under the container limit  [peak 297 MiB of 1024 MiB]
+idle connection flood
+  ok   visitors still served during the attack (p95 under 1 s)  [p50 4 ms, p95 6 ms, max 12 ms, 0 failed; 5000 idle connections]
+  ok   back to normal within 15 s after the attack  [0.1 s]
+  ok   no crash, restart or out-of-memory kill  [restarts 0 -> 0]
+  ok   memory stayed under the container limit  [peak 301 MiB of 1024 MiB]
+large-body flood
+  ok   visitors still served during the attack (p95 under 2 s)  [p50 206 ms, p95 251 ms, max 292 ms, 0 failed; 1573 bodies of 1.9 MiB]
+  ok   back to normal within 15 s after the attack  [0.0 s]
+  ok   no crash, restart or out-of-memory kill  [restarts 0 -> 0]
+  ok   memory stayed under the container limit  [peak 384 MiB of 1024 MiB]
+oversized bodies
+  ok   visitors still served during the attack (p95 under 1 s)  [p50 10 ms, p95 15 ms, max 25 ms, 0 failed; 76774 requests announcing 100 MiB; answers {'413': 76774}]
+  ok   back to normal within 15 s after the attack  [0.0 s]
+  ok   no crash, restart or out-of-memory kill  [restarts 0 -> 0]
+  ok   memory stayed under the container limit  [peak 341 MiB of 1024 MiB]
+
+28 checks, all passed

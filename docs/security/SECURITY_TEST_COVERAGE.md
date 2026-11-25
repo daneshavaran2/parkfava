@@ -42,6 +42,8 @@ they are skipped and a failed-send check runs instead.
 | `scripts/test-api-contracts.py` | 13 | Anonymous reads expose only approved and active rows; unauthenticated writes are refused and change nothing; malformed arguments are rejected by validation | APIT |
 | `scripts/test-request-hardening.py` | all | Body limits, large multipart only for uploaders, CSRF headers, Permissions-Policy, `no-store`, password-change throttle | CONF, APIT |
 | `scripts/test-auth-hardening.py` | all | MFA state per session; verified phone protected; password change needs the current password and signs other sessions out | ATHN |
+| `scripts/test-dos-resilience.py` | 28 | Sign-in floods (one and many addresses, with a real user's sign-in time), export flood, slowloris, idle connections, large and oversized bodies; visitors still served, recovery, no crash, memory (with `--container`) | — |
+| `scripts/backup-restore-drill.sh` | — | Backup and restore into an empty database and folder; checksums, row counts, files, migrations | — |
 | `tests/unit/security-regressions.test.ts` | 111 tests in `tests/unit` | Client-address parsing, URL schemes, body limits, methods, upload signatures, path segments, password policy, rate limiter under concurrency (database), no automatic admin (database), upload names, password hashing | — |
 
 ## Findings and the tests that guard them
@@ -80,11 +82,11 @@ they are skipped and a failed-send check runs instead.
 
 ## Not covered
 
-- Load, stress and denial-of-service testing.
-- A real SMS provider; the assistant against a live model.
-- The Docker image build (no container runtime in the test environment).
-- The production deployment: its TLS, router and environment.
-- Backup and restore.
+- A real SMS provider (no account); the assistant against a live model.
+- The live site: its TLS, router and environment (checks listed in the
+  production checklist).
+- Restoring the real production backups (the drill script is ready).
+- Load from a real network; long soak tests (hours).
 - OWASP ZAP; Wapiti's out-of-band SSRF and Log4Shell modules.
 - The desktop app's window and navigation rules (reviewed in code, not
   driven by a test).

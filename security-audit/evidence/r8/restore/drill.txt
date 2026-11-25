@@ -1,0 +1,8 @@
+== backup
+   16 tables, 72 files, 5.9M in /tmp/claude-0/-home-user-parkfava/6e597a91-ab1a-5f14-ae53-2c04a39ce396/scratchpad/r8/restore/backup
+== restore
+== verify
+   ok   row counts of all 16 tables match
+   ok   all 72 uploaded files are byte-identical
+   ok   migrations restored up to 0024_first_admin_only_once.sql
+restore verified
