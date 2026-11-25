@@ -89,6 +89,21 @@ control was weakened to make a test pass.
 | Behaviour change | `npm` is not available in the running container (nothing in the app or the deploy uses it; migrations run from a checkout) |
 | Verification | Hadolint clean; image rebuilt; Trivy: 23 → 0 Node.js package advisories; the container passed the probes (126), deep (34) and browser-flow (8) suites and stays healthy |
 
+### Deployment fixes found while preparing the release
+
+Not vulnerabilities, but deploying without them would have broken the site.
+Both were reproduced with the previous image against a database copy in the
+production state (migrations up to 0021, a session stored the old way,
+uploads written by root):
+
+| Problem with the previous image | Fix | After |
+|---|---|---|
+| The code needs migrations 0022–0024, but nothing applied them in the container: every signed-in request failed with `INTERNAL_ERROR` (`column s.mfa_verified_until does not exist`) | `src/server.ts` runs `runAutoMigrations()` at start-up and before each request. Its advisory lock now stays on one reserved connection (before, lock and unlock could run on different pooled connections and leave the lock held). Retries after a minute if the database was unreachable. `AUTO_MIGRATE=0` turns it off; the desktop app turns it off because it migrates itself | Each migration applied once across 4 workers; a restart applies nothing; the user signed in before the deploy is still signed in |
+| The container ran as uid 1000, but files on the uploads disk were written as root by older images: `Permission denied` on new uploads into existing company folders | `server/docker-entrypoint.sh` starts as root, re-owns only the uploads folder (`find -P -xdev`, `chown -h`: no link is followed), then `setpriv` to `node` with `--no-new-privs` | Uploads writable; the app process has uid 1000, no capabilities, `NoNewPrivs: 1` |
+
+Every suite passes against the new image on that database: probes 126,
+strict 204, deep 34, concurrency 20, browser 14, flows 8.
+
 ## Breaking changes
 
 None that require action from users. Three operational notes:

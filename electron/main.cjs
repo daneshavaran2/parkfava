@@ -269,6 +269,8 @@ async function startBackend() {
       PORT: String(APP_PORT),
       HOST: "127.0.0.1",
       NODE_ENV: "production",
+      // Migrations were applied above; the server's own run would find nothing.
+      AUTO_MIGRATE: "0",
     },
     stdio: "inherit",
   });

@@ -8,8 +8,16 @@ directory, so **merging on GitHub does not change what is live**:
 ```bash
 git pull origin main
 liara deploy
-bun run db:migrate      # against the production DATABASE_URL, when the release adds one
 ```
+
+Pending migrations are applied by the server itself when the new container
+starts (`src/lib/db/auto-migrate.server.ts`; look for `[auto-migrate]
+applying …` in the logs). `bun run db:migrate` against the production
+`DATABASE_URL` still works; `AUTO_MIGRATE=0` turns the automatic run off.
+
+The container starts as root only long enough to give the uploads disk to
+uid 1000 (`server/docker-entrypoint.sh`; files written by older images belong
+to root), then runs the app as `node`.
 
 The container runs `server/cluster.mjs` and reports health via
 `/api/public/health`, which runs `SELECT 1` — so a process that is listening
@@ -24,7 +32,7 @@ but cannot reach Postgres is unhealthy rather than quietly serving errors.
 ## After deploying the 2026-08-09 release
 
 1. Set `OPENROUTER_API_KEY` in Liara → Environment Variables (see [[AI Assistant]]).
-2. Run `bun run db:migrate` — migration `0004` is required or the assistant errors.
+2. Migration `0004` is required or the assistant errors (applied automatically at startup since then).
 
 ## Environment
 

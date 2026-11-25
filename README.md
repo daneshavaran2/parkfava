@@ -106,9 +106,11 @@ long-form fields (founders, headcount, export potential) are filled in too, so
 the map, the directions links and the assistant's grounding context all have
 something real to work with.
 
-> **After deploying, run `bun run db:migrate` on the server.** Migration
-> `0004` adds the `search_text` columns the assistant queries; without it the
-> assistant errors on every question.
+> **Migrations apply themselves.** The server runs any pending
+> `db/migrations/*.sql` when it starts (`src/lib/db/auto-migrate.server.ts`,
+> one worker at a time under a database lock), before it answers requests.
+> `bun run db:migrate` still works from a checkout; set `AUTO_MIGRATE=0` to
+> turn the automatic run off.
 
 ### Available scripts
 
@@ -652,7 +654,12 @@ removed), nobody is promoted automatically; grant the role with the SQL above.
 
 `/auth` (`src/routes/auth.tsx`) is the only sign-in surface, shared by every
 role — there's no separate admin login page, and no third-party auth
-provider. **Email + password only** — `signUp`/`signIn` in
+provider. The username is an **e-mail address or a company's national ID**
+(شناسه ملی, 11 digits, Persian digits accepted). Member companies get their
+accounts from `scripts/provision-national-id-logins.ts`: the username is the
+national ID and the first password is the CEO's mobile number from the park's
+spreadsheet; the first sign-in forces a new password (`must_change_password`).
+See `docs/company-login-guide-fa.md`. `signUp`/`signIn` in
 `src/lib/auth.functions.ts` hash the password with `scrypt`
 (`src/lib/auth/password.server.ts`) and set an opaque, random, HttpOnly
 session cookie (`src/lib/auth/session.server.ts`) backed by a `sessions`
@@ -927,9 +934,9 @@ git pull origin main
 liara deploy
 ```
 
-run manually, from a clone that's up to date with `main`, followed by
-`bun run db:migrate` against the production `DATABASE_URL` whenever the
-release adds a migration.
+run manually, from a clone that's up to date with `main`. A release that
+adds a migration needs nothing more: the new container applies pending
+migrations when it starts (`[auto-migrate] applying …` in the logs).
 
 The container starts `server/cluster.mjs`, not the Nitro entry directly, so
 the app uses every core rather than one (`WEB_CONCURRENCY` to override, `1` to
@@ -954,9 +961,10 @@ infrastructure you provision yourself:
    ephemeral across redeploys — without a mounted disk, every uploaded
    logo/image/attachment disappears on the next `liara deploy`. Provision a
    disk in the Liara dashboard, mount it at the path you set `UPLOAD_DIR`
-   to, before the first real upload happens in production. The container
-   runs as the unprivileged `node` user (uid 1000), so the mounted disk must
-   be writable by uid 1000 (`chown -R 1000:1000 <mount>` once, if needed).
+   to, before the first real upload happens in production. The app runs as
+   the unprivileged `node` user (uid 1000); `server/docker-entrypoint.sh`
+   hands the mounted disk to that user at start-up (files written by older
+   images belong to root), so no manual `chown` is needed.
 
 Migrations live under `db/migrations/*.sql`, applied in filename order by
 `bun run db:migrate` (`db/migrate.ts`). Never edit an applied migration —

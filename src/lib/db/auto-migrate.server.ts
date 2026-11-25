@@ -8,9 +8,13 @@
  * bookkeeping table as the CLI runner so the two never double-apply.
  *
  * A Postgres advisory lock serialises the run across cluster workers: the
- * first worker migrates, the others wait and then find nothing to do.
+ * first worker migrates, the others wait and then find nothing to do. The
+ * lock is taken and released on one reserved connection: a session-level
+ * advisory lock belongs to the connection that took it, and the pool may hand
+ * each query a different one.
  *
- * Opt out with AUTO_MIGRATE=0.
+ * Called by src/server.ts at boot and awaited before every request, so no
+ * request runs against an older schema. Opt out with AUTO_MIGRATE=0.
  */
 import { getDb, hasDb } from "../../../db/connection";
 
@@ -29,6 +33,7 @@ export function runAutoMigrations(): Promise<void> {
   started = (async () => {
     if (!hasDb() || process.env.AUTO_MIGRATE === "0") return;
     const sql = getDb();
+    let lock: Awaited<ReturnType<typeof sql.reserve>> | undefined;
     try {
       await sql`
         CREATE TABLE IF NOT EXISTS _migrations (
@@ -36,7 +41,8 @@ export function runAutoMigrations(): Promise<void> {
           applied_at timestamptz NOT NULL DEFAULT now()
         )
       `;
-      await sql`SELECT pg_advisory_lock(${LOCK_KEY})`;
+      lock = await sql.reserve();
+      await lock`SELECT pg_advisory_lock(${LOCK_KEY})`;
       try {
         const applied = new Set(
           (await sql<{ name: string }[]>`SELECT name FROM _migrations`).map((r) => r.name),
@@ -54,13 +60,19 @@ export function runAutoMigrations(): Promise<void> {
           });
         }
       } finally {
-        await sql`SELECT pg_advisory_unlock(${LOCK_KEY})`;
+        await lock`SELECT pg_advisory_unlock(${LOCK_KEY})`;
       }
     } catch (error) {
       // A migration failure must not stop the process from serving: the health
       // endpoint already reports database reachability, and crash-looping the
-      // container hides the real error.
+      // container hides the real error. Tried again a minute later (for
+      // example once the database is reachable), not on every request.
       console.error("[auto-migrate] failed", error);
+      setTimeout(() => {
+        started = null;
+      }, 60_000).unref();
+    } finally {
+      lock?.release();
     }
   })();
   return started;

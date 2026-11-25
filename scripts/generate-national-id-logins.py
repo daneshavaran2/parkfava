@@ -11,14 +11,15 @@ only it is read. Per company it keeps:
   - name / website / email: only to match the row to an exhibition_companies
     row in the database, the same way every other import here matches
   - initial_password_hash: scrypt hash of the CEO's mobile number, in the
-    exact "salt:hex" format src/lib/auth/password.server.ts produces, so the
-    CEO's mobile is the first-login password
+    exact format src/lib/auth/password.server.ts produces
+    (scrypt$N$r$p$salt$hash), so the CEO's mobile is the first-login password
   - ceo_mobile_masked: e.g. 0912***1997, only so the dry-run report can say
     which number a company should use, without the number itself sitting in
     the repository
 
-The mobile numbers themselves are never written out: the JSON is committed,
-and a list of every CEO's personal mobile has no business in git history.
+The mobile numbers themselves are never written out. The JSON is still not
+committed (it is git-ignored): hashes of 10-digit mobile numbers can be
+brute-forced, so it stays with whoever provisions the accounts.
 
 Usage:
   python3 scripts/generate-national-id-logins.py path/to/companies.xlsx

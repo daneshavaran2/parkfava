@@ -95,6 +95,8 @@ HEALTHCHECK, an uploads volume, limited to 1 CPU and 1 GB of memory.
 | Trivy image scan | Before: 23 Node.js package advisories in npm/corepack (SEC-058, fixed) and Debian OS packages: 1 Critical, 37 High, none fixable (SEC-061). After: 0 Node.js advisories |
 | Suites against the container | probes 126/126, strict 204/204, deep 34/34, concurrency 20/20, browser 14/14, flows 8/8 |
 | Proxy certificate in the final image | No (only in the build stage) |
+| Deploy onto a database copy in the production state (migrations up to 0021, old-style session, uploads owned by root) | Previous image: signed-in requests failed, uploads refused. New image: migrations 0022–0024 applied once, session kept, uploads writable, app process uid 1000 with no capabilities; all suites pass |
+| Dockerfile scanners | Hadolint clean; Trivy DS-0002 and Checkov CKV_DOCKER_3 flag the missing `USER` line, which is deliberate (see the vulnerability report) |
 
 ## Load tests
 

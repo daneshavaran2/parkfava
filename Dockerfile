@@ -20,10 +20,13 @@ COPY --from=build /app/server ./server
 # fresh container serves them whether or not that script ever ran again.
 COPY --from=build /app/scripts/atlas-images ./seed-assets
 
-# Run as the image's unprivileged `node` user (uid 1000), not root. The
-# uploads directory is the only path the app writes to; a volume mounted there
-# must be writable by uid 1000 (e.g. `chown -R 1000:1000` on the volume once).
-RUN mkdir -p /app/data/uploads && chown -R node:node /app/data
+# The app runs as the image's unprivileged `node` user (uid 1000), not root.
+# server/docker-entrypoint.sh starts as root only to give the uploads folder
+# (the only path the app writes to) to that user, which a mounted disk written
+# by earlier root images needs, then drops to `node` for good.
+# checkov:skip=CKV_DOCKER_3:the app runs as node (uid 1000) via the entrypoint's setpriv; root only re-owns the uploads disk
+RUN mkdir -p /app/data/uploads && chown -R node:node /app/data \
+    && chmod 0755 /app/server/docker-entrypoint.sh
 
 # The base image ships npm, npx, corepack and yarn; the app runs only `node`.
 # Their bundled packages carried 23 known advisories in an image scan
@@ -31,7 +34,6 @@ RUN mkdir -p /app/data/uploads && chown -R node:node /app/data
 RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
     /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
     /usr/local/bin/yarn /usr/local/bin/yarnpkg
-USER node
 
 EXPOSE 3000
 
@@ -42,4 +44,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 
 # Spreads requests across CPU cores instead of pinning the app to one; set
 # WEB_CONCURRENCY=1 to fall back to a single process.
+ENTRYPOINT ["/app/server/docker-entrypoint.sh"]
 CMD ["node", "server/cluster.mjs"]

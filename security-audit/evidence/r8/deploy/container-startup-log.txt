@@ -1,0 +1,7 @@
+[cluster] starting 4 workers
+➜ Listening on: http://localhost:3000/ (all interfaces)
+[auto-migrate] applying 0022_sessions_mfa_verified.sql
+[auto-migrate] applying 0023_sessions_hashed_tokens.sql
+[auto-migrate] applying 0024_first_admin_only_once.sql
+[39m[cluster] starting 4 workers
+➜ Listening on: http://localhost:3000/ (all interfaces)

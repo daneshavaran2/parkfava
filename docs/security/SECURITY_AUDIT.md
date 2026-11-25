@@ -30,10 +30,10 @@ the deployed site does not have these fixes.
 
 | # | Condition | Why |
 |---|---|---|
-| 1 | Run migrations 0022–0024 (`bun run db:migrate` from a checkout; the container does not run them) and deploy this code right after | None of the fixes protects the live site until it runs this code, and the code needs these migrations |
+| 1 | Back up the database, then deploy this code; the container applies migrations 0022–0024 itself at start-up | None of the fixes protects the live site until it runs this code |
 | 2 | Turn on MFA for admins: configure the SMS provider, check one real code and one failed send, set `MFA_ENFORCED=true` (SEC-026, Medium, open) | Today an admin account is protected by its password alone; no SMS account existed to test with |
 | 3 | Set `SETTINGS_ENCRYPTION_KEY` and re-enter the assistant key once (SEC-017) | Otherwise the key is derived from `DATABASE_URL`, and the restore drill showed it is lost after a restore to a new database address or a database password change |
-| 4 | Make the uploads volume writable by uid 1000 and run `scripts/backup-restore-drill.sh` on the real backups | The container runs as uid 1000; the drill was tested on a copy of the test database |
+| 4 | Run `scripts/backup-restore-drill.sh` on the real backups | The drill was tested on a copy of the test database |
 | 4a | Edge protection and sizing: CDN or edge rate limiting, CPU sized for peak traffic (SEC-059, SEC-060) | A distributed sign-in flood slows sign-in; past about 350 requests per second per CPU some requests wait 10–30 s |
 | 5 | Decide the review-workflow rule (SEC-055, Low, open) | An owner can still change a company while it waits for review |
 | 6 | Rotate the keys found in old git history if any of them was ever private (SEC-022) | They remain in the history |
@@ -66,7 +66,7 @@ absence of vulnerabilities.
 |---|---|
 | Frontend | React 19, TanStack Router, server-side rendered by TanStack Start 1.169; Vite 8 build |
 | Backend | TanStack Start server functions (RPC over `/_serverFn/<id>`, seroval-encoded), Nitro node server; entry `src/server.ts` (method guard, body limits, security headers), `src/start.ts` (CSRF, request id, database-error guard) |
-| Database | PostgreSQL through postgres.js tagged templates (parameterised); 24 migrations in `db/migrations`, applied with `bun run db:migrate` (an auto-migration module exists but is not called by the server) |
+| Database | PostgreSQL through postgres.js tagged templates (parameterised); 24 migrations in `db/migrations`, applied by the server at start-up under a database lock (or `bun run db:migrate`) |
 | File storage | Local disk under `UPLOAD_DIR`, served by `src/routes/assets.$.ts` |
 | Authentication | Own implementation: e-mail or company national ID plus password (scrypt), opaque session token in an `httpOnly` cookie, SHA-256 of the token in `sessions`; optional SMS one-time code (`MFA_ENFORCED`) |
 | Authorization | Roles in `user_roles` (`admin`, `company_owner`); middleware `requireAuth` / `requireMfaVerified`; per-function admin checks; ownership from `exhibition_companies.owner_user_id` read from the database, never from the request |
@@ -135,7 +135,7 @@ other viewer. Values from the SMS panel and the AI provider are untrusted.
 | Server functions | Cross-site request forgery | Other website | CSRF middleware (`Sec-Fetch-Site`, then `Origin`/`Referer`); `SameSite=Lax` | none known |
 | Uploads | Malicious file, path traversal | Owner, admin | Extension and file-signature checks; safe path segments; `nosniff`; served as stored type | none known |
 | Desktop app | Navigation to hostile sites, device access | Hostile content | Navigation and new windows restricted; permissions refused | none known |
-| Container | Exploiting the runtime image | Attacker with code execution | Non-root user, read-only application files, no npm or other package managers (SEC-058) | Unfixed Debian CVEs (SEC-061) |
+| Container | Exploiting the runtime image | Attacker with code execution | App runs as uid 1000 with no capabilities and no-new-privileges (the entrypoint starts as root only to re-own the uploads disk, without following links); read-only application files; no package managers (SEC-058) | Unfixed Debian CVEs (SEC-061) |
 | Backups | Disclosure or unusable restore | Anyone with backup access; disaster | Drill script with checksums, owner-only files | Backups hold hashes and the encrypted key; key lost on restore without `SETTINGS_ENCRYPTION_KEY` (SEC-017) |
 | CI/CD | Supply chain, token theft | Third party | Pinned actions, read-only token, pinned CLI | `npm install -g` of a pinned CLI (zizmor Low) |
 

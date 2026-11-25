@@ -209,11 +209,12 @@ for this application.
 
 ## Before going live
 
-1. Apply migrations 0022, 0023 and 0024 and deploy this code back to back: run
-   `DATABASE_URL=<production> bun run db:migrate` from a checkout (the
-   container does not run migrations; the code needs 0022's column, and 0023
-   changes how sessions are looked up).
-2. Make the uploads volume writable by uid 1000 (the container no longer runs as root).
+1. Back up the database, then deploy this code: the new container applies
+   migrations 0022, 0023 and 0024 itself when it starts (check the logs for
+   `[auto-migrate] applying …`). Tested on a copy in the production state:
+   signed-in users stay signed in.
+2. Nothing to do for the uploads disk: the container hands it to uid 1000 at
+   start-up and then runs the app as that user.
 3. Set `SETTINGS_ENCRYPTION_KEY`, then re-enter the assistant API key once in
    the admin page so it is encrypted with it.
 4. Configure SMS: send one real code, and one to an invalid number, and

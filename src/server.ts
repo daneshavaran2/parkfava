@@ -32,6 +32,21 @@ type ServerEntry = {
 
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 
+// Database migrations are applied by the server itself (the container has no
+// step that could run them before the first request): started at boot and
+// awaited before each request, so nothing runs against an older schema.
+// AUTO_MIGRATE=0 turns this off. See src/lib/db/auto-migrate.server.ts.
+async function migrationsApplied(): Promise<void> {
+  const { runAutoMigrations } = await import("./lib/db/auto-migrate.server");
+  await runAutoMigrations();
+}
+migrationsApplied().catch((error) =>
+  logError({
+    event: "auto_migrate_import_failed",
+    message: error instanceof Error ? error.message : String(error),
+  }),
+);
+
 async function getServerEntry(): Promise<ServerEntry> {
   if (!serverEntryPromise) {
     serverEntryPromise = import("@tanstack/react-start/server-entry").then(
@@ -116,6 +131,7 @@ export default {
     return runWithRequestContext({ requestId }, async () => {
       try {
         const handler = await getServerEntry();
+        await migrationsApplied();
         // Only the methods each kind of path actually uses (SEC-037).
         const wrongMethod = rejectUnexpectedMethod(request);
         if (wrongMethod) return withStandardHeaders(wrongMethod, requestId, request);
